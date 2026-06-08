@@ -1,10 +1,19 @@
-# Windows: patch CMakeLists.txt to include system_info plugin source and include dir
+# Windows: patch runner CMakeLists.txt so the system info source is compiled
+# into the runner and its FFI entry points are exported for dart:ffi lookup.
+
 cmake_path = "windows/runner/CMakeLists.txt"
-with open(cmake_path, "r") as f:
+with open(cmake_path, "r", encoding="utf-8") as f:
     cmake = f.read()
 
 plugin_src = '  "runner/plugins/system_info/system_info_plugin.cpp"'
 include_dir = '  "${CMAKE_CURRENT_SOURCE_DIR}/plugins/system_info"'
+export_block = """if(MSVC)
+  target_link_options(${BINARY_NAME} PRIVATE
+    "/EXPORT:GetSystemInfoJson"
+    "/EXPORT:FreeSystemInfoJson"
+  )
+endif()
+"""
 
 if plugin_src not in cmake:
     cmake = cmake.replace(
@@ -17,5 +26,15 @@ if include_dir not in cmake:
         "target_include_directories(${BINARY_NAME} PRIVATE\n" + include_dir,
     )
 
-with open(cmake_path, "w") as f:
+if '"/EXPORT:GetSystemInfoJson"' not in cmake:
+    marker = "target_link_libraries(${BINARY_NAME} PRIVATE flutter flutter_wrapper_app)"
+    replacement = marker + "\n\n" + export_block.rstrip()
+    if marker not in cmake:
+        raise RuntimeError(
+            "Could not find target_link_libraries(${BINARY_NAME} PRIVATE flutter flutter_wrapper_app) "
+            "in windows/runner/CMakeLists.txt to inject FFI exports."
+        )
+    cmake = cmake.replace(marker, replacement, 1)
+
+with open(cmake_path, "w", encoding="utf-8") as f:
     f.write(cmake)
