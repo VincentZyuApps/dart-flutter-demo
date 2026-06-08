@@ -1,132 +1,183 @@
-[English](./build.md) | [中文](./build.zh-cn.md)
+> **[ English](build.md)**
+> **[ 简体中文(大陆)](build.zh-cn.md)**
 
-# Build and Release Workflow
+# 🏗️ Build and Release Workflow
 
-This workflow builds the Flutter app and publishes releases to GitHub Releases.
+This document explains the actual GitHub Actions pipeline in [build.yml](./build.yml).
 
-## Trigger Conditions
+## 📋 Overview
 
-The workflow runs under the following conditions:
-- Push to `master` or `main` branch
-- Pull Request targeting `master` or `main` branch
-- Manual trigger via `workflow_dispatch`
+The workflow is driven by commit message keywords.
+Only commits containing `build action` or `build release` enter the full build pipeline on push.
+Pull requests and manual runs are still valid workflow entry points, but the current `check-commit` job is mainly designed for push-triggered release flow.
 
-## Commit Message Convention
+## 🔑 Commit Keyword Table
 
-**The full build is only triggered when the commit message contains `build action` or `build release`.**
+| Commit message keyword | Build matrix | GitHub Release | Typical use |
+|------------------------|:------------:|:--------------:|-------------|
+| `build action` | ✅ Yes | ❌ No | Verify compilation and upload CI artifacts only |
+| `build release` | ✅ Yes | ✅ Yes | Build all targets and publish a GitHub Release |
+| anything else | ❌ No | ❌ No | Skip build jobs after `check-commit` |
 
-Otherwise, the workflow will skip the build and display:
-```
-✗ Commit message does not contain build trigger
-   Skipping build (commit: abc1234)
-```
+> The workflow checks `${{ github.event.head_commit.message }}` with `grep -qiE "(build action|build release)"`.
 
-### Valid Commit Message Examples (will trigger build)
+## 🧾 Commit Examples
 
-```bash
-git commit -m "feat: build action for Windows and Android"
-git commit -m "chore: build release v1.0"
-```
-
-### Invalid Commit Messages (will skip build)
+### Will trigger build
 
 ```bash
-git commit -m "fix: update UI colors"
-git commit -m "update readme"
-git commit -m "fix typo"
+git commit --allow-empty -m "ci: verify matrix build (build action)"
+git commit -m "release: 0.3.6-rc.24 (build release)"
 ```
 
-## Git Profile Setup
+### Will skip build
 
-If the GitHub profile shown on the repository homepage or release notes is wrong, run:
+```bash
+git commit -m "docs: update workflow notes"
+git commit -m "fix: tune card spacing"
+git commit -m "refactor: clean up services"
+```
+
+## 👤 Git Identity
+
+If the wrong profile appears in commits or release notes, set:
 
 ```bash
 git config --global --replace-all user.name "VincentZyu233"
 git config --global user.email "1830540513zyu@gmail.com"
 ```
 
-## Pipeline Stages
+## 🖼️ Pipeline Sketch
 
-### Stage 1: Check Commit Message
-
-Verify that the commit message contains the required trigger keywords.
-
-- **Runner:** `ubuntu-latest`
-- **Output:** `should_build` (boolean)
-
-### Stage 2: Matrix Build
-
-Build artifacts for all three platforms simultaneously using matrix strategy.
-
-- **Runner:** Selected per platform (Windows/Linux/Ubuntu)
-- **Dependency:** Flutter stable SDK
-
-**Build Matrix:**
-
-| Platform | Runner | Build Command | Artifact |
-|----------|--------|---------------|----------|
-| Windows x64 | `windows-latest` | `flutter build windows --release` | `dart-flutter-demo-windows-x64-v<version>.zip` |
-| Linux x64 | `ubuntu-latest` | `flutter build linux --release` | `dart-flutter-demo-linux-x64-v<version>.tar.gz` |
-| Android | `ubuntu-latest` | `flutter build apk --release` | `dart-flutter-demo-android-v<version>.apk` |
-
-**Execution Steps:**
-1. Checkout code
-2. Setup Flutter stable SDK
-3. Run `flutter doctor -v`
-4. Install project dependencies (`flutter pub get`)
-5. Static analysis (`flutter analyze`)
-6. Generate version tag
-7. Execute platform-specific build command
-8. Upload build artifacts
-
-**Linux Extra Dependencies:**
-```bash
-sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev
+```text
++--------------+      +-------------------+      +------------------+
+| check-commit | ---> | build (6 targets) | ---> | publish release  |
++--------------+      +-------------------+      +------------------+
+        |                        |                          |
+        |                        |                          |
+        |                        +--> artifacts             +--> GitHub Release
+        |                                                   +--> release_body.md
+        +--> should_build / version / commits_log
 ```
 
-**Release Tag Format:**
+## 🧭 Mermaid Flow
+
+```mermaid
+flowchart LR
+    A[🚀 Push / PR / workflow_dispatch] --> B[🔍 check-commit]
+    B --> C{🔑 keyword matched?}
+    C -- no --> D[🛑 stop after check]
+    C -- yes --> E[🏗️ build matrix]
+    E --> F[📦 package artifacts]
+    F --> G[📝 render release template]
+    G --> H[🎉 create GitHub Release]
 ```
-v<pubspec-version>
-Example: v0.0.1-alpha.1
+
+## 1️⃣ Stage 1: check-commit
+
+- Runner: `ubuntu-latest`
+- Outputs: `should_build`, `version`, `commits_log`
+- Purpose: detect trigger keyword, read version from `pubspec.yaml`, collect commit log for release notes
+
+If the keyword is missing, the job prints:
+
+```text
+✗ Commit message does not contain build trigger
+   Skipping build (commit: abc1234)
 ```
 
-**Artifact Filename Format:**
+## 2️⃣ Stage 2: build matrix
+
+The build job runs only when `needs.check-commit.outputs.should_build == 'true'`.
+`fail-fast: false` keeps other platforms running even if one target fails.
+
+| Platform | Runner | Main output |
+|----------|--------|-------------|
+| `windows-x64` | `windows-latest` | zipped runner directory + setup exe |
+| `linux-x64` | `ubuntu-22.04` | Linux bundle + `.deb` + `.AppImage` |
+| `macos-x64` | `macos-15-intel` | DMG |
+| `macos-arm64` | `macos-latest` | DMG |
+| `android-multiarch` | `ubuntu-latest` | universal APK + split APKs |
+| `ios-arm64` | `macos-latest` | unsigned IPA |
+
+### 🤝 Shared steps
+
+1. Checkout code.
+2. Setup Flutter `3.41.5`.
+3. Run `flutter doctor -v`.
+4. Generate Apple and Windows platform projects with `flutter create`.
+5. Apply committed icons with `scripts/apply-icons.py`.
+6. Copy native platform plugin sources from `plugins/`.
+7. Run `flutter pub get`.
+8. Run `flutter analyze --no-pub || true`.
+
+### 🧩 Platform-specific notes
+
+- Windows copies the native C++ system info source, patches `windows/runner/CMakeLists.txt`, builds the app, then packages an Inno Setup installer.
+- Linux installs packaging dependencies, generates the Linux runner, and uses `flutter_distributor` to build `.deb` and `.AppImage`.
+- macOS copies `SystemInfoPlugin.swift`, patches the runner, builds two DMGs, and retries `hdiutil` when the volume is busy.
+- Android copies `SystemInfoPlugin.kt`, patches `MainActivity.kt`, builds universal and split-per-ABI APKs, then verifies the outputs exist.
+- iOS copies `SystemInfoPlugin.swift`, patches the generated runner, builds without codesign, and zips `Runner.app` into an IPA manually.
+
+## 3️⃣ Stage 3: publish
+
+- Runner: `ubuntu-latest`
+- Needs: `check-commit`, `build`
+- Purpose: rename artifacts with the extracted version, render release notes, and publish GitHub Release assets
+
+### 📦 Publish steps
+
+1. Download all uploaded artifacts.
+2. Repackage or rename them into final versioned filenames.
+3. Read `.github/release_template.md`.
+4. Inject repository name, version, release URL base, build info, and commit log.
+5. Write `release_body.md`.
+6. Create a GitHub Release with `softprops/action-gh-release@v2`.
+
+## 🏷️ Artifact Naming
+
+| Artifact type | Final filename pattern |
+|---------------|------------------------|
+| Windows zip | `dart-flutter-demo-windows-x64-v<version>.zip` |
+| Windows installer | `dart-flutter-demo-windows-x64-v<version>-setup.exe` |
+| Linux tarball | `dart-flutter-demo-linux-x64-v<version>.tar.gz` |
+| Linux packages | `dart-flutter-demo-linux-x64-v<version>.deb` / `.AppImage` |
+| macOS DMG | `dart-flutter-demo-macos-<arch>-v<version>.dmg` |
+| Android APK | `dart-flutter-demo-android-<flavor>-v<version>.apk` |
+| iOS IPA | `dart-flutter-demo-ios-arm64-v<version>.ipa` |
+
+## 🔢 Version Source
+
+The workflow reads the version from `pubspec.yaml`.
+It uses the full version for app metadata and the part before `+` for the GitHub tag and artifact names.
+
+Example:
+
+```text
+0.3.6-rc.24+20260609  ->  tag/artifact version: 0.3.6-rc.24
 ```
-dart-flutter-demo-<platform>-v<pubspec-version>.<extension>
-Example: dart-flutter-demo-windows-x64-v0.0.1-alpha.1.zip
-```
 
-### Stage 3: Publish Release
+## 📝 Release Notes Inputs
 
-Create a GitHub Release and upload all build artifacts.
+The rendered GitHub Release body is assembled from:
 
-- **Runner:** `ubuntu-latest`
-- **Dependency:** All artifacts from the build stage
+- `.github/release_template.md`
+- current repository name
+- extracted version
+- current commit SHA
+- `github.event.head_commit.timestamp`
+- commit log collected in `check-commit`
 
-**Execution Steps:**
-1. Checkout code
-2. Download all build artifacts
-3. Package artifacts with versioned filenames
-4. Create Draft Release (draft mode, requires manual publish)
-5. Upload Windows/Linux/Android artifacts
+## 🔐 Permissions and Secrets
 
-**Release Contents:**
+- Required workflow permission: `contents: write`
+- Current release publishing uses the default `GITHUB_TOKEN`
+- No extra package-registry secrets are used in this workflow file
 
-| File | Description |
-|------|-------------|
-| `dart-flutter-demo-windows-x64-v<version>.zip` | Windows executable archive |
-| `dart-flutter-demo-linux-x64-v<version>.tar.gz` | Linux executable archive |
-| `dart-flutter-demo-android-v<version>.apk` | Android APK package |
+## 💡 Practical Notes
 
-## Permissions
-
-- `contents: write` (required for creating Releases)
-
-## Notes
-
-- Uses `softprops/action-gh-release@v2` to create Releases
-- Releases are created in **Draft** state by default, requiring manual publish on GitHub
-- All artifacts are retained for 7 days (controlled by `retention-days: 7`)
-- `fail-fast: false` ensures a single platform build failure does not affect others
-- Android build uses `flutter build apk --release` directly
-- Version is extracted from `pubspec.yaml` `version` field (part before `+`), used in artifact filenames and Release tag
+- The repository keeps native plugin source files under `plugins/`, then copies and patches them into generated platform runners during CI.
+- Windows system info collection depends on native FFI wiring in the generated runner, so `plugins/windows/patch_ci.py` is part of the critical path.
+- The workflow currently publishes GitHub Releases directly with `draft: false` and `prerelease: false`.
+- Linux is the only target that also emits package-manager style artifacts in the same run.
+- If you want a release, the safest commit message is an empty commit containing `build release`.

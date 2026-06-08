@@ -1,7 +1,10 @@
+> **[ English](README.md)**
+> **[ 简体中文(大陆)](README.zh-cn.md)**
+
 ![dart-flutter-demo](https://socialify.git.ci/VincentZyuApps/dart-flutter-demo/image?description=1&font=Bitter&forks=1&issues=1&language=1&logo=https%3A%2F%2Fupload.wikimedia.org%2Fwikipedia%2Fcommons%2Fthumb%2F7%2F79%2FFlutter_logo.svg%2F120px-Flutter_logo.svg.png%3Futm_source%3Dcommons.wikimedia.org%26utm_campaign%3Dindex%26utm_content%3Dthumbnail%26_%3D20230821075714&name=1&owner=1&pulls=1&stargazers=1&theme=Auto)
 ![onefetch](doc/preview-pics/onefetch.png)
 
-# dart_flutter_demo
+# ✨ dart_flutter_demo
 
 一个跨平台的 Flutter UI 展示 PoC（Proof of Concept）应用，可以跑在 Android、Windows、Linux、macOS 和 iOS 上，使用 GitHub Actions CI 打包工作流构建。
 
@@ -16,7 +19,7 @@
 [![Android x86_64 | ARM64](https://img.shields.io/badge/Android-x86_64_|_ARM64-3DDC84?style=for-the-badge&logo=android&logoColor=white)](https://github.com/VincentZyuApps/dart-flutter-demo/releases)
 [![iOS ARM64](https://img.shields.io/badge/iOS-ARM64-000000?style=for-the-badge&logo=apple&logoColor=white)](https://github.com/VincentZyuApps/dart-flutter-demo/releases)
 
-## 💬 对话框
+## 💬🪟 对话框
 
 ### ℹ️ 关于
 
@@ -28,7 +31,7 @@
 一步步指引展示应用的下载渠道、构建选项及推荐的开发环境配置的引导对话框。从 AppBar 菜单中打开。<br>
 ![guide](doc/preview-pics/side1.guide.png)
 
-## 🧩 页面介绍
+## 🧩📱 页面介绍
 
 ### 0. 🖥️ 系统信息实验室
 
@@ -101,11 +104,11 @@
 ![page4](doc/preview-pics/page4.controls-schema-feedback.png)
 
 
-## ⚙️ CI/CD
+## ⚙️🚀 CI/CD
 
 GitHub Actions 负责自动构建与打包。提交信息包含 `build action` 或 `build release` 即可触发流水线。详见 [build.zh-cn.md](.github/workflows/build.zh-cn.md)。
 
-## ⚠️ 故障排除
+## ⚠️🩺 故障排除
 
 - **🪟🐧 Windows / Linux GPU问题**：使用软件渲染启动：`./dart_flutter_demo --disable-gpu`
 - **🍎 macOS 虚拟机 图形问题**（VMware、VirtualBox 等）：Flutter 桌面应用依赖 Apple Metal，虚拟机无法提供 Metal 支持，因此无法运行。请使用物理 Mac 或 [GitHub Actions macOS runners](https://github.com/VincentZyuApps/mac-test-action-runner)。
@@ -118,7 +121,7 @@ GitHub Actions 负责自动构建与打包。提交信息包含 `build action` �
   5. 打开 AltStore → 点 **+** → 选择 `.ipa` 文件
   6. 免费账号每 **7 天**需要刷新签名（AltStore 会自动提示，电脑保持 AltServer 运行或 iPad 与电脑同 WiFi）
 
-## 🛠️ 技术栈
+## 🛠️🧰 技术栈
 
 | 项目 | Badge |
 |------|-------|

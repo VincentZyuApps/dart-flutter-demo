@@ -1,7 +1,10 @@
+> **[ English](README.md)**
+> **[ 简体中文(大陆)](README.zh-cn.md)**
+
 ![dart-flutter-demo](https://socialify.git.ci/VincentZyuApps/dart-flutter-demo/image?description=1&font=Bitter&forks=1&issues=1&language=1&logo=https%3A%2F%2Fupload.wikimedia.org%2Fwikipedia%2Fcommons%2Fthumb%2F7%2F79%2FFlutter_logo.svg%2F120px-Flutter_logo.svg.png%3Futm_source%3Dcommons.wikimedia.org%26utm_campaign%3Dindex%26utm_content%3Dthumbnail%26_%3D20230821075714&name=1&owner=1&pulls=1&stargazers=1&theme=Auto)
 ![onefetch](doc/preview-pics/onefetch.png)
 
-# dart_flutter_demo
+# ✨ dart_flutter_demo
 
 A cross-platform Flutter UI showcase PoC (Proof of Concept) app, available on Android, Windows, Linux, macOS, and iOS, built by a GitHub Actions CI packaging workflow.
 
@@ -16,7 +19,7 @@ A cross-platform Flutter UI showcase PoC (Proof of Concept) app, available on An
 [![Android x86_64 | ARM64](https://img.shields.io/badge/Android-x86_64_|_ARM64-3DDC84?style=for-the-badge&logo=android&logoColor=white)](https://github.com/VincentZyuApps/dart-flutter-demo/releases)
 [![iOS ARM64](https://img.shields.io/badge/iOS-ARM64-000000?style=for-the-badge&logo=apple&logoColor=white)](https://github.com/VincentZyuApps/dart-flutter-demo/releases)
 
-## 💬 Dialogs
+## 💬🪟 Dialogs
 
 ### ℹ️ About
 
@@ -28,7 +31,7 @@ An app information dialog that displays app name, version, build number, publish
 A step-by-step walkthrough dialog showing the app's download channels, build options, and recommended development setup. Accessible from the AppBar menu.<br>
 ![guide](doc/preview-pics/side1.guide.png)
 
-## 🧩 Pages
+## 🧩📱 Pages
 
 ### 0. 🖥️ System Info
 
@@ -101,11 +104,11 @@ Source: [lib/pages/page4_controls_feedback.dart](https://github.com/VincentZyu23
 ![page4](doc/preview-pics/page4.controls-schema-feedback.png)
 
 
-## ⚙️ CI/CD
+## ⚙️🚀 CI/CD
 
 GitHub Actions handles automated builds and packaging. Push a commit containing `build action` or `build release` to trigger the pipeline. See [build.md](.github/workflows/build.md) for details.
 
-## ⚠️ Troubleshooting
+## ⚠️🩺 Troubleshooting
 
 - **🪟🐧 Windows / Linux GPU issues**: Launch with software rendering: `./dart_flutter_demo --disable-gpu`
 - **🍎 macOS virtual machines graphic issues** (VMware, VirtualBox, etc.): Flutter desktop apps require Apple Metal, which is unavailable in VMs. Use a physical Mac or [GitHub Actions macOS runners](https://github.com/VincentZyuApps/mac-test-action-runner) instead.
@@ -118,7 +121,7 @@ GitHub Actions handles automated builds and packaging. Push a commit containing 
   5. Open AltStore → **+** → select the `.ipa` file
   6. Free accounts need **re-signing every 7 days** (AltStore prompts automatically; keep AltServer running on your PC/iPad on same WiFi)
 
-## 🛠️ Tech Stack
+## 🛠️🧰 Tech Stack
 
 | Item | Badge |
 |------|-------|
