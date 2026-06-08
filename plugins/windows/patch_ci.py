@@ -34,11 +34,32 @@ def inject_into_block(text: str, block_name: str, addition: str) -> str:
     return text.replace(block, updated, 1)
 
 
+def inject_standalone_include_block(text: str, addition: str) -> str:
+    standalone_block = (
+        "target_include_directories(${BINARY_NAME} PRIVATE\n"
+        f"{addition}\n"
+        ")\n"
+    )
+    if addition in text:
+        return text
+
+    marker = "target_link_libraries(${BINARY_NAME} PRIVATE flutter flutter_wrapper_app)"
+    if marker not in text:
+        raise RuntimeError(
+            "Could not find target_link_libraries(${BINARY_NAME} PRIVATE flutter flutter_wrapper_app) "
+            f"in {cmake_path} to inject include directories."
+        )
+    return text.replace(marker, standalone_block + "\n" + marker, 1)
+
+
 if plugin_src not in cmake:
     cmake = inject_into_block(cmake, "add_executable", plugin_src)
 
 if include_dir not in cmake:
-    cmake = inject_into_block(cmake, "target_include_directories", include_dir)
+    try:
+        cmake = inject_into_block(cmake, "target_include_directories", include_dir)
+    except RuntimeError:
+        cmake = inject_standalone_include_block(cmake, include_dir)
 
 if '"/EXPORT:GetSystemInfoJson"' not in cmake:
     marker = "target_link_libraries(${BINARY_NAME} PRIVATE flutter flutter_wrapper_app)"

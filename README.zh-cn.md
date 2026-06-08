@@ -12,10 +12,15 @@
   <img src="assets/images/logo-icon-favicon.png" alt="dart_flutter_demo logo" width="280"/>
 </p>
 
+## 📊🧬 语言占比
+
+这两张动画图分别按仓库中已跟踪的代码、脚本、文档与构建配置的字节数和行数做分布统计。<br>
+![lang-stats](doc/lang-stats.svg)
+![lang-line-stats](doc/lang-line-stats.svg)
+
 [![Windows x64](https://img.shields.io/badge/Windows-x64-0078D4?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/VincentZyuApps/dart-flutter-demo/releases)
 [![Linux x64 | ARM64](https://img.shields.io/badge/Linux-x64_|_ARM64-FCC624?style=for-the-badge&logo=linux&logoColor=black)](https://github.com/VincentZyuApps/dart-flutter-demo/releases)
 [![macOS x64 | ARM64](https://img.shields.io/badge/macOS-x64_|_ARM64-000000?style=for-the-badge&logo=apple&logoColor=white)](https://github.com/VincentZyuApps/dart-flutter-demo/releases)
-
 [![Android x86_64 | ARM64](https://img.shields.io/badge/Android-x86_64_|_ARM64-3DDC84?style=for-the-badge&logo=android&logoColor=white)](https://github.com/VincentZyuApps/dart-flutter-demo/releases)
 [![iOS ARM64](https://img.shields.io/badge/iOS-ARM64-000000?style=for-the-badge&logo=apple&logoColor=white)](https://github.com/VincentZyuApps/dart-flutter-demo/releases)
 
