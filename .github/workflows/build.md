@@ -1,5 +1,5 @@
-> **[ English](build.md)**
-> **[ 简体中文(大陆)](build.zh-cn.md)**
+> **[📖 English](build.md)**
+> **[📖 简体中文(大陆)](build.zh-cn.md)**
 
 # 🏗️ Build and Release Workflow
 
