@@ -1,6 +1,9 @@
 > **[ English](README.md)**
 > **[ 简体中文(大陆)](README.zh-cn.md)**
 
+[![GitHub](https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/VincentZyuApps/dart-flutter-demo)
+[![Gitee](https://img.shields.io/badge/Gitee-C71D23?style=for-the-badge&logo=gitee&logoColor=white)](https://gitee.com/vincent-zyu/dart-flutter-demo)
+
 ![dart-flutter-demo](https://socialify.git.ci/VincentZyuApps/dart-flutter-demo/image?description=1&font=Bitter&forks=1&issues=1&language=1&logo=https%3A%2F%2Fupload.wikimedia.org%2Fwikipedia%2Fcommons%2Fthumb%2F7%2F79%2FFlutter_logo.svg%2F120px-Flutter_logo.svg.png%3Futm_source%3Dcommons.wikimedia.org%26utm_campaign%3Dindex%26utm_content%3Dthumbnail%26_%3D20230821075714&name=1&owner=1&pulls=1&stargazers=1&theme=Auto)
 ![onefetch](doc/preview-pics/onefetch.png)
 
@@ -12,7 +15,10 @@
   <img src="assets/images/logo-icon-favicon.png" alt="dart_flutter_demo logo" width="280"/>
 </p>
 
-[![Windows x64](https://img.shields.io/badge/Windows-x64-0078D4?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/VincentZyuApps/dart-flutter-demo/releases)
+[![Last Commit](https://img.shields.io/github/last-commit/VincentZyuApps/dart-flutter-demo?style=for-the-badge&logo=github&color=181717&logoColor=white)](https://github.com/VincentZyuApps/dart-flutter-demo/commits/main/)
+[![Build](https://img.shields.io/github/actions/workflow/status/VincentZyuApps/dart-flutter-demo/build.yml?style=for-the-badge&logo=githubactions&logoColor=white&label=Build)](https://github.com/VincentZyuApps/dart-flutter-demo/actions)
+
+[![Windows x64](https://img.shields.io/static/v1?label=Windows&message=x64&color=0078D4&style=for-the-badge&logo=data:image/svg%2bxml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZD0iTTAgMGgxMS4zNzd2MTEuMzcySDB6TTEyLjYyMyAwSDI0djExLjM3MkgxMi42MjN6TTAgMTIuNjIzaDExLjM3N1YyNEgweiBNMTIuNjIzIDEyLjYyM0gyNFYyNEgxMi42MjN6IiBmaWxsPSIjZmZmIi8+PC9zdmc+)](https://github.com/VincentZyuApps/dart-flutter-demo/releases)
 [![Linux x64 | ARM64](https://img.shields.io/badge/Linux-x64_|_ARM64-FCC624?style=for-the-badge&logo=linux&logoColor=black)](https://github.com/VincentZyuApps/dart-flutter-demo/releases)
 [![macOS x64 | ARM64](https://img.shields.io/badge/macOS-x64_|_ARM64-000000?style=for-the-badge&logo=apple&logoColor=white)](https://github.com/VincentZyuApps/dart-flutter-demo/releases)
 
@@ -74,8 +80,8 @@
       <td align="center"><sub>macOS 14</sub><br><img src="doc/preview-pics/fastfetch.macos14.png" width="100%"/></td>
     </tr>
     <tr>
-      <td align="center"><sub>Android 15</sub><br><img src="doc/preview-pics/page0.android15.png" width="100%"/></td>
-      <td align="center"><sub>Android 15</sub><br><img src="doc/preview-pics/fastfetch.android15.termux.png" width="100%"/></td>
+      <td align="center"><sub>Android 15</sub><br><img src="doc/preview-pics/page0.android14.png" width="100%"/></td>
+      <td align="center"><sub>Android 15</sub><br><img src="doc/preview-pics/fastfetch.android14.termux.png" width="100%"/></td>
     </tr>
     <tr>
       <td align="center"><sub>iOS 17 (iPad Air 5)</sub><br><img src="doc/preview-pics/page0.ios17.png" width="100%"/></td>
@@ -131,30 +137,35 @@ GitHub Actions 负责自动构建与打包。提交信息包含 `build action` �
 
 | 依赖项 | Badge |
 |---|---|
-| Flutter | ![flutter](https://img.shields.io/badge/Flutter-stable-02569B.svg?logo=flutter) |
-| Flutter Localizations | ![flutter_localizations](https://img.shields.io/badge/Flutter%20Localizations-sdk-02569B.svg?logo=flutter) |
-| Intl | ![intl](https://img.shields.io/badge/intl-any-0175C2.svg?logo=dart) |
-| File Selector | ![file_selector](https://img.shields.io/badge/file__selector-%5E1.1.0-00A884.svg?logo=flutter) |
-| Google Fonts | ![google_fonts](https://img.shields.io/badge/Google%20Fonts-%5E6.1.0-4285F4.svg?logo=googlefonts) |
-| Flutter Colorpicker | ![flutter_colorpicker](https://img.shields.io/badge/flutter__colorpicker-%5E1.1.0-6750A4.svg?logo=flutter) |
-| Package Info Plus | ![package_info_plus](https://img.shields.io/badge/package__info__plus-%5E8.0.2-FF6F00.svg?logo=dart) |
-| URL Launcher | ![url_launcher](https://img.shields.io/badge/url__launcher-%5E6.3.1-1E88E5.svg?logo=linktree) |
+| Flutter | [![flutter](https://img.shields.io/badge/Flutter-stable-02569B.svg?logo=flutter)](https://flutter.dev/) |
+| Flutter Localizations | [![flutter_localizations](https://img.shields.io/badge/Flutter%20Localizations-sdk-02569B.svg?logo=flutter)](https://docs.flutter.dev/ui/accessibility-and-internationalization/internationalization) |
+| Intl | [![intl](https://img.shields.io/badge/intl-any-0175C2.svg?logo=dart)](https://pub.dev/packages/intl) |
+| File Selector | [![file_selector](https://img.shields.io/badge/file__selector-%5E1.1.0-00A884.svg?logo=flutter)](https://pub.dev/packages/file_selector) |
+| Google Fonts | [![google_fonts](https://img.shields.io/badge/Google%20Fonts-%5E6.1.0-4285F4.svg?logo=googlefonts)](https://pub.dev/packages/google_fonts) |
+| Flutter Colorpicker | [![flutter_colorpicker](https://img.shields.io/badge/flutter__colorpicker-%5E1.1.0-6750A4.svg?logo=flutter)](https://github.com/mchome/flutter_colorpicker) |
+| Package Info Plus | [![package_info_plus](https://img.shields.io/badge/package__info__plus-%5E8.0.2-FF6F00.svg?logo=dart)](https://pub.dev/packages/package_info_plus) |
+| URL Launcher | [![url_launcher](https://img.shields.io/badge/url__launcher-%5E6.3.1-1E88E5.svg?logo=linktree)](https://pub.dev/packages/url_launcher) |
+| Testing | [![Flutter Test](https://img.shields.io/badge/Flutter%20Test-sdk-00A884.svg?logo=flutter)](https://docs.flutter.dev/testing) |
+| Linting | [![Flutter Lints](https://img.shields.io/badge/flutter__lints-%5E5.0.0-9B59B6.svg?logo=dart)](https://pub.dev/packages/flutter_lints) |
 
 ## 🛠️ 技术栈
 
 | 技术 | Badge |
 |---|---|
-| Language | ![Dart](https://img.shields.io/badge/Dart-3.x-0175C2.svg?logo=dart) |
-| Design | ![Material 3](https://img.shields.io/badge/Material%203-design%20system-6750A4.svg?logo=materialdesign) |
-| Windows | ![Windows](https://img.shields.io/badge/Windows-supported-0078D4.svg?logo=windows) |
-| Linux | ![Linux](https://img.shields.io/badge/Linux-supported-f84e29.svg?logo=linux) |
-| macOS | ![macOS](https://img.shields.io/badge/macOS-supported-8E8E93.svg?logo=apple) |
-| Android | ![Android](https://img.shields.io/badge/Android-supported-3DDC84.svg?logo=android) |
-| iOS | ![iOS](https://img.shields.io/badge/iOS-supported-000000.svg?logo=apple) |
-| Min SDK | ![SDK](https://img.shields.io/badge/SDK-%3E%3D3.0.0-02569B.svg?logo=dart) |
-| Version | ![Version](https://img.shields.io/badge/Version-0.4.1--alpha.1-02569B.svg?logo=flutter) |
-| Testing | ![Flutter Test](https://img.shields.io/badge/Flutter%20Test-sdk-00A884.svg?logo=flutter) |
-| Linting | ![Flutter Lints](https://img.shields.io/badge/flutter__lints-%5E5.0.0-9B59B6.svg?logo=dart) |
-| Stars | ![Stars](https://img.shields.io/github/stars/VincentZyuApps/dart-flutter-demo?style=flat&logo=github&label=stars&labelColor=181717&color=FFD700) |
-| Last Commit | ![Last Commit](https://img.shields.io/github/last-commit/VincentZyuApps/dart-flutter-demo?logo=github&label=last%20commit&labelColor=181717&color=02569B) |
-| CI/CD | [![release](https://img.shields.io/github/v/release/VincentZyuApps/dart-flutter-demo?logo=github&label=发布&color=02569B&labelColor=181717)](https://github.com/VincentZyuApps/dart-flutter-demo/releases) · [![build](https://img.shields.io/github/actions/workflow/status/VincentZyuApps/dart-flutter-demo/build.yml?branch=main&logo=githubactions&label=构建)](https://github.com/VincentZyuApps/dart-flutter-demo/actions) |
+| Language | [![Dart](https://img.shields.io/badge/Dart-3.x-0175C2.svg?logo=dart)](https://dart.dev/) |
+| Design | [![Material 3](https://img.shields.io/badge/Material%203-design%20system-6750A4.svg?logo=materialdesign)](https://m3.material.io/) |
+| Windows | [![Windows](https://img.shields.io/static/v1?label=Windows&message=supported&color=0078D4&logo=data:image/svg%2bxml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZD0iTTAgMGgxMS4zNzd2MTEuMzcySDB6TTEyLjYyMyAwSDI0djExLjM3MkgxMi42MjN6TTAgMTIuNjIzaDExLjM3N1YyNEgweiBNMTIuNjIzIDEyLjYyM0gyNFYyNEgxMi42MjN6IiBmaWxsPSIjZmZmIi8+PC9zdmc+)](https://docs.flutter.dev/platform-integration/desktop) |
+| Linux | [![Linux](https://img.shields.io/badge/Linux-supported-f84e29.svg?logo=linux)](https://docs.flutter.dev/platform-integration/linux) |
+| macOS | [![macOS](https://img.shields.io/badge/macOS-supported-8E8E93.svg?logo=apple)](https://docs.flutter.dev/platform-integration/macos) |
+| Android | [![Android](https://img.shields.io/badge/Android-supported-3DDC84.svg?logo=android)](https://docs.flutter.dev/platform-integration/android) |
+| iOS | [![iOS](https://img.shields.io/badge/iOS-supported-000000.svg?logo=apple)](https://docs.flutter.dev/platform-integration/ios) |
+| Min SDK | [![SDK](https://img.shields.io/badge/SDK-%3E%3D3.0.0-02569B.svg?logo=dart)](https://dart.dev/tools/pub/pubspec) |
+
+## 🏷️ 其他Badge
+
+| Badge | Link |
+|---|---|
+| Version | [![Version](https://img.shields.io/badge/Version-0.4.1--alpha.1-02569B.svg?logo=flutter&labelColor=181717)](https://github.com/VincentZyuApps/dart-flutter-demo/releases) |
+| Stars | [![Stars](https://img.shields.io/github/stars/VincentZyuApps/dart-flutter-demo?style=flat&logo=github&label=stars&labelColor=181717&color=FFD700)](https://github.com/VincentZyuApps/dart-flutter-demo/stargazers) |
+| Last Commit | [![Last Commit](https://img.shields.io/github/last-commit/VincentZyuApps/dart-flutter-demo?logo=github&label=last%20commit&labelColor=181717&color=02569B)](https://github.com/VincentZyuApps/dart-flutter-demo/commits/main/) |
+| Github Action CI/CD | [![release](https://img.shields.io/github/v/release/VincentZyuApps/dart-flutter-demo?logo=github&label=发布&color=02569B&labelColor=181717)](https://github.com/VincentZyuApps/dart-flutter-demo/releases) · [![build](https://img.shields.io/github/actions/workflow/status/VincentZyuApps/dart-flutter-demo/build.yml?branch=main&logo=githubactions&label=构建)](https://github.com/VincentZyuApps/dart-flutter-demo/actions) |
