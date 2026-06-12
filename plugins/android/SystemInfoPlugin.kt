@@ -1,12 +1,13 @@
 package com.example.dart_flutter_demo
 
+import android.appwidget.AppWidgetManager
+import android.content.ComponentName
 import android.content.Context
+import android.content.Intent
 import android.net.ConnectivityManager
-import android.net.NetworkCapabilities
 import android.os.Build
 import android.os.Environment
 import android.os.StatFs
-import android.view.Display
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
@@ -20,6 +21,14 @@ import java.util.Locale
 import java.util.concurrent.TimeUnit
 
 class SystemInfoPlugin : FlutterPlugin, MethodCallHandler {
+    companion object {
+        private const val widgetPrefsName = "dart_flutter_demo_widget"
+        private const val keyDiskPercent = "disk_percent"
+        private const val keyMemoryPercent = "memory_percent"
+        private const val keyUptimeText = "uptime_text"
+        private const val keyVersionText = "version_text"
+    }
+
     private lateinit var channel: MethodChannel
     private lateinit var context: Context
 
@@ -34,10 +43,14 @@ class SystemInfoPlugin : FlutterPlugin, MethodCallHandler {
     }
 
     override fun onMethodCall(call: MethodCall, result: Result) {
-        if (call.method == "getInfo") {
-            result.success(getInfo())
-        } else {
-            result.notImplemented()
+        when (call.method) {
+            "getInfo" -> result.success(getInfo())
+            "getWidgetInfo" -> result.success(getWidgetInfo())
+            "syncHomeWidget" -> {
+                syncHomeWidget()
+                result.success(true)
+            }
+            else -> result.notImplemented()
         }
     }
 
@@ -53,6 +66,37 @@ class SystemInfoPlugin : FlutterPlugin, MethodCallHandler {
         info["Local IP"] = getLocalIP()
         info["Locale"] = getLocale()
         return info
+    }
+
+    private fun getWidgetInfo(): Map<String, String> {
+        return mapOf(
+            "diskPercent" to getDiskPercent(),
+            "memoryPercent" to getMemoryPercent(),
+            "uptimeText" to getUptimeClock(),
+            "versionText" to getVersionText(),
+        )
+    }
+
+    private fun syncHomeWidget() {
+        val data = getWidgetInfo()
+        context.getSharedPreferences(widgetPrefsName, Context.MODE_PRIVATE)
+            .edit()
+            .putString(keyDiskPercent, data["diskPercent"])
+            .putString(keyMemoryPercent, data["memoryPercent"])
+            .putString(keyUptimeText, data["uptimeText"])
+            .putString(keyVersionText, data["versionText"])
+            .apply()
+
+        val appWidgetManager = AppWidgetManager.getInstance(context)
+        val componentName = ComponentName(context, DemoAppWidgetProvider::class.java)
+        val appWidgetIds = appWidgetManager.getAppWidgetIds(componentName)
+        if (appWidgetIds.isNotEmpty()) {
+            val updateIntent = Intent(context, DemoAppWidgetProvider::class.java).apply {
+                action = AppWidgetManager.ACTION_APPWIDGET_UPDATE
+                putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, appWidgetIds)
+            }
+            context.sendBroadcast(updateIntent)
+        }
     }
 
     private fun getOS(): String {
@@ -78,6 +122,15 @@ class SystemInfoPlugin : FlutterPlugin, MethodCallHandler {
             if (days > 0) append("$days days, ")
             append("$hours hours, $mins mins")
         }
+    }
+
+    private fun getUptimeClock(): String {
+        val elapsed = android.os.SystemClock.elapsedRealtime()
+        val totalSeconds = TimeUnit.MILLISECONDS.toSeconds(elapsed)
+        val hours = totalSeconds / 3600
+        val mins = (totalSeconds % 3600) / 60
+        val secs = totalSeconds % 60
+        return String.format(Locale.US, "%02d:%02d:%02d", hours, mins, secs)
     }
 
     private fun getCPU(): String {
@@ -172,6 +225,34 @@ class SystemInfoPlugin : FlutterPlugin, MethodCallHandler {
         }
     }
 
+    private fun getMemoryPercent(): String {
+        return try {
+            val reader = java.io.BufferedReader(java.io.FileReader("/proc/meminfo"))
+            var memTotal = 0L
+            var memAvailable = 0L
+            reader.useLines { lines ->
+                lines.forEach { line ->
+                    if (line.startsWith("MemTotal:")) {
+                        memTotal = line.substringAfter(":").trim()
+                            .split(" ")[0].toLongOrNull() ?: 0
+                    }
+                    if (line.startsWith("MemAvailable:")) {
+                        memAvailable = line.substringAfter(":").trim()
+                            .split(" ")[0].toLongOrNull() ?: 0
+                    }
+                }
+            }
+            if (memTotal > 0) {
+                val pct = ((1.0 - memAvailable.toDouble() / memTotal) * 100).toInt()
+                "${pct.coerceIn(0, 100)}%"
+            } else {
+                "--"
+            }
+        } catch (_: Exception) {
+            "--"
+        }
+    }
+
     private fun getDisk(): String {
         val stat = StatFs(Environment.getDataDirectory().path)
         val totalBytes = stat.totalBytes
@@ -182,6 +263,22 @@ class SystemInfoPlugin : FlutterPlugin, MethodCallHandler {
         val pct = ((1.0 - freeBytes.toDouble() / totalBytes) * 100).toInt()
 
         return "${formatGiB(usedGiB)} / ${formatGiB(totalGiB)} ($pct%)"
+    }
+
+    private fun getDiskPercent(): String {
+        return try {
+            val stat = StatFs(Environment.getDataDirectory().path)
+            val totalBytes = stat.totalBytes
+            val freeBytes = stat.freeBytes
+            if (totalBytes <= 0L) {
+                "--"
+            } else {
+                val pct = ((1.0 - freeBytes.toDouble() / totalBytes) * 100).toInt()
+                "${pct.coerceIn(0, 100)}%"
+            }
+        } catch (_: Exception) {
+            "--"
+        }
     }
 
     private fun getLocalIP(): String {
@@ -245,6 +342,20 @@ class SystemInfoPlugin : FlutterPlugin, MethodCallHandler {
 
     private fun getLocale(): String {
         return Locale.getDefault().toString()
+    }
+
+    private fun getVersionText(): String {
+        return try {
+            val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
+            val rawVersion = packageInfo.versionName?.trim().orEmpty()
+            if (rawVersion.isEmpty()) {
+                "v?"
+            } else {
+                "v${rawVersion.substringBefore('+')}"
+            }
+        } catch (_: Exception) {
+            "v?"
+        }
     }
 
     private fun formatBytes(bytes: Long): String {

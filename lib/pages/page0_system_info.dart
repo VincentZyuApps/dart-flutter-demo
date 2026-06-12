@@ -4,6 +4,7 @@ import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../services/android_home_widget_service.dart';
 import '../services/system_info_service.dart';
 import '../widgets/animated_page.dart';
 
@@ -102,6 +103,7 @@ class _Page0SystemInfoState extends State<Page0SystemInfo> {
       if (!mounted || generation != _loadGeneration) return;
 
       if (mounted && generation == _loadGeneration) {
+        await AndroidHomeWidgetService.syncSystemInfoWidget();
         setState(() {
           _info.addAll(info);
           _loadingKeys.removeAll(info.keys);

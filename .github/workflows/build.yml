@@ -146,6 +146,11 @@ jobs:
             android-multiarch)
               mkdir -p android/app/src/main/kotlin/com/example/dart_flutter_demo
               cp plugins/android/SystemInfoPlugin.kt android/app/src/main/kotlin/com/example/dart_flutter_demo/
+              cp plugins/android_widget/DemoAppWidgetProvider.kt android/app/src/main/kotlin/com/example/dart_flutter_demo/
+              mkdir -p android/app/src/main/res/layout
+              cp plugins/android_widget/demo_widget.xml android/app/src/main/res/layout/
+              mkdir -p android/app/src/main/res/xml
+              cp plugins/android_widget/demo_widget_info.xml android/app/src/main/res/xml/
               ;;
             ios-arm64)
               mkdir -p ios/Runner
@@ -164,6 +169,7 @@ jobs:
         shell: bash
         run: |
           python3 plugins/android/patch_ci.py
+          python3 plugins/android_widget/patch_ci.py
           echo "=== Patched MainActivity.kt ===" && cat android/app/src/main/kotlin/com/example/dart_flutter_demo/MainActivity.kt
 
       - name: Install dependencies
