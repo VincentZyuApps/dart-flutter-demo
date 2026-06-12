@@ -100,11 +100,10 @@
             android:textColor="#99F5F7FA"
             android:textSize="11sp" />
 
-        <TextView
+        <Chronometer
             android:id="@+id/widget_uptime_value"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="--h --m --s"
             android:textColor="#FFFFFFFF"
             android:textSize="14sp"
             android:textStyle="bold" />
