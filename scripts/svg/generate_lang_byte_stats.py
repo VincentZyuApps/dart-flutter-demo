@@ -7,7 +7,7 @@ import base64
 import io
 import subprocess
 from collections import defaultdict
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from html import escape
 from pathlib import Path
 
@@ -106,6 +106,17 @@ def format_bytes(num_bytes: int) -> str:
     return f"{num_bytes} B"
 
 
+def get_commit_info() -> str:
+    result = subprocess.run(
+        ["git", "log", "-1", "--format=%h %ae %ad", "--date=format:%Y-%m-%d %H:%M"],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    return result.stdout.strip()
+
+
 def build_font_face_css() -> str:
     if not FONT_PATH.exists():
         return ""
@@ -163,9 +174,9 @@ def build_svg(stats: dict[str, int]) -> str:
     if total <= 0:
         raise RuntimeError("No tracked language bytes found.")
 
-    top_bar_y = 92
+    top_bar_y = 108
     top_bar_h = 12
-    table_start_y = 124
+    table_start_y = 140
     footer_y = table_start_y + len(stats) * ROW_HEIGHT + 22
     height = footer_y + 16
     progress_x = 132
@@ -200,8 +211,9 @@ def build_svg(stats: dict[str, int]) -> str:
 <rect class="panel" x="1" y="1" width="{SVG_WIDTH - 2}" height="{height - 2}" rx="15"/>
 <text class="title head" x="{CARD_PADDING}" y="32">📊 dart-flutter-demo · Language Footprint</text>
 <text class="sub head" x="{CARD_PADDING}" y="50" style="animation-delay:0.1s">Tracked source bytes: {format_bytes(total)} ({total:,} bytes)</text>
-<text class="sub head" x="{CARD_PADDING}" y="66" style="animation-delay:0.2s">Scope: git-tracked code, scripts, workflow docs, and build config</text>
-<text class="sub head" x="{CARD_PADDING}" y="82" style="animation-delay:0.3s">Updated: {datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M")} UTC</text>
+<text class="sub head" x="{CARD_PADDING}" y="66" style="animation-delay:0.2s">Tracked scope: git-tracked code, scripts, workflow docs, and build config</text>
+<text class="sub head" x="{CARD_PADDING}" y="82" style="animation-delay:0.3s">Last svg updated: {datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M")} UTC ({datetime.now(timezone(timedelta(hours=8))).strftime("%Y-%m-%d %H:%M")} GMT+8)</text>
+<text class="sub head" x="{CARD_PADDING}" y="98" style="animation-delay:0.4s">Last git commit: {get_commit_info()} UTC</text>
 <rect class="barbg" x="{CARD_PADDING}" y="{top_bar_y}" width="{SVG_WIDTH - CARD_PADDING * 2}" height="{top_bar_h}" rx="6"/>
 <g clip-path="url(#topbar-clip)">
 """
