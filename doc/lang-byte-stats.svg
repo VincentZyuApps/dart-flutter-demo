@@ -2,13 +2,13 @@
 <defs>
   <style>
 
-    .bg { fill: #08111f; }
-    .panel { fill: #0f172a; stroke: #1e293b; stroke-width: 1; }
-    .title { font: 700 18px 'LXGW WenKai Mono', 'Segoe UI', 'Noto Sans', sans-serif; fill: #e0f2fe; }
+    .bg { fill: #0f172a; }
+    .panel { fill: #111827; stroke: #1f2937; stroke-width: 1; }
+    .title { font: 700 18px 'LXGW WenKai Mono', 'Segoe UI', 'Noto Sans', sans-serif; fill: #e5f0ff; }
     .sub { font: 400 11px 'LXGW WenKai Mono', 'Segoe UI', 'Noto Sans', sans-serif; fill: #94a3b8; }
     .label { font: 600 12px 'LXGW WenKai Mono', 'Segoe UI', 'Noto Sans', sans-serif; fill: #e5e7eb; }
     .meta { font: 400 11px 'LXGW WenKai Mono', 'Segoe UI', 'Noto Sans', sans-serif; fill: #94a3b8; }
-    .inbar { font: 700 11px 'LXGW WenKai Mono', 'Segoe UI', 'Noto Sans', sans-serif; fill: #f8fafc; stroke: rgba(8, 17, 31, 0.82); stroke-width: 2.2px; paint-order: stroke fill; stroke-linejoin: round; }
+    .inbar { font: 700 11px 'LXGW WenKai Mono', 'Segoe UI', 'Noto Sans', sans-serif; fill: #f8fafc; stroke: rgba(15, 23, 42, 0.78); stroke-width: 2.2px; paint-order: stroke fill; stroke-linejoin: round; }
     .barbg { fill: #1f2937; }
     .row { opacity: 0; animation: fadeIn 0.55s ease forwards; }
     .head { opacity: 0; animation: dropIn 0.7s ease forwards; }
@@ -21,32 +21,32 @@
 </defs>
 <rect class="bg" width="560" height="358" rx="16"/>
 <rect class="panel" x="1" y="1" width="558" height="356" rx="15"/>
-<text class="title head" x="22" y="32">📈 dart-flutter-demo · Language Line Count</text>
-<text class="sub head" x="22" y="50" style="animation-delay:0.1s">Tracked source lines: 9,012 lines</text>
+<text class="title head" x="22" y="32">📊 dart-flutter-demo · Language Footprint</text>
+<text class="sub head" x="22" y="50" style="animation-delay:0.1s">Tracked source bytes: 298.1 KB (298,095 bytes)</text>
 <text class="sub head" x="22" y="66" style="animation-delay:0.2s">Scope: git-tracked code, scripts, workflow docs, and build config</text>
 <text class="sub head" x="22" y="82" style="animation-delay:0.3s">Updated: 2026-06-12 16:45 UTC</text>
 <rect class="barbg" x="22" y="92" width="516" height="12" rx="6"/>
 <g clip-path="url(#topbar-clip)">
 <rect x="22.00" y="92" width="0" height="12" fill="#00B4AB">
-  <animate attributeName="width" from="0" to="316.34" dur="0.7s" begin="0.25s" fill="freeze"/>
+  <animate attributeName="width" from="0" to="304.04" dur="0.7s" begin="0.25s" fill="freeze"/>
 </rect>
-<rect x="338.34" y="92" width="0" height="12" fill="#3572A5">
-  <animate attributeName="width" from="0" to="96.71" dur="0.7s" begin="0.31s" fill="freeze"/>
+<rect x="326.04" y="92" width="0" height="12" fill="#3572A5">
+  <animate attributeName="width" from="0" to="101.72" dur="0.7s" begin="0.31s" fill="freeze"/>
 </rect>
-<rect x="435.05" y="92" width="0" height="12" fill="#F34B7D">
-  <animate attributeName="width" from="0" to="43.63" dur="0.7s" begin="0.37s" fill="freeze"/>
+<rect x="427.76" y="92" width="0" height="12" fill="#F34B7D">
+  <animate attributeName="width" from="0" to="44.59" dur="0.7s" begin="0.37s" fill="freeze"/>
 </rect>
-<rect x="478.68" y="92" width="0" height="12" fill="#A97BFF">
-  <animate attributeName="width" from="0" to="27.60" dur="0.7s" begin="0.43s" fill="freeze"/>
+<rect x="472.35" y="92" width="0" height="12" fill="#A97BFF">
+  <animate attributeName="width" from="0" to="31.84" dur="0.7s" begin="0.43s" fill="freeze"/>
 </rect>
-<rect x="506.28" y="92" width="0" height="12" fill="#F05138">
-  <animate attributeName="width" from="0" to="18.95" dur="0.7s" begin="0.49s" fill="freeze"/>
+<rect x="504.19" y="92" width="0" height="12" fill="#F05138">
+  <animate attributeName="width" from="0" to="22.26" dur="0.7s" begin="0.49s" fill="freeze"/>
 </rect>
-<rect x="525.23" y="92" width="0" height="12" fill="#DA3434">
-  <animate attributeName="width" from="0" to="10.31" dur="0.7s" begin="0.55s" fill="freeze"/>
+<rect x="526.44" y="92" width="0" height="12" fill="#DA3434">
+  <animate attributeName="width" from="0" to="9.92" dur="0.7s" begin="0.55s" fill="freeze"/>
 </rect>
-<rect x="535.54" y="92" width="0" height="12" fill="#708090">
-  <animate attributeName="width" from="0" to="2.46" dur="0.7s" begin="0.61s" fill="freeze"/>
+<rect x="536.36" y="92" width="0" height="12" fill="#708090">
+  <animate attributeName="width" from="0" to="1.64" dur="0.7s" begin="0.61s" fill="freeze"/>
 </rect>
 </g>
 <g class="row" style="animation-delay:0.35s">
@@ -56,68 +56,68 @@
   <rect x="132" y="124" width="0" height="15" rx="7" fill="#00B4AB" opacity="0.92">
     <animate attributeName="width" from="0" to="372.00" dur="0.8s" begin="0.35s" fill="freeze"/>
   </rect>
-  <text class="inbar" x="140" y="136">5,525 lines</text>
-  <text class="meta" x="514" y="136">61.3%</text>
+  <text class="inbar" x="140" y="136">175.6 KB</text>
+  <text class="meta" x="514" y="136">58.9%</text>
 </g>
 <g class="row" style="animation-delay:0.43s">
   <circle cx="26" cy="160" r="5" fill="#3572A5"/>
   <text class="label" x="38" y="164">Python</text>
   <rect class="barbg" x="132" y="152" width="372" height="15" rx="7"/>
   <rect x="132" y="152" width="0" height="15" rx="7" fill="#3572A5" opacity="0.92">
-    <animate attributeName="width" from="0" to="113.72" dur="0.8s" begin="0.43s" fill="freeze"/>
+    <animate attributeName="width" from="0" to="124.46" dur="0.8s" begin="0.43s" fill="freeze"/>
   </rect>
-  <text class="inbar" x="140" y="164">1,689 lines</text>
-  <text class="meta" x="514" y="164">18.7%</text>
+  <text class="inbar" x="140" y="164">58.8 KB</text>
+  <text class="meta" x="514" y="164">19.7%</text>
 </g>
 <g class="row" style="animation-delay:0.51s">
   <circle cx="26" cy="188" r="5" fill="#F34B7D"/>
   <text class="label" x="38" y="192">C++</text>
   <rect class="barbg" x="132" y="180" width="372" height="15" rx="7"/>
   <rect x="132" y="180" width="0" height="15" rx="7" fill="#F34B7D" opacity="0.92">
-    <animate attributeName="width" from="0" to="51.31" dur="0.8s" begin="0.51s" fill="freeze"/>
+    <animate attributeName="width" from="0" to="54.56" dur="0.8s" begin="0.51s" fill="freeze"/>
   </rect>
-  <text class="inbar" x="140" y="192">762 lines</text>
-  <text class="meta" x="514" y="192">8.5%</text>
+  <text class="inbar" x="140" y="192">25.8 KB</text>
+  <text class="meta" x="514" y="192">8.6%</text>
 </g>
 <g class="row" style="animation-delay:0.59s">
   <circle cx="26" cy="216" r="5" fill="#A97BFF"/>
   <text class="label" x="38" y="220">Kotlin</text>
   <rect class="barbg" x="132" y="208" width="372" height="15" rx="7"/>
   <rect x="132" y="208" width="0" height="15" rx="7" fill="#A97BFF" opacity="0.92">
-    <animate attributeName="width" from="0" to="32.45" dur="0.8s" begin="0.59s" fill="freeze"/>
+    <animate attributeName="width" from="0" to="38.95" dur="0.8s" begin="0.59s" fill="freeze"/>
   </rect>
-  <text class="inbar" x="140" y="220">482 lines</text>
-  <text class="meta" x="514" y="220">5.3%</text>
+  <text class="inbar" x="140" y="220">18.4 KB</text>
+  <text class="meta" x="514" y="220">6.2%</text>
 </g>
 <g class="row" style="animation-delay:0.67s">
   <circle cx="26" cy="244" r="5" fill="#F05138"/>
   <text class="label" x="38" y="248">Swift</text>
   <rect class="barbg" x="132" y="236" width="372" height="15" rx="7"/>
   <rect x="132" y="236" width="0" height="15" rx="7" fill="#F05138" opacity="0.92">
-    <animate attributeName="width" from="0" to="22.29" dur="0.8s" begin="0.67s" fill="freeze"/>
+    <animate attributeName="width" from="0" to="27.23" dur="0.8s" begin="0.67s" fill="freeze"/>
   </rect>
-  <text class="inbar" x="140" y="248">331 lines</text>
-  <text class="meta" x="514" y="248">3.7%</text>
+  <text class="inbar" x="140" y="248">12.9 KB</text>
+  <text class="meta" x="514" y="248">4.3%</text>
 </g>
 <g class="row" style="animation-delay:0.75s">
   <circle cx="26" cy="272" r="5" fill="#DA3434"/>
   <text class="label" x="38" y="276">CMake</text>
   <rect class="barbg" x="132" y="264" width="372" height="15" rx="7"/>
   <rect x="132" y="264" width="0" height="15" rx="7" fill="#DA3434" opacity="0.92">
-    <animate attributeName="width" from="0" to="12.12" dur="0.8s" begin="0.75s" fill="freeze"/>
+    <animate attributeName="width" from="0" to="12.14" dur="0.8s" begin="0.75s" fill="freeze"/>
   </rect>
-  <text class="inbar" x="140" y="276">180 lines</text>
-  <text class="meta" x="514" y="276">2.0%</text>
+  <text class="inbar" x="140" y="276">5.7 KB</text>
+  <text class="meta" x="514" y="276">1.9%</text>
 </g>
 <g class="row" style="animation-delay:0.83s">
   <circle cx="26" cy="300" r="5" fill="#708090"/>
   <text class="label" x="38" y="304">C Header</text>
   <rect class="barbg" x="132" y="292" width="372" height="15" rx="7"/>
   <rect x="132" y="292" width="0" height="15" rx="7" fill="#708090" opacity="0.92">
-    <animate attributeName="width" from="0" to="2.90" dur="0.8s" begin="0.83s" fill="freeze"/>
+    <animate attributeName="width" from="0" to="2.00" dur="0.8s" begin="0.83s" fill="freeze"/>
   </rect>
-  <text class="inbar" x="140" y="304">43 lines</text>
-  <text class="meta" x="514" y="304">0.5%</text>
+  <text class="inbar" x="140" y="304">945 B</text>
+  <text class="meta" x="514" y="304">0.3%</text>
 </g>
-<text class="sub" x="538" y="342" text-anchor="end">Generated by scripts/generate_lang_line_stats.py</text>
+<text class="sub" x="538" y="342" text-anchor="end">Generated by scripts/generate_lang_stats.py</text>
 </svg>
