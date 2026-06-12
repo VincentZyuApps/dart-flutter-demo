@@ -149,6 +149,8 @@ jobs:
               cp plugins/android_widget/DemoAppWidgetProvider.kt android/app/src/main/kotlin/com/example/dart_flutter_demo/
               mkdir -p android/app/src/main/res/layout
               cp plugins/android_widget/demo_widget.xml android/app/src/main/res/layout/
+              mkdir -p android/app/src/main/res/values
+              cp plugins/android_widget/strings.xml android/app/src/main/res/values/
               mkdir -p android/app/src/main/res/xml
               cp plugins/android_widget/demo_widget_info.xml android/app/src/main/res/xml/
               ;;
