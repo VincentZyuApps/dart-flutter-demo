@@ -12,18 +12,18 @@ A cross-platform Flutter UI showcase PoC (Proof of Concept) app, available on An
   <img src="assets/images/logo-icon-favicon.png" alt="dart_flutter_demo logo" width="280"/>
 </p>
 
-## 📊🧬 Language Footprint
-
-Animated breakdowns of tracked code, script, doc, and build-config size by bytes and by lines.<br>
-![lang-stats](doc/lang-stats.svg)
-![lang-line-stats](doc/lang-line-stats.svg)
-
 [![Windows x64](https://img.shields.io/badge/Windows-x64-0078D4?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/VincentZyuApps/dart-flutter-demo/releases)
 [![Linux x64 | ARM64](https://img.shields.io/badge/Linux-x64_|_ARM64-FCC624?style=for-the-badge&logo=linux&logoColor=black)](https://github.com/VincentZyuApps/dart-flutter-demo/releases)
 [![macOS x64 | ARM64](https://img.shields.io/badge/macOS-x64_|_ARM64-000000?style=for-the-badge&logo=apple&logoColor=white)](https://github.com/VincentZyuApps/dart-flutter-demo/releases)
 
 [![Android x86_64 | ARM64](https://img.shields.io/badge/Android-x86_64_|_ARM64-3DDC84?style=for-the-badge&logo=android&logoColor=white)](https://github.com/VincentZyuApps/dart-flutter-demo/releases)
 [![iOS ARM64](https://img.shields.io/badge/iOS-ARM64-000000?style=for-the-badge&logo=apple&logoColor=white)](https://github.com/VincentZyuApps/dart-flutter-demo/releases)
+
+## 📊🧬 Language Footprint
+
+Animated breakdowns of tracked code, script, doc, and build-config size by bytes and by lines.<br>
+![lang-byte-stats](doc/lang-byte-stats.svg)
+![lang-line-stats](doc/lang-line-stats.svg)
 
 ## 💬🪟 Dialogs
 
@@ -120,20 +120,41 @@ GitHub Actions handles automated builds and packaging. Push a commit containing 
 - **🍎 macOS virtual machines graphic issues** (VMware, VirtualBox, etc.): Flutter desktop apps require Apple Metal, which is unavailable in VMs. Use a physical Mac or [GitHub Actions macOS runners](https://github.com/VincentZyuApps/mac-test-action-runner) instead.
 - **🤖 Android APK**: Not signed with a persistent keystore. Each release uses a different debug key, so you must **uninstall the old version** before installing a new one to avoid signature conflicts.
 - **📱 iOS IPA**: CI does not configure code signing. To run on your own device, self-sign the `.ipa` before installing.<br>*(for reference — tested on iPad Air 5, iOS 17; other devices/versions may vary)*:
-  1. Install [AltInstaller.msi](https://altstore.io) on Windows, open AltServer (system tray)
+  1. Download and install [AltStore](https://altstore.io) on Windows or macOS, open AltServer (system tray)
   2. Connect iPad via USB → tray icon → Install AltStore → select your iPad
   3. Enter your Apple ID (used only for signing, not stored)
   4. On iPad: **Settings → General → VPN & Device Management → trust your Apple ID certificate**
   5. Open AltStore → **+** → select the `.ipa` file
   6. Free accounts need **re-signing every 7 days** (AltStore prompts automatically; keep AltServer running on your PC/iPad on same WiFi)
 
-## 🛠️🧰 Tech Stack
+## 📦 Dependencies
 
-| Item | Badge |
-|------|-------|
+| Dependencies | Badge |
+|---|---|
 | Flutter | ![flutter](https://img.shields.io/badge/Flutter-stable-02569B.svg?logo=flutter) |
-| Material 3 | ![material3](https://img.shields.io/badge/Material%203-design%20system-6750A4.svg?logo=materialdesign) |
-| Fonts | ![google-fonts](https://img.shields.io/badge/Google%20Fonts-plugin-4285F4.svg?logo=googlefonts) |
-| Plugins | ![plugins](https://img.shields.io/badge/file__selector%20%2B%20flutter__colorpicker-plugins-00A884.svg?logo=flutter) |
-| App Info | ![package-info-plus](https://img.shields.io/badge/package__info__plus-app%20metadata-FF6F00.svg?logo=dart) |
-| Links | ![url-launcher](https://img.shields.io/badge/url__launcher-open%20links-1E88E5.svg?logo=linktree) |
+| Flutter Localizations | ![flutter_localizations](https://img.shields.io/badge/Flutter%20Localizations-sdk-02569B.svg?logo=flutter) |
+| Intl | ![intl](https://img.shields.io/badge/intl-any-0175C2.svg?logo=dart) |
+| File Selector | ![file_selector](https://img.shields.io/badge/file__selector-%5E1.1.0-00A884.svg?logo=flutter) |
+| Google Fonts | ![google_fonts](https://img.shields.io/badge/Google%20Fonts-%5E6.1.0-4285F4.svg?logo=googlefonts) |
+| Flutter Colorpicker | ![flutter_colorpicker](https://img.shields.io/badge/flutter__colorpicker-%5E1.1.0-6750A4.svg?logo=flutter) |
+| Package Info Plus | ![package_info_plus](https://img.shields.io/badge/package__info__plus-%5E8.0.2-FF6F00.svg?logo=dart) |
+| URL Launcher | ![url_launcher](https://img.shields.io/badge/url__launcher-%5E6.3.1-1E88E5.svg?logo=linktree) |
+
+## 🛠️ Tech Stack
+
+| Tech | Badge |
+|---|---|
+| Language | ![Dart](https://img.shields.io/badge/Dart-3.x-0175C2.svg?logo=dart) |
+| Design | ![Material 3](https://img.shields.io/badge/Material%203-design%20system-6750A4.svg?logo=materialdesign) |
+| Windows | ![Windows](https://img.shields.io/badge/Windows-supported-0078D4.svg?logo=windows) |
+| Linux | ![Linux](https://img.shields.io/badge/Linux-supported-f84e29.svg?logo=linux) |
+| macOS | ![macOS](https://img.shields.io/badge/macOS-supported-8E8E93.svg?logo=apple) |
+| Android | ![Android](https://img.shields.io/badge/Android-supported-3DDC84.svg?logo=android) |
+| iOS | ![iOS](https://img.shields.io/badge/iOS-supported-000000.svg?logo=apple) |
+| Min SDK | ![SDK](https://img.shields.io/badge/SDK-%3E%3D3.0.0-02569B.svg?logo=dart) |
+| Version | ![Version](https://img.shields.io/badge/Version-0.4.1--alpha.1-02569B.svg?logo=flutter) |
+| Testing | ![Flutter Test](https://img.shields.io/badge/Flutter%20Test-sdk-00A884.svg?logo=flutter) |
+| Linting | ![Flutter Lints](https://img.shields.io/badge/flutter__lints-%5E5.0.0-9B59B6.svg?logo=dart) |
+| Stars | ![Stars](https://img.shields.io/github/stars/VincentZyuApps/dart-flutter-demo?style=flat&logo=github&label=stars&labelColor=181717&color=FFD700) |
+| Last Commit | ![Last Commit](https://img.shields.io/github/last-commit/VincentZyuApps/dart-flutter-demo?logo=github&label=last%20commit&labelColor=181717&color=02569B) |
+| CI/CD | [![release](https://img.shields.io/github/v/release/VincentZyuApps/dart-flutter-demo?logo=github&label=release&color=02569B&labelColor=181717)](https://github.com/VincentZyuApps/dart-flutter-demo/releases) · [![build](https://img.shields.io/github/actions/workflow/status/VincentZyuApps/dart-flutter-demo/build.yml?branch=main&logo=githubactions&label=build)](https://github.com/VincentZyuApps/dart-flutter-demo/actions) |

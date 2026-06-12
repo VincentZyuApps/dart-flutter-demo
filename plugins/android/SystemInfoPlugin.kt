@@ -8,6 +8,7 @@ import android.net.ConnectivityManager
 import android.os.Build
 import android.os.Environment
 import android.os.StatFs
+import android.os.SystemClock
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
@@ -25,6 +26,7 @@ class SystemInfoPlugin : FlutterPlugin, MethodCallHandler {
         private const val widgetPrefsName = "dart_flutter_demo_widget"
         private const val keyDiskPercent = "disk_percent"
         private const val keyMemoryPercent = "memory_percent"
+        private const val keyBootTimestamp = "boot_timestamp"
         private const val keyUptimeText = "uptime_text"
         private const val keyVersionText = "version_text"
     }
@@ -79,10 +81,12 @@ class SystemInfoPlugin : FlutterPlugin, MethodCallHandler {
 
     private fun syncHomeWidget() {
         val data = getWidgetInfo()
+        val bootTimestamp = System.currentTimeMillis() - SystemClock.elapsedRealtime()
         context.getSharedPreferences(widgetPrefsName, Context.MODE_PRIVATE)
             .edit()
             .putString(keyDiskPercent, data["diskPercent"])
             .putString(keyMemoryPercent, data["memoryPercent"])
+            .putLong(keyBootTimestamp, bootTimestamp)
             .putString(keyUptimeText, data["uptimeText"])
             .putString(keyVersionText, data["versionText"])
             .apply()
@@ -112,20 +116,21 @@ class SystemInfoPlugin : FlutterPlugin, MethodCallHandler {
     }
 
     private fun getUptime(): String {
-        val elapsed = android.os.SystemClock.elapsedRealtime()
+        val elapsed = SystemClock.elapsedRealtime()
         val seconds = TimeUnit.MILLISECONDS.toSeconds(elapsed)
         val days = seconds / 86400
         val hours = (seconds % 86400) / 3600
         val mins = (seconds % 3600) / 60
+        val secs = seconds % 60
 
         return buildString {
             if (days > 0) append("$days days, ")
-            append("$hours hours, $mins mins")
+            append("$hours hours, $mins mins, $secs secs")
         }
     }
 
     private fun getUptimeClock(): String {
-        val elapsed = android.os.SystemClock.elapsedRealtime()
+        val elapsed = SystemClock.elapsedRealtime()
         val totalSeconds = TimeUnit.MILLISECONDS.toSeconds(elapsed)
         val hours = totalSeconds / 3600
         val mins = (totalSeconds % 3600) / 60

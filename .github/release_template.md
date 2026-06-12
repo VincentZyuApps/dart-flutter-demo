@@ -23,7 +23,10 @@
 >
 > ⚠️ **Android**: APKs are not signed with a persistent keystore, so you must uninstall the previous version before installing a new one to avoid signature conflicts.
 >
-> ⚠️ **iOS**: The IPA is not code-signed for personal devices. To install it on your own iPhone or iPad, self-sign it first. For example, on Windows you can use AltStore / AltServer: install AltServer, connect the device by USB, install AltStore to the device, trust your Apple ID certificate under **Settings → General → VPN & Device Management**, then open AltStore and import the `.ipa`. Free Apple IDs require re-signing every 7 days.
+> ⚠️ **iOS**: The IPA is not code-signed for personal devices. To install it on your own iPhone or iPad, self-sign it first. You can use self-signing tools such as AltStore/AltServer or other solutions. For example:
+>   1. Download and install [AltStore](https://altstore.io) on Windows or macOS, open AltServer (system tray)
+>   2. Connect your device via USB → Install AltStore → trust your Apple ID certificate under **Settings → General → VPN & Device Management**
+>   3. Open AltStore → import the `.ipa`. Free Apple IDs require re-signing every 7 days
 
 ### 📥 Quick Install
 

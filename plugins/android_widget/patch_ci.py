@@ -10,6 +10,7 @@ receiver_block = """
             android:exported="true">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="com.example.dart_flutter_demo.APPWIDGET_TICK" />
             </intent-filter>
             <meta-data
                 android:name="android.appwidget.provider"

@@ -12,18 +12,18 @@
   <img src="assets/images/logo-icon-favicon.png" alt="dart_flutter_demo logo" width="280"/>
 </p>
 
-## 📊🧬 语言占比
-
-这两张动画图分别按仓库中已跟踪的代码、脚本、文档与构建配置的字节数和行数做分布统计。<br>
-![lang-stats](doc/lang-stats.svg)
-![lang-line-stats](doc/lang-line-stats.svg)
-
 [![Windows x64](https://img.shields.io/badge/Windows-x64-0078D4?style=for-the-badge&logo=windows&logoColor=white)](https://github.com/VincentZyuApps/dart-flutter-demo/releases)
 [![Linux x64 | ARM64](https://img.shields.io/badge/Linux-x64_|_ARM64-FCC624?style=for-the-badge&logo=linux&logoColor=black)](https://github.com/VincentZyuApps/dart-flutter-demo/releases)
 [![macOS x64 | ARM64](https://img.shields.io/badge/macOS-x64_|_ARM64-000000?style=for-the-badge&logo=apple&logoColor=white)](https://github.com/VincentZyuApps/dart-flutter-demo/releases)
 
 [![Android x86_64 | ARM64](https://img.shields.io/badge/Android-x86_64_|_ARM64-3DDC84?style=for-the-badge&logo=android&logoColor=white)](https://github.com/VincentZyuApps/dart-flutter-demo/releases)
 [![iOS ARM64](https://img.shields.io/badge/iOS-ARM64-000000?style=for-the-badge&logo=apple&logoColor=white)](https://github.com/VincentZyuApps/dart-flutter-demo/releases)
+
+## 📊🧬 语言占比
+
+这两张动画图分别按仓库中已跟踪的代码、脚本、文档与构建配置的字节数和行数做分布统计。<br>
+![lang-byte-stats](doc/lang-byte-stats.svg)
+![lang-line-stats](doc/lang-line-stats.svg)
 
 ## 💬🪟 对话框
 
@@ -120,20 +120,41 @@ GitHub Actions 负责自动构建与打包。提交信息包含 `build action` �
 - **🍎 macOS 虚拟机 图形问题**（VMware、VirtualBox 等）：Flutter 桌面应用依赖 Apple Metal，虚拟机无法提供 Metal 支持，因此无法运行。请使用物理 Mac 或 [GitHub Actions macOS runners](https://github.com/VincentZyuApps/mac-test-action-runner)。
 - **🤖 Android APK**：未使用固定 keystore 签名。每次 release 使用不同的 debug key，安装新版本前需要**先卸载旧版本**以避免签名冲突。
 - **📱 iOS IPA**：CI 未配置代码签名，想在自己设备上运行需要自行签名。<br>*(仅供参考 — 测试设备 iPad Air 5，iOS 17；其他设备/系统版本可能有差异)*：
-  1. 电脑安装 [AltInstaller.msi](https://altstore.io)，打开 AltServer（右下角托盘图标）
+  1. 在 Windows 或 macOS 上下载并安装 [AltStore](https://altstore.io)，打开 AltServer（系统托盘）
   2. iPad 用 USB 连电脑 → 托盘图标 → Install AltStore → 选择你的 iPad
   3. 输入 Apple ID（仅用于签名，不会存储）
   4. iPad 上：**设置 → 通用 → VPN 与设备管理 → 信任你的 Apple ID 证书**
   5. 打开 AltStore → 点 **+** → 选择 `.ipa` 文件
   6. 免费账号每 **7 天**需要刷新签名（AltStore 会自动提示，电脑保持 AltServer 运行或 iPad 与电脑同 WiFi）
 
-## 🛠️🧰 技术栈
+## 📦 依赖项
 
-| 项目 | Badge |
-|------|-------|
+| 依赖项 | Badge |
+|---|---|
 | Flutter | ![flutter](https://img.shields.io/badge/Flutter-stable-02569B.svg?logo=flutter) |
-| Material 3 | ![material3](https://img.shields.io/badge/Material%203-设计系统-6750A4.svg?logo=materialdesign) |
-| 字体 | ![google-fonts](https://img.shields.io/badge/Google%20Fonts-plugin-4285F4.svg?logo=googlefonts) |
-| 插件 | ![plugins](https://img.shields.io/badge/file__selector%20%2B%20flutter__colorpicker-plugins-00A884.svg?logo=flutter) |
-| 应用信息 | ![package-info-plus](https://img.shields.io/badge/package__info__plus-应用元数据-FF6F00.svg?logo=dart) |
-| 链接 | ![url-launcher](https://img.shields.io/badge/url__launcher-打开链接-1E88E5.svg?logo=linktree) |
+| Flutter Localizations | ![flutter_localizations](https://img.shields.io/badge/Flutter%20Localizations-sdk-02569B.svg?logo=flutter) |
+| Intl | ![intl](https://img.shields.io/badge/intl-any-0175C2.svg?logo=dart) |
+| File Selector | ![file_selector](https://img.shields.io/badge/file__selector-%5E1.1.0-00A884.svg?logo=flutter) |
+| Google Fonts | ![google_fonts](https://img.shields.io/badge/Google%20Fonts-%5E6.1.0-4285F4.svg?logo=googlefonts) |
+| Flutter Colorpicker | ![flutter_colorpicker](https://img.shields.io/badge/flutter__colorpicker-%5E1.1.0-6750A4.svg?logo=flutter) |
+| Package Info Plus | ![package_info_plus](https://img.shields.io/badge/package__info__plus-%5E8.0.2-FF6F00.svg?logo=dart) |
+| URL Launcher | ![url_launcher](https://img.shields.io/badge/url__launcher-%5E6.3.1-1E88E5.svg?logo=linktree) |
+
+## 🛠️ 技术栈
+
+| 技术 | Badge |
+|---|---|
+| Language | ![Dart](https://img.shields.io/badge/Dart-3.x-0175C2.svg?logo=dart) |
+| Design | ![Material 3](https://img.shields.io/badge/Material%203-design%20system-6750A4.svg?logo=materialdesign) |
+| Windows | ![Windows](https://img.shields.io/badge/Windows-supported-0078D4.svg?logo=windows) |
+| Linux | ![Linux](https://img.shields.io/badge/Linux-supported-f84e29.svg?logo=linux) |
+| macOS | ![macOS](https://img.shields.io/badge/macOS-supported-8E8E93.svg?logo=apple) |
+| Android | ![Android](https://img.shields.io/badge/Android-supported-3DDC84.svg?logo=android) |
+| iOS | ![iOS](https://img.shields.io/badge/iOS-supported-000000.svg?logo=apple) |
+| Min SDK | ![SDK](https://img.shields.io/badge/SDK-%3E%3D3.0.0-02569B.svg?logo=dart) |
+| Version | ![Version](https://img.shields.io/badge/Version-0.4.1--alpha.1-02569B.svg?logo=flutter) |
+| Testing | ![Flutter Test](https://img.shields.io/badge/Flutter%20Test-sdk-00A884.svg?logo=flutter) |
+| Linting | ![Flutter Lints](https://img.shields.io/badge/flutter__lints-%5E5.0.0-9B59B6.svg?logo=dart) |
+| Stars | ![Stars](https://img.shields.io/github/stars/VincentZyuApps/dart-flutter-demo?style=flat&logo=github&label=stars&labelColor=181717&color=FFD700) |
+| Last Commit | ![Last Commit](https://img.shields.io/github/last-commit/VincentZyuApps/dart-flutter-demo?logo=github&label=last%20commit&labelColor=181717&color=02569B) |
+| CI/CD | [![release](https://img.shields.io/github/v/release/VincentZyuApps/dart-flutter-demo?logo=github&label=发布&color=02569B&labelColor=181717)](https://github.com/VincentZyuApps/dart-flutter-demo/releases) · [![build](https://img.shields.io/github/actions/workflow/status/VincentZyuApps/dart-flutter-demo/build.yml?branch=main&logo=githubactions&label=构建)](https://github.com/VincentZyuApps/dart-flutter-demo/actions) |
