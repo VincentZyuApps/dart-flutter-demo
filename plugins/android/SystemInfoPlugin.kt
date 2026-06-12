@@ -130,7 +130,7 @@ class SystemInfoPlugin : FlutterPlugin, MethodCallHandler {
         val hours = totalSeconds / 3600
         val mins = (totalSeconds % 3600) / 60
         val secs = totalSeconds % 60
-        return String.format(Locale.US, "%02d:%02d:%02d", hours, mins, secs)
+        return "${hours}h ${mins}m ${secs}s"
     }
 
     private fun getCPU(): String {

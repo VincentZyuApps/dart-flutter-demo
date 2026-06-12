@@ -38,6 +38,14 @@ if count == 0:
     if count == 0:
         raise RuntimeError("Failed to set android:label in AndroidManifest.xml")
 
+if "android.permission.INTERNET" not in manifest:
+    manifest = re.sub(
+        r"(<manifest\b[^>]*>)",
+        r'\1\n    <uses-permission android:name="android.permission.INTERNET" />',
+        manifest,
+        count=1,
+    )
+
 manifest_path.write_text(manifest, encoding="utf-8")
 
 # Fix Maven Central 403: ensure google() is before mavenCentral() in settings.gradle.kts
