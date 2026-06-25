@@ -266,7 +266,7 @@ class _HomeShellState extends State<HomeShell> {
             SizedBox(width: 8),
             CircleAvatar(
               radius: 16,
-              backgroundImage: AssetImage('assets/images/mahiro-pfp-VincentZyu.jpg'),
+              backgroundImage: AssetImage('assets/images/mahiro-pfp-VincentZyuApps-square.png'),
             ),
           ],
         ),

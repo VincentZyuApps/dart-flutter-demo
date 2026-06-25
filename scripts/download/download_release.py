@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+# python ./download_release.py --proxy http://127.0.0.1:7890 --path X:\packs\dart-flutter-demo-showcase
 
 import argparse
 import hashlib

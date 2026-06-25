@@ -42,7 +42,7 @@ python download_release.py
 ```bash
 # 📂 Specify a custom download directory
 python download_release.py --path D:\downloads
-# python download_release.py --path X:\packs\dart-flutter-demo-showcase
+# python download_release.py --proxy http://127.0.0.1:7890 --path X:\packs\dart-flutter-demo-showcase
 ```
 
 ### ⌨️ Custom download path (interactive, default = current dir)

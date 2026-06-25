@@ -27,5 +27,6 @@ flutter:
   uses-material-design: true
   assets:
     - assets/images/mahiro-pfp-VincentZyu-square.png
+    - assets/images/mahiro-pfp-VincentZyuApps-square.png
     - assets/images/mahiro-pfp-VincentZyu.jpg
     - assets/images/logo-icon-favicon.png
