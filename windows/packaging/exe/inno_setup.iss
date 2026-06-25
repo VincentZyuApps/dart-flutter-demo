@@ -8,6 +8,7 @@ AppSupportURL={{PUBLISHER_URL}}
 AppUpdatesURL={{PUBLISHER_URL}}
 DefaultDirName={autopf}\{{DISPLAY_NAME}}
 DisableProgramGroupPage=yes
+UninstallDisplayIcon={app}\{{EXECUTABLE_NAME}}
 OutputDir=.
 OutputBaseFilename={{OUTPUT_BASE_FILENAME}}
 Compression=lzma

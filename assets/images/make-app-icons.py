@@ -59,6 +59,39 @@ MACOS_SIZES = {
 WINDOWS_SIZES = [16, 24, 32, 48, 64, 128, 256]
 LINUX_SIZES = [16, 32, 48, 64, 128, 256, 512]
 
+RESET = "\033[0m"
+BOLD = "\033[1m"
+DIM = "\033[2m"
+RED = "\033[31m"
+GREEN = "\033[32m"
+YELLOW = "\033[33m"
+BLUE = "\033[34m"
+MAGENTA = "\033[35m"
+CYAN = "\033[36m"
+
+
+def color(text: str, code: str) -> str:
+    return f"{code}{text}{RESET}"
+
+
+def banner(title: str) -> None:
+    line = "═" * 68
+    print(color(f"╔{line}╗", CYAN))
+    print(color(f"║ {title:<66} ║", CYAN))
+    print(color(f"╚{line}╝", CYAN))
+
+
+def section(title: str) -> None:
+    print(color(f"\n━━ {title} ━━", MAGENTA))
+
+
+def box(lines: list[str]) -> None:
+    width = max(len(line) for line in lines)
+    print(color(f"┌{'─' * (width + 2)}┐", BLUE))
+    for line in lines:
+        print(color(f"│ {line.ljust(width)} │", BLUE))
+    print(color(f"└{'─' * (width + 2)}┘", BLUE))
+
 
 def resize_square(image: Image.Image, size: int) -> Image.Image:
     return image.resize((size, size), Image.Resampling.LANCZOS)
@@ -161,58 +194,77 @@ def generate_linux(image: Image.Image, root: Path) -> None:
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Generate platform-specific app icons from a single PNG source."
+        description="从一个 PNG 源图生成各平台应用图标。"
     )
     parser.add_argument(
         "--source",
         type=Path,
         default=SOURCE_ICON,
-        help="Source square PNG icon. Defaults to assets/images/logo-icon-favicon.png",
+        help="源 PNG 图标。默认使用 assets/images/logo-icon-favicon.png",
     )
     parser.add_argument(
         "--output",
         type=Path,
         default=OUTPUT_ROOT,
-        help="Output directory for generated icon assets.",
+        help="生成图标的输出目录。",
     )
     args = parser.parse_args()
 
+    banner("应用图标生成器")
     source = args.source.resolve()
     output = args.output.resolve()
 
     if not source.exists():
-        raise SystemExit(f"Source icon not found: {source}")
+        box([color("错误：找不到源图标", RED), str(source)])
+        raise SystemExit(1)
 
     original = Image.open(source).convert("RGBA")
     crop_box = get_crop_box(original, margin_ratio=0.1)
     image = crop_center_square_with_margin(original, margin_ratio=0.1)
 
+    section("输入检查")
+    box(
+        [
+            color("源图标已找到", GREEN),
+            f"路径: {source}",
+            f"尺寸: {original.width}x{original.height}",
+            f"模式: {original.mode}",
+        ]
+    )
+
+    section("裁剪参数")
+    box(
+        [
+            "边距比例: 10%",
+            f"裁剪框: left={crop_box[0]}, top={crop_box[1]}, right={crop_box[2]}, bottom={crop_box[3]}",
+            f"裁剪后: {image.width}x{image.height}, mode={image.mode}",
+        ]
+    )
+
+    section("清理输出目录")
     ensure_clean_dir(output)
     shutil.copy2(source, output / source.name)
     image.save(output / "logo-icon-favicon.cropped.png")
+    print(color(f"已重置输出目录: {output}", GREEN))
 
+    section("生成平台资源")
     generate_android(image, output)
     generate_ios(image, output)
     generate_macos(image, output)
     generate_windows(image, output)
     generate_linux(image, output)
 
-    print(f"Source icon: {source}")
-    print(f"Source size: {original.width}x{original.height}, mode={original.mode}")
-    print(
-        "Crop box after 10% margin and centered max square: "
-        f"left={crop_box[0]}, top={crop_box[1]}, right={crop_box[2]}, bottom={crop_box[3]}"
+    box(
+        [
+            color("全部生成完成", GREEN),
+            f"android: {len(ANDROID_SIZES)} 张",
+            f"ios: {len(IOS_SIZES)} 张",
+            f"macos: {len(MACOS_SIZES)} 张",
+            "windows: 1 个 ico",
+            f"linux: {len(LINUX_SIZES) + 1} 张",
+        ]
     )
-    print(f"Cropped size: {image.width}x{image.height}, mode={image.mode}")
-    print(f"Output directory reset and regenerated: {output}")
-    print(
-        "Generated sets: "
-        f"android={len(ANDROID_SIZES)}, "
-        f"ios={len(IOS_SIZES)}, "
-        f"macos={len(MACOS_SIZES)}, "
-        f"windows=1, "
-        f"linux={len(LINUX_SIZES) + 1}"
-    )
+    print(color(f"输出目录: {output}", DIM))
 
 
 if __name__ == "__main__":

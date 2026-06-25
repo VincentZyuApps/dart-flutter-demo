@@ -33,6 +33,32 @@ Animated breakdowns of tracked code, script, doc, and build-config size by bytes
 
 ## 💬🪟 Dialogs
 
+### 🖼️ Desktop Icons
+
+<div align="center">
+<table>
+  <thead>
+    <tr>
+      <th align="center">Desktop Icon Preview</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td align="center"><img src="doc/preview-pics/desktop-icon.dock-taskbar-button.windows11.png" width="100%"/><br><sub>Windows 11 dock / taskbar</sub></td>
+    </tr>
+    <tr>
+      <td align="center"><img src="doc/preview-pics/desktop-icon.start-menu.debian13.kde.png" width="100%"/><br><sub>Debian 13 KDE start menu</sub></td>
+    </tr>
+    <tr>
+      <td align="center"><img src="doc/preview-pics/desktop-icon-widget.android14.png" width="100%"/><br><sub>Android 14 widget</sub></td>
+    </tr>
+    <tr>
+      <td align="center"><img src="doc/preview-pics/desktop-icon.altserver.self-sign.sideloaded.ios17.png" width="100%"/><br><sub>iOS 17 sideloaded</sub></td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
 ### ℹ️ About
 
 An app information dialog that displays app name, version, build number, publisher, and related links. Accessible from the AppBar menu.<br>
@@ -115,6 +141,31 @@ A compact lab for interactive controls and user feedback. Includes radios, check
 Source: [lib/pages/page4_controls_feedback.dart](https://github.com/VincentZyu233/dart-flutter-demo/blob/main/lib/pages/page4_controls_feedback.dart)
 ![page4](doc/preview-pics/page4.controls-schema-feedback.png)
 
+## 📁 File Structure
+
+The `lib/` directory is organized by entry, app shell, feature pages, shared widgets, and service/model helpers:
+
+| File | Purpose |
+|---|---|
+| `lib/main.dart` | App entry point; boots `FlutterShowcaseApp`. |
+| `lib/app.dart` | App shell, theme switching, navigation, about/guide dialogs, and page switching. |
+| `lib/models/mock_data.dart` | Small random-data helpers for demo content. |
+| `lib/models/page3_enums.dart` | Enums and density helpers used by the GitHub grid page. |
+| `lib/pages/page0_system_info.dart` | System info showcase page. |
+| `lib/pages/page1_dialog_lab.dart` | Dialog comparison and interaction demo page. |
+| `lib/pages/page2_typography_studio.dart` | Typography playground page. |
+| `lib/pages/page3_adaptive_grid.dart` | Adaptive GitHub repository browser page. |
+| `lib/pages/page4_controls_feedback.dart` | Controls and feedback component lab. |
+| `lib/services/android_home_widget_service.dart` | Android home-widget sync bridge. |
+| `lib/services/app_performance.dart` | FPS tracking and rebuild count helpers. |
+| `lib/services/github_repository_service.dart` | GitHub repository parsing, fetching, and data models. |
+| `lib/services/system_info_service.dart` | Cross-platform system info collection, debug snapshot, copy/export helpers. |
+| `lib/widgets/animated_page.dart` | Page transitions and staggered animation wrappers. |
+| `lib/widgets/repository_card.dart` | Grid-style repository card widget. |
+| `lib/widgets/repository_list_tile.dart` | List-style repository row widget. |
+| `lib/widgets/state_shell.dart` | Shared empty/loading/error state layout. |
+| `lib/widgets/tag.dart` | Small pill/tag display widget. |
+
 
 ## ⚙️🚀 CI/CD
 
@@ -130,8 +181,9 @@ GitHub Actions handles automated builds and packaging. Push a commit containing 
   2. Connect iPad via USB → tray icon → Install AltStore → select your iPad
   3. Enter your Apple ID (used only for signing, not stored)
   4. On iPad: **Settings → General → VPN & Device Management → trust your Apple ID certificate**
-  5. Open AltStore → **+** → select the `.ipa` file
-  6. Free accounts need **re-signing every 7 days** (AltStore prompts automatically; keep AltServer running on your PC/iPad on same WiFi)
+   5. Open AltStore → **+** → select the `.ipa` file
+   6. Make sure to **turn off any proxy / VPN software** (e.g. Shadowrocket, Clash, etc.), then open the app
+   7. Free accounts need **re-signing every 7 days** (AltStore prompts automatically; keep AltServer running on your PC/iPad on same WiFi)
 
 ## 📦 Dependencies
 

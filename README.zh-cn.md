@@ -33,6 +33,32 @@
 
 ## 💬🪟 对话框
 
+### 🖼️ 桌面图标
+
+<div align="center">
+<table>
+  <thead>
+    <tr>
+      <th align="center">桌面图标预览</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td align="center"><img src="doc/preview-pics/desktop-icon.dock-taskbar-button.windows11.png" width="100%"/><br><sub>Windows 11 dock / 任务栏</sub></td>
+    </tr>
+    <tr>
+      <td align="center"><img src="doc/preview-pics/desktop-icon.start-menu.debian13.kde.png" width="100%"/><br><sub>Debian 13 KDE 开始菜单</sub></td>
+    </tr>
+    <tr>
+      <td align="center"><img src="doc/preview-pics/desktop-icon-widget.android14.png" width="100%"/><br><sub>Android 14 桌面小组件</sub></td>
+    </tr>
+    <tr>
+      <td align="center"><img src="doc/preview-pics/desktop-icon.altserver.self-sign.sideloaded.ios17.png" width="100%"/><br><sub>iOS 17 侧载</sub></td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
 ### ℹ️ 关于
 
 显示应用名称、版本号、构建号、发布方及相关链接的应用信息对话框。从 AppBar 菜单中打开。<br>
@@ -115,6 +141,31 @@
 源码： [lib/pages/page4_controls_feedback.dart](https://github.com/VincentZyu233/dart-flutter-demo/blob/main/lib/pages/page4_controls_feedback.dart)
 ![page4](doc/preview-pics/page4.controls-schema-feedback.png)
 
+## 📁 文件结构
+
+`lib/` 目录按入口、应用壳、页面、通用组件、服务和模型做了分层：
+
+| 文件 | 作用 |
+|---|---|
+| `lib/main.dart` | 程序入口，启动 `FlutterShowcaseApp`。 |
+| `lib/app.dart` | 应用壳、主题切换、导航、关于/引导弹窗和页面切换。 |
+| `lib/models/mock_data.dart` | 演示用随机数据生成工具。 |
+| `lib/models/page3_enums.dart` | GitHub 网格页使用的枚举和密度辅助。 |
+| `lib/pages/page0_system_info.dart` | 系统信息展示页。 |
+| `lib/pages/page1_dialog_lab.dart` | 对话框对比与交互演示页。 |
+| `lib/pages/page2_typography_studio.dart` | 字体排版实验页。 |
+| `lib/pages/page3_adaptive_grid.dart` | 自适应 GitHub 仓库浏览页。 |
+| `lib/pages/page4_controls_feedback.dart` | 控件与反馈组件实验页。 |
+| `lib/services/android_home_widget_service.dart` | Android 桌面小组件同步桥接。 |
+| `lib/services/app_performance.dart` | FPS 和重建次数统计辅助。 |
+| `lib/services/github_repository_service.dart` | GitHub 仓库解析、抓取和数据模型。 |
+| `lib/services/system_info_service.dart` | 跨平台系统信息采集、调试快照、复制/导出辅助。 |
+| `lib/widgets/animated_page.dart` | 页面切换和层级动画封装。 |
+| `lib/widgets/repository_card.dart` | 网格样式的仓库卡片。 |
+| `lib/widgets/repository_list_tile.dart` | 列表样式的仓库条目。 |
+| `lib/widgets/state_shell.dart` | 通用的空态/加载态/错误态布局。 |
+| `lib/widgets/tag.dart` | 小型标签胶囊组件。 |
+
 
 ## ⚙️🚀 CI/CD
 
@@ -130,8 +181,9 @@ GitHub Actions 负责自动构建与打包。提交信息包含 `build action` �
   2. iPad 用 USB 连电脑 → 托盘图标 → Install AltStore → 选择你的 iPad
   3. 输入 Apple ID（仅用于签名，不会存储）
   4. iPad 上：**设置 → 通用 → VPN 与设备管理 → 信任你的 Apple ID 证书**
-  5. 打开 AltStore → 点 **+** → 选择 `.ipa` 文件
-  6. 免费账号每 **7 天**需要刷新签名（AltStore 会自动提示，电脑保持 AltServer 运行或 iPad 与电脑同 WiFi）
+   5. 打开 AltStore → 点 **+** → 选择 `.ipa` 文件
+   6. 确保**关掉所有代理软件 / VPN**（如 Shadowrocket、Clash 等），然后打开 app
+   7. 免费账号每 **7 天**需要刷新签名（AltStore 会自动提示，电脑保持 AltServer 运行或 iPad 与电脑同 WiFi）
 
 ## 📦 依赖项
 

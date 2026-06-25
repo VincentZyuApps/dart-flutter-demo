@@ -163,9 +163,11 @@ class _HomeShellState extends State<HomeShell> {
                     return UserAccountsDrawerHeader(
                       accountName: Text(appName),
                       accountEmail: Text(version),
-                      currentAccountPicture: const CircleAvatar(
-                        backgroundImage: AssetImage(
-                          'assets/images/mahiro-pfp-VincentZyu-square.png',
+                      currentAccountPicture: const ClipRRect(
+                        borderRadius: BorderRadius.all(Radius.circular(16)),
+                        child: Image(
+                          image: AssetImage('assets/images/logo-icon-favicon.png'),
+                          fit: BoxFit.cover,
                         ),
                       ),
                     );
@@ -241,13 +243,32 @@ class _HomeShellState extends State<HomeShell> {
       context: context,
       applicationName: 'Dart + Flutter Demo',
       applicationVersion: '${info.version}+${info.buildNumber}',
-      applicationIcon: const CircleAvatar(
-        radius: 24,
-        backgroundImage: AssetImage('assets/images/mahiro-pfp-VincentZyu-square.png'),
+      applicationIcon: const ClipRRect(
+        borderRadius: BorderRadius.all(Radius.circular(8)),
+        child: Image(
+          image: AssetImage('assets/images/logo-icon-favicon.png'),
+          width: 48,
+          height: 48,
+          fit: BoxFit.cover,
+        ),
       ),
       children: [
         const Text(
           'A proof-of-concept app for testing Flutter UI, motion, layout, and cross-platform consistency.',
+        ),
+        const SizedBox(height: 8),
+        const Row(
+          children: [
+            CircleAvatar(
+              radius: 16,
+              backgroundImage: AssetImage('assets/images/mahiro-pfp-VincentZyu-square.png'),
+            ),
+            SizedBox(width: 8),
+            CircleAvatar(
+              radius: 16,
+              backgroundImage: AssetImage('assets/images/mahiro-pfp-VincentZyu.jpg'),
+            ),
+          ],
         ),
         const SizedBox(height: 8),
         InkWell(
