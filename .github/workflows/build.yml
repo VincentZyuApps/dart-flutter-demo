@@ -248,7 +248,7 @@ jobs:
         if: matrix.platform == 'macos-x64' || matrix.platform == 'macos-arm64'
         run: flutter build macos --release
 
-      - name: Package macOS DMG
+      - name: Package macOS DMG and ZIP
         if: matrix.platform == 'macos-x64' || matrix.platform == 'macos-arm64'
         shell: bash
         run: |
@@ -257,9 +257,13 @@ jobs:
           APP_NAME="dart_flutter_demo"
           APP_PATH="build/macos/Build/Products/Release/${APP_NAME}.app"
           STAGING_DIR="build/macos/dmg-staging"
-          DMG_NAME="${{ matrix.artifact_name }}"
+          ARTIFACT_NAME="${{ matrix.artifact_name }}"
 
           test -d "$APP_PATH"
+
+          ditto -c -k --sequesterRsrc --keepParent \
+            "$APP_PATH" \
+            "build/macos/${ARTIFACT_NAME}.zip"
 
           # Detach any previously mounted DMG volumes
           hdiutil detach "/Volumes/Dart + Flutter Demo" -quiet 2>/dev/null || true
@@ -277,7 +281,7 @@ jobs:
               -ov \
               -fs HFS+ \
               -format UDZO \
-              "build/macos/${DMG_NAME}.dmg"; then
+              "build/macos/${ARTIFACT_NAME}.dmg"; then
               break
             fi
             echo "hdiutil failed (attempt $i), retrying in 5s..."
@@ -364,7 +368,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact_name }}
-          path: build/macos/${{ matrix.artifact_name }}.dmg
+          path: |
+            build/macos/${{ matrix.artifact_name }}.dmg
+            build/macos/${{ matrix.artifact_name }}.zip
           retention-days: 7
 
       - name: Upload Android artifact
@@ -434,13 +440,17 @@ jobs:
             esac
           done
 
-          # macOS x64: keep the DMG produced in the build job
+          # macOS x64: keep the DMG and ZIP produced in the build job
           cp artifacts/dart-flutter-demo-macos-x64/dart-flutter-demo-macos-x64.dmg \
              "artifacts/dart-flutter-demo-macos-x64-v${VERSION}.dmg"
+          cp artifacts/dart-flutter-demo-macos-x64/dart-flutter-demo-macos-x64.zip \
+             "artifacts/dart-flutter-demo-macos-x64-v${VERSION}.zip"
 
-          # macOS ARM64: keep the DMG produced in the build job
+          # macOS ARM64: keep the DMG and ZIP produced in the build job
           cp artifacts/dart-flutter-demo-macos-arm64/dart-flutter-demo-macos-arm64.dmg \
              "artifacts/dart-flutter-demo-macos-arm64-v${VERSION}.dmg"
+          cp artifacts/dart-flutter-demo-macos-arm64/dart-flutter-demo-macos-arm64.zip \
+             "artifacts/dart-flutter-demo-macos-arm64-v${VERSION}.zip"
 
           # Android: rename the APK
           ls -lah artifacts/dart-flutter-demo-android/
@@ -508,7 +518,9 @@ jobs:
             artifacts/dart-flutter-demo-linux-x64-v*.AppImage
             artifacts/dart-flutter-demo-linux-x64-v*.deb
             artifacts/dart-flutter-demo-macos-x64-v*.dmg
+            artifacts/dart-flutter-demo-macos-x64-v*.zip
             artifacts/dart-flutter-demo-macos-arm64-v*.dmg
+            artifacts/dart-flutter-demo-macos-arm64-v*.zip
             artifacts/dart-flutter-demo-android-universal-v*.apk
             artifacts/dart-flutter-demo-android-arm64-v*.apk
             artifacts/dart-flutter-demo-android-x86_64-v*.apk

@@ -95,8 +95,8 @@ flowchart LR
 |------|--------|----------|
 | `windows-x64` | `windows-latest` | runner 目录压缩包 + setup exe |
 | `linux-x64` | `ubuntu-22.04` | Linux bundle + `.deb` + `.AppImage` |
-| `macos-x64` | `macos-15-intel` | DMG |
-| `macos-arm64` | `macos-latest` | DMG |
+| `macos-x64` | `macos-15-intel` | DMG + ZIP |
+| `macos-arm64` | `macos-latest` | DMG + ZIP |
 | `android-multiarch` | `ubuntu-latest` | universal APK + split APK |
 | `ios-arm64` | `macos-latest` | 未签名 IPA |
 
@@ -115,7 +115,7 @@ flowchart LR
 
 - Windows 会复制原生 C++ 系统信息源码，patch `windows/runner/CMakeLists.txt`，构建应用，然后打包 Inno Setup 安装器。
 - Linux 会安装打包依赖，生成 Linux runner，并通过 `flutter_distributor` 构建 `.deb` 和 `.AppImage`。
-- macOS 会复制 `SystemInfoPlugin.swift`，patch runner，构建两个 DMG，并在卷占用时重试 `hdiutil`。
+- macOS 会复制 `SystemInfoPlugin.swift`，patch runner，构建两个 DMG 和两个 ZIP，并在卷占用时重试 `hdiutil`。
 - Android 会复制 `SystemInfoPlugin.kt`，patch `MainActivity.kt`，构建 universal 和 split-per-ABI APK，然后校验输出文件存在。
 - iOS 会复制 `SystemInfoPlugin.swift`，patch 生成的 runner，在不签名的情况下构建，并手动把 `Runner.app` 打成 IPA。
 
@@ -142,7 +142,7 @@ flowchart LR
 | Windows 安装器 | `dart-flutter-demo-windows-x64-v<version>-setup.exe` |
 | Linux tarball | `dart-flutter-demo-linux-x64-v<version>.tar.gz` |
 | Linux 包 | `dart-flutter-demo-linux-x64-v<version>.deb` / `.AppImage` |
-| macOS DMG | `dart-flutter-demo-macos-<arch>-v<version>.dmg` |
+| macOS 包 | `dart-flutter-demo-macos-<arch>-v<version>.dmg` / `.zip` |
 | Android APK | `dart-flutter-demo-android-<flavor>-v<version>.apk` |
 | iOS IPA | `dart-flutter-demo-ios-arm64-v<version>.ipa` |
 

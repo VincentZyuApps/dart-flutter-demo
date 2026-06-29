@@ -95,8 +95,8 @@ The build job runs only when `needs.check-commit.outputs.should_build == 'true'`
 |----------|--------|-------------|
 | `windows-x64` | `windows-latest` | zipped runner directory + setup exe |
 | `linux-x64` | `ubuntu-22.04` | Linux bundle + `.deb` + `.AppImage` |
-| `macos-x64` | `macos-15-intel` | DMG |
-| `macos-arm64` | `macos-latest` | DMG |
+| `macos-x64` | `macos-15-intel` | DMG + ZIP |
+| `macos-arm64` | `macos-latest` | DMG + ZIP |
 | `android-multiarch` | `ubuntu-latest` | universal APK + split APKs |
 | `ios-arm64` | `macos-latest` | unsigned IPA |
 
@@ -115,7 +115,7 @@ The build job runs only when `needs.check-commit.outputs.should_build == 'true'`
 
 - Windows copies the native C++ system info source, patches `windows/runner/CMakeLists.txt`, builds the app, then packages an Inno Setup installer.
 - Linux installs packaging dependencies, generates the Linux runner, and uses `flutter_distributor` to build `.deb` and `.AppImage`.
-- macOS copies `SystemInfoPlugin.swift`, patches the runner, builds two DMGs, and retries `hdiutil` when the volume is busy.
+- macOS copies `SystemInfoPlugin.swift`, patches the runner, builds two DMGs and two ZIP archives, and retries `hdiutil` when the volume is busy.
 - Android copies `SystemInfoPlugin.kt`, patches `MainActivity.kt`, builds universal and split-per-ABI APKs, then verifies the outputs exist.
 - iOS copies `SystemInfoPlugin.swift`, patches the generated runner, builds without codesign, and zips `Runner.app` into an IPA manually.
 
@@ -142,7 +142,7 @@ The build job runs only when `needs.check-commit.outputs.should_build == 'true'`
 | Windows installer | `dart-flutter-demo-windows-x64-v<version>-setup.exe` |
 | Linux tarball | `dart-flutter-demo-linux-x64-v<version>.tar.gz` |
 | Linux packages | `dart-flutter-demo-linux-x64-v<version>.deb` / `.AppImage` |
-| macOS DMG | `dart-flutter-demo-macos-<arch>-v<version>.dmg` |
+| macOS packages | `dart-flutter-demo-macos-<arch>-v<version>.dmg` / `.zip` |
 | Android APK | `dart-flutter-demo-android-<flavor>-v<version>.apk` |
 | iOS IPA | `dart-flutter-demo-ios-arm64-v<version>.ipa` |
 

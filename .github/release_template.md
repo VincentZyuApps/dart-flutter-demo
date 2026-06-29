@@ -11,7 +11,7 @@
 |-----------|--------|-------|-----------|
 | **Windows** | [![windows-x64-setup-exe](https://img.shields.io/badge/windows-x64.setup.exe-0078D4.svg?logo=data:image/svg%2bxml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZD0iTTAgMGgxMS4zNzd2MTEuMzcySDB6TTEyLjYyMyAwSDI0djExLjM3MkgxMi42MjN6TTAgMTIuNjIzaDExLjM3N1YyNEgweiBNMTIuNjIzIDEyLjYyM0gyNFYyNEgxMi42MjN6IiBmaWxsPSIjZmZmIi8+PC9zdmc+)](__BASE_URL__/dart-flutter-demo-windows-x64-v__VERSION__-setup.exe) · [![windows-x64-portable-zip](https://img.shields.io/badge/windows-x64.portable.zip-67b7d1.svg?logo=data:image/svg%2bxml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZD0iTTAgMGgxMS4zNzd2MTEuMzcySDB6TTEyLjYyMyAwSDI0djExLjM3MkgxMi42MjN6TTAgMTIuNjIzaDExLjM3N1YyNEgweiBNMTIuNjIzIDEyLjYyM0gyNFYyNEgxMi42MjN6IiBmaWxsPSIjZmZmIi8+PC9zdmc+)](__BASE_URL__/dart-flutter-demo-windows-x64-v__VERSION__.zip) | *none yet* | *none yet* |
 | **Linux** | [![linux-x64-appimage](https://img.shields.io/badge/linux-x64.AppImage-FCC624.svg?logo=linux)](__BASE_URL__/dart-flutter-demo-linux-x64-v__VERSION__.AppImage) · [![linux-x64-deb](https://img.shields.io/badge/linux-x64.deb-CE0056.svg?logo=debian)](__BASE_URL__/dart-flutter-demo-linux-x64-v__VERSION__.deb) · [![linux-x64-tar-gz](https://img.shields.io/badge/linux-x64.tar.gz-2E3440.svg?logo=linux)](__BASE_URL__/dart-flutter-demo-linux-x64-v__VERSION__.tar.gz) | *none yet* | *none yet* |
-| **macOS** | [![macos-x64](https://img.shields.io/badge/macOS-x64.dmg-8E8E93.svg?logo=apple)](__BASE_URL__/dart-flutter-demo-macos-x64-v__VERSION__.dmg) | [![macos-arm64](https://img.shields.io/badge/macOS-ARM64.dmg-8E8E93.svg?logo=apple)](__BASE_URL__/dart-flutter-demo-macos-arm64-v__VERSION__.dmg) | *none yet* |
+| **macOS** | [![macos-x64-dmg](https://img.shields.io/badge/macOS-x64.dmg-8E8E93.svg?logo=apple)](__BASE_URL__/dart-flutter-demo-macos-x64-v__VERSION__.dmg) · [![macos-x64-zip](https://img.shields.io/badge/macOS-x64.zip-4A4A4F.svg?logo=apple)](__BASE_URL__/dart-flutter-demo-macos-x64-v__VERSION__.zip) | [![macos-arm64-dmg](https://img.shields.io/badge/macOS-ARM64.dmg-8E8E93.svg?logo=apple)](__BASE_URL__/dart-flutter-demo-macos-arm64-v__VERSION__.dmg) · [![macos-arm64-zip](https://img.shields.io/badge/macOS-ARM64.zip-4A4A4F.svg?logo=apple)](__BASE_URL__/dart-flutter-demo-macos-arm64-v__VERSION__.zip) | *none yet* |
 | **Android** | [![android-x64](https://img.shields.io/badge/android-x64.apk-8FE388.svg?logo=android)](__BASE_URL__/dart-flutter-demo-android-x86_64-v__VERSION__.apk) | [![android-arm64](https://img.shields.io/badge/android-ARM64.apk-168039.svg?logo=android)](__BASE_URL__/dart-flutter-demo-android-arm64-v__VERSION__.apk) | [![android-universal](https://img.shields.io/badge/android-universal.apk-3DDC84.svg?logo=android)](__BASE_URL__/dart-flutter-demo-android-universal-v__VERSION__.apk) |
 | **iOS** | *none yet* | [![ios-arm64](https://img.shields.io/badge/iOS-ARM64.ipa-000000.svg?logo=apple)](__BASE_URL__/dart-flutter-demo-ios-arm64-v__VERSION__.ipa) | *none yet* |
 
@@ -24,6 +24,14 @@
 > ⚠️ **Android**: APKs are not signed with a persistent keystore, so you must uninstall the previous version before installing a new one to avoid signature conflicts.
 >
 > ⚠️ **iOS**: The IPA is not code-signed for personal devices. To install it on your own iPhone or iPad, self-sign it first. You can use self-signing tools such as AltStore/AltServer or other solutions. For example, see the self-signing guide in the [Troubleshooting section](https://github.com/VincentZyuApps/dart-flutter-demo#%EF%B8%8F-troubleshooting) of the README.
+
+### 📋 构建类型
+
+| 类型 | 下载 | JIT | AOT | 压缩 | 调试符号 | 体积 | 适用场景 |
+|:-----|:----:|:---:|:---:|:----:|:--------:|:----:|:---------|
+| **Debug** | [![debug](https://img.shields.io/badge/debug-2E3440)](__BASE_URL__/dart-flutter-demo-windows-x64-v__VERSION__-setup.exe) | ✅ | ❌ | ❌ | ✅ | ~100MB | 开发调试 |
+| **Profile** | [![profile](https://img.shields.io/badge/profile-FCC624)](__BASE_URL__/dart-flutter-demo-windows-x64-v__VERSION__-setup.exe) | ❌ | ✅ | ✅ | ❌ | ~20MB | 性能分析 |
+| **Release** | [![release](https://img.shields.io/badge/release-0078D4)](__BASE_URL__/dart-flutter-demo-windows-x64-v__VERSION__-setup.exe) | ❌ | ✅ | ✅ | ❌ | ~10MB | 生产发布 |
 
 ### 📄 Git Infomation
 
