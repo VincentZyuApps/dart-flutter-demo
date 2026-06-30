@@ -9,7 +9,7 @@
 uv venv
 
 # ⬇️ Install dependencies
-uv pip install "fonttools[woff2]"
+uv pip install "fonttools[woff2]" brotli
 ```
 
 ## 🚀 Usage
@@ -26,7 +26,7 @@ uv run python ./scripts/svg/generate_lang_byte_stats.py
 
 ## 🖼️ Output
 
-📄 Outputs are written to `doc/`:
+📄 Outputs are written to `doc/images/svg/`:
 
-- 📈 `doc/lang-line-stats.svg`
-- 📊 `doc/lang-byte-stats.svg`
+- 📈 `doc/images/svg/lang-line-stats.svg`
+- 📊 `doc/images/svg/lang-byte-stats.svg`

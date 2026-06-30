@@ -106,7 +106,7 @@ The build job runs only when `needs.check-commit.outputs.should_build == 'true'`
 2. Setup Flutter `3.41.5`.
 3. Run `flutter doctor -v`.
 4. Generate Apple and Windows platform projects with `flutter create`.
-5. Apply committed icons with `scripts/apply-icons.py`.
+5. Apply committed icons with `scripts/ci/apply-icons.py`.
 6. Copy native platform plugin sources from `plugins/`.
 7. Run `flutter pub get`.
 8. Run `flutter analyze --no-pub || true`.

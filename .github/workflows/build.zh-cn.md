@@ -106,7 +106,7 @@ flowchart LR
 2. 安装 Flutter `3.41.5`。
 3. 运行 `flutter doctor -v`。
 4. 用 `flutter create` 生成 Apple 和 Windows 平台工程。
-5. 用 `scripts/apply-icons.py` 应用已提交的图标。
+5. 用 `scripts/ci/apply-icons.py` 应用已提交的图标。
 6. 从 `plugins/` 复制原生平台插件源码。
 7. 运行 `flutter pub get`。
 8. 运行 `flutter analyze --no-pub || true`。

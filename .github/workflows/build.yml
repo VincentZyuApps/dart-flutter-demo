@@ -126,7 +126,7 @@ jobs:
         run: flutter create --project-name dart_flutter_demo --platforms=windows,macos,android,ios .
 
       - name: Apply committed app icons
-        run: python scripts/apply-icons.py ${{ matrix.platform }}
+        run: python scripts/ci/apply-icons.py ${{ matrix.platform }}
 
       - name: Copy platform plugins
         shell: bash
@@ -200,7 +200,7 @@ jobs:
         shell: bash
         run: |
           VERSION="${{ needs.check-commit.outputs.version }}"
-          python scripts/render-iss.py "$VERSION"
+          python scripts/ci/render-iss.py "$VERSION"
           ISCC="/c/Program Files (x86)/Inno Setup 6/ISCC.exe"
           "$ISCC" dist/dart-flutter-demo-setup.iss
           mv dist/dart-flutter-demo-setup.exe "dist/dart-flutter-demo-windows-x64-v${VERSION}-setup.exe"

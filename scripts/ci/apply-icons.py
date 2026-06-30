@@ -2,7 +2,7 @@ import os
 import shutil
 import sys
 
-REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 GENERATED_ICONS = os.path.join(REPO_ROOT, "assets", "generated-icons")
 
 

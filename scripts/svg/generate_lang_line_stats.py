@@ -7,12 +7,22 @@ import base64
 import io
 import subprocess
 from collections import defaultdict
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timedelta, timezone
 from html import escape
 from pathlib import Path
 
+try:
+    import brotli  # noqa: F401
+    from fontTools.subset import Subsetter
+    from fontTools.ttLib import TTFont
+except ImportError as exc:
+    raise SystemExit(
+        "Missing SVG font embedding dependency. "
+        'Install dependencies with: uv pip install "fonttools[woff2]" brotli'
+    ) from exc
+
 ROOT = Path(__file__).resolve().parent.parent.parent
-OUTPUT = ROOT / "doc" / "lang-line-stats.svg"
+OUTPUT = ROOT / "doc" / "images" / "svg" / "lang-line-stats.svg"
 FONT_PATH = ROOT / "assets" / "fonts" / "LXGWWenKaiMono-Regular.ttf"
 
 LANGUAGE_BY_SUFFIX = {
@@ -47,7 +57,7 @@ LANG_COLORS = {
 IGNORE_PARTS = {
     ".git",
     "assets/generated-icons",
-    "doc/preview-pics",
+    "doc/images/preview",
     "tmp",
     "build",
     "dist",
@@ -119,13 +129,6 @@ def get_commit_info() -> str:
 
 def build_font_face_css() -> str:
     if not FONT_PATH.exists():
-        return ""
-
-    try:
-        from fontTools.subset import Subsetter
-        from fontTools.ttLib import TTFont
-    except ImportError:
-        print("fontTools not installed; using fallback fonts only.")
         return ""
 
     text = (
@@ -276,3 +279,5 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
+

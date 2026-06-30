@@ -25,14 +25,6 @@
 >
 > ⚠️ **iOS**: The IPA is not code-signed for personal devices. To install it on your own iPhone or iPad, self-sign it first. You can use self-signing tools such as AltStore/AltServer or other solutions. For example, see the self-signing guide in the [Troubleshooting section](https://github.com/VincentZyuApps/dart-flutter-demo#%EF%B8%8F-troubleshooting) of the README.
 
-### 📋 构建类型
-
-| 类型 | 下载 | JIT | AOT | 压缩 | 调试符号 | 体积 | 适用场景 |
-|:-----|:----:|:---:|:---:|:----:|:--------:|:----:|:---------|
-| **Debug** | [![debug](https://img.shields.io/badge/debug-2E3440)](__BASE_URL__/dart-flutter-demo-windows-x64-v__VERSION__-setup.exe) | ✅ | ❌ | ❌ | ✅ | ~100MB | 开发调试 |
-| **Profile** | [![profile](https://img.shields.io/badge/profile-FCC624)](__BASE_URL__/dart-flutter-demo-windows-x64-v__VERSION__-setup.exe) | ❌ | ✅ | ✅ | ❌ | ~20MB | 性能分析 |
-| **Release** | [![release](https://img.shields.io/badge/release-0078D4)](__BASE_URL__/dart-flutter-demo-windows-x64-v__VERSION__-setup.exe) | ❌ | ✅ | ✅ | ❌ | ~10MB | 生产发布 |
-
 ### 📄 Git Infomation
 
 __BUILD_INFO__

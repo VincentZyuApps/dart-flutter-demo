@@ -5,7 +5,7 @@
 [![Gitee](https://img.shields.io/badge/Gitee-C71D23?style=for-the-badge&logo=gitee&logoColor=white)](https://gitee.com/vincent-zyu/dart-flutter-demo)
 
 ![dart-flutter-demo](https://socialify.git.ci/VincentZyuApps/dart-flutter-demo/image?description=1&font=Bitter&forks=1&issues=1&language=1&logo=https%3A%2F%2Fupload.wikimedia.org%2Fwikipedia%2Fcommons%2Fthumb%2F7%2F79%2FFlutter_logo.svg%2F120px-Flutter_logo.svg.png%3Futm_source%3Dcommons.wikimedia.org%26utm_campaign%3Dindex%26utm_content%3Dthumbnail%26_%3D20230821075714&name=1&owner=1&pulls=1&stargazers=1&theme=Auto)
-![onefetch](doc/preview-pics/onefetch.png)
+![onefetch](doc/images/preview/onefetch.png)
 
 # ✨ dart_flutter_demo
 
@@ -28,8 +28,8 @@ A cross-platform Flutter UI showcase PoC (Proof of Concept) app, available on An
 ## 📊🧬 Language Footprint
 
 Animated breakdowns of tracked code, script, doc, and build-config size by bytes and by lines.<br>
-![lang-byte-stats](doc/lang-byte-stats.svg)
-![lang-line-stats](doc/lang-line-stats.svg)
+![lang-byte-stats](doc/images/svg/lang-byte-stats.svg)
+![lang-line-stats](doc/images/svg/lang-line-stats.svg)
 
 ## 💬🪟 Dialogs
 
@@ -44,16 +44,16 @@ Animated breakdowns of tracked code, script, doc, and build-config size by bytes
   </thead>
   <tbody>
     <tr>
-      <td align="center"><img src="doc/preview-pics/desktop-icon.dock-taskbar-button.windows11.png" width="100%"/><br><sub>Windows 11 dock / taskbar</sub></td>
+      <td align="center"><img src="doc/images/preview/desktop-icon.start-menu.dock-taskbar-button.windows11.png" width="100%"/><br><sub>Windows 11 dock / taskbar</sub></td>
     </tr>
     <tr>
-      <td align="center"><img src="doc/preview-pics/desktop-icon.start-menu.debian13.kde.png" width="100%"/><br><sub>Debian 13 KDE start menu</sub></td>
+      <td align="center"><img src="doc/images/preview/desktop-icon.start-menu.debian13.kde.png" width="100%"/><br><sub>Debian 13 KDE start menu</sub></td>
     </tr>
     <tr>
-      <td align="center"><img src="doc/preview-pics/desktop-icon-widget.android14.png" width="100%"/><br><sub>Android 14 widget</sub></td>
+      <td align="center"><img src="doc/images/preview/desktop-icon-widget.android14.png" width="100%"/><br><sub>Android 14 widget</sub></td>
     </tr>
     <tr>
-      <td align="center"><img src="doc/preview-pics/desktop-icon.altserver.self-sign.sideloaded.ios17.png" width="100%"/><br><sub>iOS 17 sideloaded</sub></td>
+      <td align="center"><img src="doc/images/preview/desktop-icon.altserver.self-sign.sideloaded.ios17.png" width="100%"/><br><sub>iOS 17 sideloaded</sub></td>
     </tr>
   </tbody>
 </table>
@@ -62,12 +62,12 @@ Animated breakdowns of tracked code, script, doc, and build-config size by bytes
 ### ℹ️ About
 
 An app information dialog that displays app name, version, build number, publisher, and related links. Accessible from the AppBar menu.<br>
-![about](doc/preview-pics/side1.about.png)
+![about](doc/images/preview/side1.about.png)
 
 ### 📘 Getting Started Guide
 
 A step-by-step walkthrough dialog showing the app's download channels, build options, and recommended development setup. Accessible from the AppBar menu.<br>
-![guide](doc/preview-pics/side1.guide.png)
+![guide](doc/images/preview/side1.guide.png)
 
 ## 🧩📱 Pages
 
@@ -86,32 +86,32 @@ Source: [lib/pages/page0_system_info.dart](https://github.com/VincentZyu233/dart
   </thead>
   <tbody>
     <tr>
-      <td align="center"><sub>Windows 11</sub><br><img src="doc/preview-pics/page0.windows11.png" width="100%"/></td>
-      <td align="center"><sub>Windows 11</sub><br><img src="doc/preview-pics/fastfetch.windows11.png" width="100%"/></td>
+      <td align="center"><sub>Windows 11</sub><br><img src="doc/images/preview/page0.windows11.png" width="100%"/></td>
+      <td align="center"><sub>Windows 11</sub><br><img src="doc/images/preview/fastfetch.windows11.png" width="100%"/></td>
     </tr>
     <tr>
-      <td align="center"><sub>Windows 10 WSL Arch Linux</sub><br><img src="doc/preview-pics/page0.windows10.wsl.arch-linux.png" width="100%"/></td>
-      <td align="center"><sub>Windows 10 WSL Arch Linux</sub><br><img src="doc/preview-pics/fastfetch.windows10.wsl.arch-linux.png" width="100%"/></td>
+      <td align="center"><sub>Windows 10 WSL Arch Linux</sub><br><img src="doc/images/preview/page0.windows10.wsl.arch-linux.png" width="100%"/></td>
+      <td align="center"><sub>Windows 10 WSL Arch Linux</sub><br><img src="doc/images/preview/fastfetch.windows10.wsl.arch-linux.png" width="100%"/></td>
     </tr>
     <tr>
-      <td align="center"><sub>Ubuntu 24.04 LXQt</sub><br><img src="doc/preview-pics/page0.ubuntu24.lxqt.png" width="100%"/></td>
-      <td align="center"><sub>Ubuntu 24.04 LXQt</sub><br><img src="doc/preview-pics/fastfetch.ubuntu24.lxqt.png" width="100%"/></td>
+      <td align="center"><sub>Ubuntu 24.04 LXQt</sub><br><img src="doc/images/preview/page0.ubuntu24.lxqt.png" width="100%"/></td>
+      <td align="center"><sub>Ubuntu 24.04 LXQt</sub><br><img src="doc/images/preview/fastfetch.ubuntu24.lxqt.png" width="100%"/></td>
     </tr>
     <tr>
-      <td align="center"><sub>Debian 13 KDE</sub><br><img src="doc/preview-pics/page0.debian13.kde.png" width="100%"/></td>
-      <td align="center"><sub>Debian 13 KDE</sub><br><img src="doc/preview-pics/fastfetch.debian13.kde.png" width="100%"/></td>
+      <td align="center"><sub>Debian 13 KDE</sub><br><img src="doc/images/preview/page0.debian13.kde.png" width="100%"/></td>
+      <td align="center"><sub>Debian 13 KDE</sub><br><img src="doc/images/preview/fastfetch.debian13.kde.png" width="100%"/></td>
     </tr>
     <tr>
-      <td align="center"><sub>macOS 14</sub><br><img src="doc/preview-pics/page0.macos14.png" width="100%"/></td>
-      <td align="center"><sub>macOS 14</sub><br><img src="doc/preview-pics/fastfetch.macos14.png" width="100%"/></td>
+      <td align="center"><sub>macOS 14</sub><br><img src="doc/images/preview/page0.macos14.png" width="100%"/></td>
+      <td align="center"><sub>macOS 14</sub><br><img src="doc/images/preview/fastfetch.macos14.png" width="100%"/></td>
     </tr>
     <tr>
-      <td align="center"><sub>Android 15</sub><br><img src="doc/preview-pics/page0.android14.png" width="100%"/></td>
-      <td align="center"><sub>Android 15</sub><br><img src="doc/preview-pics/fastfetch.android14.termux.png" width="100%"/></td>
+      <td align="center"><sub>Android 15</sub><br><img src="doc/images/preview/page0.android14.png" width="100%"/></td>
+      <td align="center"><sub>Android 15</sub><br><img src="doc/images/preview/fastfetch.android14.termux.png" width="100%"/></td>
     </tr>
     <tr>
-      <td align="center"><sub>iOS 17 (iPad Air 5)</sub><br><img src="doc/preview-pics/page0.ios17.png" width="100%"/></td>
-      <td align="center"><sub>iOS 17 (iSH)</sub><br><img src="doc/preview-pics/fastfetch.ios17.iSH.png" width="100%"/></td>
+      <td align="center"><sub>iOS 17 (iPad Air 5)</sub><br><img src="doc/images/preview/page0.ios17.png" width="100%"/></td>
+      <td align="center"><sub>iOS 17 (iSH)</sub><br><img src="doc/images/preview/fastfetch.ios17.iSH.png" width="100%"/></td>
     </tr>
   </tbody>
 </table>
@@ -121,25 +121,25 @@ Source: [lib/pages/page0_system_info.dart](https://github.com/VincentZyu233/dart
 
 A compact dialog lab with both a modern Flutter dialog and a classic Win32-style dialog recreation. Uses retro borders, inset input styling, and larger action buttons to demonstrate that Flutter can reproduce very different interaction and visual languages in one app.<br>
 Source: [lib/pages/page1_dialog_lab.dart](https://github.com/VincentZyu233/dart-flutter-demo/blob/main/lib/pages/page1_dialog_lab.dart)
-![page1](doc/preview-pics/page1.dialog.png)
+![page1](doc/images/preview/page1.dialog.png)
 
 ### 2. 🔤 Typography Studio
 
 An interactive text playground. Adjust font size, letter spacing, and line height with live controls. Switch between the system font, Google Fonts, and a one-shot local font file. Includes live preview text editing, dark/light auto text color switching, preset swatches, and a custom color picker with RGB and HEX readout.<br>
 Source: [lib/pages/page2_typography_studio.dart](https://github.com/VincentZyu233/dart-flutter-demo/blob/main/lib/pages/page2_typography_studio.dart)
-![page2](doc/preview-pics/page2.typograghy.png)
+![page2](doc/images/preview/page2.typograghy.png)
 
 ### 3. 🧱 Adaptive Grid
 
 A responsive GitHub repository browser driven by LayoutBuilder. Fetches repositories from configurable personal or organization repository pages, supports proxy configuration, filter and sort controls, collapsible configuration UI, layout switching between Grid / Masonry / List, and adjustable target columns from 5 to 1.<br>
 Source: [lib/pages/page3_adaptive_grid.dart](https://github.com/VincentZyu233/dart-flutter-demo/blob/main/lib/pages/page3_adaptive_grid.dart)
-![page3](doc/preview-pics/page3.masonry-grid.png)
+![page3](doc/images/preview/page3.masonry-grid.png)
 
 ### 4. 🎛️ Controls & Feedback
 
 A compact lab for interactive controls and user feedback. Includes radios, checkboxes, switches, progress indicators, snack bars, and bottom sheets. Useful for checking state transitions, motion, and component responsiveness.<br>
 Source: [lib/pages/page4_controls_feedback.dart](https://github.com/VincentZyu233/dart-flutter-demo/blob/main/lib/pages/page4_controls_feedback.dart)
-![page4](doc/preview-pics/page4.controls-schema-feedback.png)
+![page4](doc/images/preview/page4.controls-schema-feedback.png)
 
 ## 📁 File Structure
 
@@ -166,6 +166,17 @@ The `lib/` directory is organized by entry, app shell, feature pages, shared wid
 | `lib/widgets/state_shell.dart` | Shared empty/loading/error state layout. |
 | `lib/widgets/tag.dart` | Small pill/tag display widget. |
 
+
+## 🧪 Build Modes
+
+| Mode | GitHub CI release | JIT | AOT | Optimized | Debug symbols | Typical use |
+|:-----|:-----------------:|:---:|:---:|:---------:|:-------------:|:------------|
+| **Debug** | ❌ | ✅ | ❌ | ❌ | ✅ | Local development and debugging |
+| **Profile** | ❌ | ❌ | ✅ | ✅ | ❌ | Performance profiling |
+| **🚀 Release** | ✅ | ❌ | ✅ | ✅ | ❌ | GitHub Release packages and production use |
+
+> GitHub Release assets are built with `flutter build <platform> --release`.
+> For local Debug/Profile builds, run commands such as `flutter run --debug`, `flutter run --profile`, or `flutter build windows --profile` after selecting the target platform.
 
 ## ⚙️🚀 CI/CD
 
@@ -221,3 +232,5 @@ GitHub Actions handles automated builds and packaging. Push a commit containing 
 | Stars | [![Stars](https://img.shields.io/github/stars/VincentZyuApps/dart-flutter-demo?style=flat&logo=github&label=stars&labelColor=181717&color=FFD700)](https://github.com/VincentZyuApps/dart-flutter-demo/stargazers) |
 | Last Commit | [![Last Commit](https://img.shields.io/github/last-commit/VincentZyuApps/dart-flutter-demo?logo=github&label=last%20commit&labelColor=181717&color=02569B)](https://github.com/VincentZyuApps/dart-flutter-demo/commits/main/) |
 | Github Action CI/CD | [![release](https://img.shields.io/github/v/release/VincentZyuApps/dart-flutter-demo?logo=github&label=release&color=02569B&labelColor=181717)](https://github.com/VincentZyuApps/dart-flutter-demo/releases) · [![build](https://img.shields.io/github/actions/workflow/status/VincentZyuApps/dart-flutter-demo/build.yml?branch=main&logo=githubactions&label=build)](https://github.com/VincentZyuApps/dart-flutter-demo/actions) |
+
+

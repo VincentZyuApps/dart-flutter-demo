@@ -5,7 +5,7 @@
 [![Gitee](https://img.shields.io/badge/Gitee-C71D23?style=for-the-badge&logo=gitee&logoColor=white)](https://gitee.com/vincent-zyu/dart-flutter-demo)
 
 ![dart-flutter-demo](https://socialify.git.ci/VincentZyuApps/dart-flutter-demo/image?description=1&font=Bitter&forks=1&issues=1&language=1&logo=https%3A%2F%2Fupload.wikimedia.org%2Fwikipedia%2Fcommons%2Fthumb%2F7%2F79%2FFlutter_logo.svg%2F120px-Flutter_logo.svg.png%3Futm_source%3Dcommons.wikimedia.org%26utm_campaign%3Dindex%26utm_content%3Dthumbnail%26_%3D20230821075714&name=1&owner=1&pulls=1&stargazers=1&theme=Auto)
-![onefetch](doc/preview-pics/onefetch.png)
+![onefetch](doc/images/preview/onefetch.png)
 
 # ✨ dart_flutter_demo
 
@@ -28,8 +28,8 @@
 ## 📊🧬 语言占比
 
 这两张动画图分别按仓库中已跟踪的代码、脚本、文档与构建配置的字节数和行数做分布统计。<br>
-![lang-byte-stats](doc/lang-byte-stats.svg)
-![lang-line-stats](doc/lang-line-stats.svg)
+![lang-byte-stats](doc/images/svg/lang-byte-stats.svg)
+![lang-line-stats](doc/images/svg/lang-line-stats.svg)
 
 ## 💬🪟 对话框
 
@@ -44,16 +44,16 @@
   </thead>
   <tbody>
     <tr>
-      <td align="center"><img src="doc/preview-pics/desktop-icon.dock-taskbar-button.windows11.png" width="100%"/><br><sub>Windows 11 dock / 任务栏</sub></td>
+      <td align="center"><img src="doc/images/preview/desktop-icon.start-menu.dock-taskbar-button.windows11.png" width="100%"/><br><sub>Windows 11 dock / 任务栏</sub></td>
     </tr>
     <tr>
-      <td align="center"><img src="doc/preview-pics/desktop-icon.start-menu.debian13.kde.png" width="100%"/><br><sub>Debian 13 KDE 开始菜单</sub></td>
+      <td align="center"><img src="doc/images/preview/desktop-icon.start-menu.debian13.kde.png" width="100%"/><br><sub>Debian 13 KDE 开始菜单</sub></td>
     </tr>
     <tr>
-      <td align="center"><img src="doc/preview-pics/desktop-icon-widget.android14.png" width="100%"/><br><sub>Android 14 桌面小组件</sub></td>
+      <td align="center"><img src="doc/images/preview/desktop-icon-widget.android14.png" width="100%"/><br><sub>Android 14 桌面小组件</sub></td>
     </tr>
     <tr>
-      <td align="center"><img src="doc/preview-pics/desktop-icon.altserver.self-sign.sideloaded.ios17.png" width="100%"/><br><sub>iOS 17 侧载</sub></td>
+      <td align="center"><img src="doc/images/preview/desktop-icon.altserver.self-sign.sideloaded.ios17.png" width="100%"/><br><sub>iOS 17 侧载</sub></td>
     </tr>
   </tbody>
 </table>
@@ -62,12 +62,12 @@
 ### ℹ️ 关于
 
 显示应用名称、版本号、构建号、发布方及相关链接的应用信息对话框。从 AppBar 菜单中打开。<br>
-![about](doc/preview-pics/side1.about.png)
+![about](doc/images/preview/side1.about.png)
 
 ### 📘 入门引导
 
 一步步指引展示应用的下载渠道、构建选项及推荐的开发环境配置的引导对话框。从 AppBar 菜单中打开。<br>
-![guide](doc/preview-pics/side1.guide.png)
+![guide](doc/images/preview/side1.guide.png)
 
 ## 🧩📱 页面介绍
 
@@ -86,32 +86,32 @@
   </thead>
   <tbody>
     <tr>
-      <td align="center"><sub>Windows 11</sub><br><img src="doc/preview-pics/page0.windows11.png" width="100%"/></td>
-      <td align="center"><sub>Windows 11</sub><br><img src="doc/preview-pics/fastfetch.windows11.png" width="100%"/></td>
+      <td align="center"><sub>Windows 11</sub><br><img src="doc/images/preview/page0.windows11.png" width="100%"/></td>
+      <td align="center"><sub>Windows 11</sub><br><img src="doc/images/preview/fastfetch.windows11.png" width="100%"/></td>
     </tr>
     <tr>
-      <td align="center"><sub>Windows 10 WSL Arch Linux</sub><br><img src="doc/preview-pics/page0.windows10.wsl.arch-linux.png" width="100%"/></td>
-      <td align="center"><sub>Windows 10 WSL Arch Linux</sub><br><img src="doc/preview-pics/fastfetch.windows10.wsl.arch-linux.png" width="100%"/></td>
+      <td align="center"><sub>Windows 10 WSL Arch Linux</sub><br><img src="doc/images/preview/page0.windows10.wsl.arch-linux.png" width="100%"/></td>
+      <td align="center"><sub>Windows 10 WSL Arch Linux</sub><br><img src="doc/images/preview/fastfetch.windows10.wsl.arch-linux.png" width="100%"/></td>
     </tr>
     <tr>
-      <td align="center"><sub>Ubuntu 24.04 LXQt</sub><br><img src="doc/preview-pics/page0.ubuntu24.lxqt.png" width="100%"/></td>
-      <td align="center"><sub>Ubuntu 24.04 LXQt</sub><br><img src="doc/preview-pics/fastfetch.ubuntu24.lxqt.png" width="100%"/></td>
+      <td align="center"><sub>Ubuntu 24.04 LXQt</sub><br><img src="doc/images/preview/page0.ubuntu24.lxqt.png" width="100%"/></td>
+      <td align="center"><sub>Ubuntu 24.04 LXQt</sub><br><img src="doc/images/preview/fastfetch.ubuntu24.lxqt.png" width="100%"/></td>
     </tr>
     <tr>
-      <td align="center"><sub>Debian 13 KDE</sub><br><img src="doc/preview-pics/page0.debian13.kde.png" width="100%"/></td>
-      <td align="center"><sub>Debian 13 KDE</sub><br><img src="doc/preview-pics/fastfetch.debian13.kde.png" width="100%"/></td>
+      <td align="center"><sub>Debian 13 KDE</sub><br><img src="doc/images/preview/page0.debian13.kde.png" width="100%"/></td>
+      <td align="center"><sub>Debian 13 KDE</sub><br><img src="doc/images/preview/fastfetch.debian13.kde.png" width="100%"/></td>
     </tr>
     <tr>
-      <td align="center"><sub>macOS 14</sub><br><img src="doc/preview-pics/page0.macos14.png" width="100%"/></td>
-      <td align="center"><sub>macOS 14</sub><br><img src="doc/preview-pics/fastfetch.macos14.png" width="100%"/></td>
+      <td align="center"><sub>macOS 14</sub><br><img src="doc/images/preview/page0.macos14.png" width="100%"/></td>
+      <td align="center"><sub>macOS 14</sub><br><img src="doc/images/preview/fastfetch.macos14.png" width="100%"/></td>
     </tr>
     <tr>
-      <td align="center"><sub>Android 15</sub><br><img src="doc/preview-pics/page0.android14.png" width="100%"/></td>
-      <td align="center"><sub>Android 15</sub><br><img src="doc/preview-pics/fastfetch.android14.termux.png" width="100%"/></td>
+      <td align="center"><sub>Android 15</sub><br><img src="doc/images/preview/page0.android14.png" width="100%"/></td>
+      <td align="center"><sub>Android 15</sub><br><img src="doc/images/preview/fastfetch.android14.termux.png" width="100%"/></td>
     </tr>
     <tr>
-      <td align="center"><sub>iOS 17 (iPad Air 5)</sub><br><img src="doc/preview-pics/page0.ios17.png" width="100%"/></td>
-      <td align="center"><sub>iOS 17 (iSH)</sub><br><img src="doc/preview-pics/fastfetch.ios17.iSH.png" width="100%"/></td>
+      <td align="center"><sub>iOS 17 (iPad Air 5)</sub><br><img src="doc/images/preview/page0.ios17.png" width="100%"/></td>
+      <td align="center"><sub>iOS 17 (iSH)</sub><br><img src="doc/images/preview/fastfetch.ios17.iSH.png" width="100%"/></td>
     </tr>
   </tbody>
 </table>
@@ -121,25 +121,25 @@
 
 一个同时包含现代 Flutter 对话框与经典 Win32 风格对话框复刻的紧凑实验页。使用复古边框、内凹输入框样式和更大的操作按钮，展示 Flutter 可以在同一个应用里还原非常不同的交互与视觉语言。<br>
 源码： [lib/pages/page1_dialog_lab.dart](https://github.com/VincentZyu233/dart-flutter-demo/blob/main/lib/pages/page1_dialog_lab.dart)
-![page1](doc/preview-pics/page1.dialog.png)
+![page1](doc/images/preview/page1.dialog.png)
 
 ### 2. 🔤 文字排版工作室
 
 一个交互式文字实验场。通过实时控件调整字号、字间距和行高。在系统字体、Google Fonts 和一次性本地字体文件之间切换。包含实时预览文本编辑、深浅色主题自动文字颜色切换、预设色板，以及带 RGB 与 HEX 读数的自定义颜色选择器。<br>
 源码： [lib/pages/page2_typography_studio.dart](https://github.com/VincentZyu233/dart-flutter-demo/blob/main/lib/pages/page2_typography_studio.dart)
-![page2](doc/preview-pics/page2.typograghy.png)
+![page2](doc/images/preview/page2.typograghy.png)
 
 ### 3. 🧱 自适应网格
 
 一个由 LayoutBuilder 驱动的响应式 GitHub 仓库浏览页。可从可配置的个人或组织仓库页面抓取数据，支持代理设置、筛选与排序控件、可折叠配置区、Grid / Masonry / List 布局切换，以及从 5 到 1 的目标列数调整。<br>
 源码： [lib/pages/page3_adaptive_grid.dart](https://github.com/VincentZyu233/dart-flutter-demo/blob/main/lib/pages/page3_adaptive_grid.dart)
-![page3](doc/preview-pics/page3.masonry-grid.png)
+![page3](doc/images/preview/page3.masonry-grid.png)
 
 ### 4. 🎛️ 控件与反馈实验室
 
 一个用于交互控件与反馈模式的紧凑实验页。包含单选框、多选框、开关、进度指示器、SnackBar 和 BottomSheet。适合检查状态切换、动效反馈与组件响应性。<br>
 源码： [lib/pages/page4_controls_feedback.dart](https://github.com/VincentZyu233/dart-flutter-demo/blob/main/lib/pages/page4_controls_feedback.dart)
-![page4](doc/preview-pics/page4.controls-schema-feedback.png)
+![page4](doc/images/preview/page4.controls-schema-feedback.png)
 
 ## 📁 文件结构
 
@@ -166,6 +166,17 @@
 | `lib/widgets/state_shell.dart` | 通用的空态/加载态/错误态布局。 |
 | `lib/widgets/tag.dart` | 小型标签胶囊组件。 |
 
+
+## 🧪 构建模式
+
+| 模式 | GitHub CI 发布 | JIT | AOT | 优化 | 调试符号 | 适用场景 |
+|:-----|:--------------:|:---:|:---:|:----:|:--------:|:---------|
+| **Debug** | ❌ | ✅ | ❌ | ❌ | ✅ | 本地开发与调试 |
+| **Profile** | ❌ | ❌ | ✅ | ✅ | ❌ | 性能分析 |
+| **🚀 Release** | ✅ | ❌ | ✅ | ✅ | ❌ | GitHub Release 发布包与生产使用 |
+
+> GitHub Release 产物使用 `flutter build <platform> --release` 构建。
+> 本地 Debug/Profile 构建可按目标平台运行 `flutter run --debug`、`flutter run --profile` 或 `flutter build windows --profile` 等命令。
 
 ## ⚙️🚀 CI/CD
 
@@ -221,3 +232,5 @@ GitHub Actions 负责自动构建与打包。提交信息包含 `build action` �
 | Stars | [![Stars](https://img.shields.io/github/stars/VincentZyuApps/dart-flutter-demo?style=flat&logo=github&label=stars&labelColor=181717&color=FFD700)](https://github.com/VincentZyuApps/dart-flutter-demo/stargazers) |
 | Last Commit | [![Last Commit](https://img.shields.io/github/last-commit/VincentZyuApps/dart-flutter-demo?logo=github&label=last%20commit&labelColor=181717&color=02569B)](https://github.com/VincentZyuApps/dart-flutter-demo/commits/main/) |
 | Github Action CI/CD | [![release](https://img.shields.io/github/v/release/VincentZyuApps/dart-flutter-demo?logo=github&label=发布&color=02569B&labelColor=181717)](https://github.com/VincentZyuApps/dart-flutter-demo/releases) · [![build](https://img.shields.io/github/actions/workflow/status/VincentZyuApps/dart-flutter-demo/build.yml?branch=main&logo=githubactions&label=构建)](https://github.com/VincentZyuApps/dart-flutter-demo/actions) |
+
+
