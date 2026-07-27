@@ -362,7 +362,7 @@ jobs:
           mkdir -p release-files
           cp artifacts/release-windows-x64/dart-flutter-demo-windows-x64.zip \
             "release-files/dart-flutter-demo-windows-x64-v${VERSION}.zip"
-          cp artifacts/release-windows-x64/dart-flutter-demo-setup.exe \
+          cp artifacts/release-windows-x64/dist/dart-flutter-demo-setup.exe \
             "release-files/dart-flutter-demo-windows-x64-v${VERSION}-setup.exe"
           cp artifacts/release-linux-x64/dart-flutter-demo-linux-x64.tar.gz \
             "release-files/dart-flutter-demo-linux-x64-v${VERSION}.tar.gz"
