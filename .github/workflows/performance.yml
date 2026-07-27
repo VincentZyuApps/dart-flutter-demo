@@ -1,0 +1,314 @@
+name: Performance Reports
+
+on:
+  push:
+    branches: [main, master]
+  schedule:
+    - cron: '0 3 * * 1'
+  workflow_dispatch:
+    inputs:
+      report_destination:
+        description: Report destination / 报告保存位置
+        required: true
+        type: choice
+        default: artifact-7-days
+        options:
+          - artifact-7-days
+          - github-release
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: performance-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  FLUTTER_VERSION: 3.41.5
+  # ===== ⏰ SCHEDULE SWITCH / 每周性能报告开关 =====
+  # 'false' = disabled / 关闭; 'true' = enabled / 开启.
+  ENABLE_SCHEDULED_PERFORMANCE: 'false'
+  # ===== ✏️ EDIT ONLY THE VALUE ABOVE / 只修改上一行的值 =====
+  # ===== 📦 SCHEDULE DESTINATION / 每周报告保存位置 =====
+  # 'artifact' = 7 days / 保留 7 天; 'release' = permanent / 永久保留.
+  SCHEDULED_PERFORMANCE_DESTINATION: 'artifact'
+  # ===== ✏️ EDIT ONLY THE VALUE ABOVE / 只修改上一行的值 =====
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      should_run: ${{ steps.trigger.outputs.should_run }}
+      should_publish: ${{ steps.trigger.outputs.should_publish }}
+      short_sha: ${{ steps.trigger.outputs.short_sha }}
+      file_stamp: ${{ steps.trigger.outputs.file_stamp }}
+      recorded_at_utc: ${{ steps.trigger.outputs.recorded_at_utc }}
+      display_time: ${{ steps.trigger.outputs.display_time }}
+      trigger_source: ${{ steps.trigger.outputs.trigger_source }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: trigger
+        shell: bash
+        env:
+          COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
+          MANUAL_DESTINATION: ${{ inputs.report_destination || 'artifact-7-days' }}
+        run: |
+          set -euo pipefail
+          SHOULD_RUN=false
+          SHOULD_PUBLISH=false
+          TRIGGER_SOURCE="event:${{ github.event_name }}"
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            SHOULD_RUN=true
+            case "$MANUAL_DESTINATION" in
+              artifact-7-days) ;;
+              github-release) SHOULD_PUBLISH=true ;;
+              *) echo "Unsupported manual destination: $MANUAL_DESTINATION" >&2; exit 1 ;;
+            esac
+            TRIGGER_SOURCE="manual:$MANUAL_DESTINATION"
+          elif [[ "${{ github.event_name }}" == "schedule" ]]; then
+            if [[ "$ENABLE_SCHEDULED_PERFORMANCE" == "true" ]]; then
+              SHOULD_RUN=true
+              case "$SCHEDULED_PERFORMANCE_DESTINATION" in
+                artifact) ;;
+                release) SHOULD_PUBLISH=true ;;
+                *) echo "Unsupported scheduled destination: $SCHEDULED_PERFORMANCE_DESTINATION" >&2; exit 1 ;;
+              esac
+              TRIGGER_SOURCE="schedule:$SCHEDULED_PERFORMANCE_DESTINATION"
+            else
+              echo "Scheduled performance reports are disabled."
+            fi
+          elif python scripts/ci/ci_trigger.py --message "$COMMIT_MESSAGE" --token release-performance; then
+            SHOULD_RUN=true
+            SHOULD_PUBLISH=true
+            TRIGGER_SOURCE="commit:release-performance"
+          elif python scripts/ci/ci_trigger.py --message "$COMMIT_MESSAGE" --token run-performance; then
+            SHOULD_RUN=true
+            TRIGGER_SOURCE="commit:run-performance"
+          fi
+          RECORDED_AT_UTC="$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+          FILE_STAMP="${RECORDED_AT_UTC//[-:]/}"
+          DISPLAY_TIME="${RECORDED_AT_UTC:0:10} ${RECORDED_AT_UTC:11:5} UTC"
+          echo "should_run=$SHOULD_RUN" >> "$GITHUB_OUTPUT"
+          echo "should_publish=$SHOULD_PUBLISH" >> "$GITHUB_OUTPUT"
+          echo "short_sha=${GITHUB_SHA:0:7}" >> "$GITHUB_OUTPUT"
+          echo "file_stamp=$FILE_STAMP" >> "$GITHUB_OUTPUT"
+          echo "recorded_at_utc=$RECORDED_AT_UTC" >> "$GITHUB_OUTPUT"
+          echo "display_time=$DISPLAY_TIME" >> "$GITHUB_OUTPUT"
+          echo "trigger_source=$TRIGGER_SOURCE" >> "$GITHUB_OUTPUT"
+
+  profile-report:
+    needs: prepare
+    if: needs.prepare.outputs.should_run == 'true'
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: windows-x64
+            os: windows-latest
+            output: build/windows/x64/runner/Profile
+          - platform: linux-x64
+            os: ubuntu-22.04
+            output: build/linux/x64/profile/bundle
+          - platform: macos-arm64
+            os: macos-latest
+            output: build/macos/Build/Products/Profile
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Linux dependencies
+        if: matrix.platform == 'linux-x64'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - run: flutter pub get
+
+      - name: Download the latest available baseline
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p previous
+          FOUND=false
+          while read -r RUN_ID; do
+            [[ -n "$RUN_ID" ]] || continue
+            rm -rf previous-candidate
+            mkdir -p previous-candidate
+            if gh run download "$RUN_ID" --pattern "performance-report-*" \
+              --dir previous-candidate >/dev/null 2>&1 && \
+              find previous-candidate -type f \
+                -name "performance-${{ matrix.platform }}-*.json" -print -quit | grep -q .; then
+              cp -R previous-candidate/. previous/
+              FOUND=true
+              break
+            fi
+          done < <(gh run list --workflow performance.yml --status success --limit 100 \
+            --json databaseId --jq '.[].databaseId' 2>/dev/null || true)
+          rm -rf previous-candidate
+
+          if [[ "$FOUND" != "true" ]]; then
+            LATEST_TAG="$(gh release list --limit 100 --json tagName \
+              --jq '[.[] | select(.tagName | startswith("performance-"))][0].tagName // empty' \
+              2>/dev/null || true)"
+            if [[ -n "$LATEST_TAG" ]]; then
+              gh release download "$LATEST_TAG" \
+                --pattern "performance-${{ matrix.platform }}-*.json" \
+                --dir previous >/dev/null 2>&1 || true
+            fi
+          fi
+
+      - name: Build Profile and measure elapsed time
+        id: build
+        shell: bash
+        run: |
+          set -euo pipefail
+          START="$(date +%s)"
+          case "${{ matrix.platform }}" in
+            windows-x64) flutter build windows --profile ;;
+            linux-x64) flutter build linux --profile ;;
+            macos-arm64) flutter build macos --profile ;;
+          esac
+          echo "elapsed_seconds=$(( $(date +%s) - START ))" >> "$GITHUB_OUTPUT"
+
+      - name: Generate JSON and Markdown reports
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p report
+          python scripts/ci/performance_report.py \
+            --platform "${{ matrix.platform }}" \
+            --artifact "${{ matrix.output }}" \
+            --elapsed-seconds "${{ steps.build.outputs.elapsed_seconds }}" \
+            --sha "${{ github.sha }}" \
+            --baseline-directory previous \
+            --output-directory report
+
+      - name: Upload staging performance report
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-staging-${{ matrix.platform }}
+          path: report/*
+          retention-days: 1
+          if-no-files-found: error
+
+  aggregate-report:
+    needs: [prepare, profile-report]
+    if: needs.prepare.outputs.should_run == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download platform reports
+        uses: actions/download-artifact@v4
+        with:
+          pattern: performance-staging-*
+          path: collected
+          merge-multiple: true
+
+      - name: Assemble reports and bilingual summary
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p release-files
+          find collected -maxdepth 1 -type f \( -name '*.json' -o -name '*.md' \) \
+            -exec cp '{}' release-files/ \;
+          python scripts/ci/performance_summary.py \
+            --input-directory collected \
+            --output-directory release-files \
+            --file-stamp "${{ needs.prepare.outputs.file_stamp }}" \
+            --recorded-at-utc "${{ needs.prepare.outputs.recorded_at_utc }}" \
+            --sha "${{ github.sha }}" \
+            --flutter-version "$FLUTTER_VERSION" \
+            --repository "${{ github.repository }}" \
+            --run-id "${{ github.run_id }}" \
+            --run-attempt "${{ github.run_attempt }}" \
+            --trigger "${{ needs.prepare.outputs.trigger_source }}"
+
+      - name: Collect completed performance job logs
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          JOBS_FILE="$(mktemp)"
+          gh api \
+            "repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/jobs?filter=latest&per_page=100" \
+            --jq '[.jobs[] | select(.name == "prepare" or (.name | startswith("profile-report")))] | sort_by(.started_at)[] | [.id, .name] | @tsv' \
+            > "$JOBS_FILE"
+          JOB_COUNT="$(awk 'END { print NR + 0 }' "$JOBS_FILE")"
+          if [[ "$JOB_COUNT" != "4" ]]; then
+            echo "Expected four completed performance jobs, found $JOB_COUNT." >&2
+            exit 1
+          fi
+
+          LOG_PATH="release-files/performance-workflow-${{ needs.prepare.outputs.file_stamp }}-${{ needs.prepare.outputs.short_sha }}.log"
+          : > "$LOG_PATH"
+          while IFS=$'\t' read -r JOB_ID JOB_NAME; do
+            printf '===== 🧾 %s =====\n\n' "$JOB_NAME" >> "$LOG_PATH"
+            JOB_LOG="$(mktemp)"
+            DOWNLOADED=false
+            for attempt in 1 2 3; do
+              if gh api "repos/${GITHUB_REPOSITORY}/actions/jobs/${JOB_ID}/logs" > "$JOB_LOG"; then
+                DOWNLOADED=true
+                break
+              fi
+              sleep 2
+            done
+            if [[ "$DOWNLOADED" != "true" ]]; then
+              echo "Unable to download logs for job $JOB_ID ($JOB_NAME)." >&2
+              exit 1
+            fi
+            cat "$JOB_LOG" >> "$LOG_PATH"
+            printf '\n\n' >> "$LOG_PATH"
+            rm -f "$JOB_LOG"
+          done < "$JOBS_FILE"
+          rm -f "$JOBS_FILE"
+          test -s "$LOG_PATH"
+
+      - name: Upload seven-day performance bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-report-${{ needs.prepare.outputs.short_sha }}
+          path: release-files/*
+          retention-days: 7
+          if-no-files-found: error
+
+  publish-report:
+    needs: [prepare, aggregate-report]
+    if: needs.prepare.outputs.should_publish == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      actions: read
+      contents: write
+    steps:
+      - name: Download the aggregated report
+        uses: actions/download-artifact@v4
+        with:
+          name: performance-report-${{ needs.prepare.outputs.short_sha }}
+          path: release-files
+
+      - name: Create permanent Performance Pre-release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: performance-${{ needs.prepare.outputs.file_stamp }}-${{ needs.prepare.outputs.short_sha }}-run${{ github.run_id }}-attempt${{ github.run_attempt }}
+          name: 📊 Performance Report · ${{ needs.prepare.outputs.display_time }} · ${{ needs.prepare.outputs.short_sha }}
+          target_commitish: ${{ github.sha }}
+          body_path: release-files/performance-summary-${{ needs.prepare.outputs.file_stamp }}-${{ needs.prepare.outputs.short_sha }}.md
+          files: release-files/*
+          prerelease: true
+          make_latest: false
+          fail_on_unmatched_files: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

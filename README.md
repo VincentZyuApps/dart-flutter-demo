@@ -12,14 +12,14 @@
 A cross-platform Flutter UI showcase PoC (Proof of Concept) app, available on Android, Windows, Linux, macOS, and iOS, built by a GitHub Actions CI packaging workflow.
 
 [![Last Commit](https://img.shields.io/github/last-commit/VincentZyuApps/dart-flutter-demo?style=for-the-badge&logo=github&color=181717&logoColor=white)](https://github.com/VincentZyuApps/dart-flutter-demo/commits/main/)
-[![Build](https://img.shields.io/github/actions/workflow/status/VincentZyuApps/dart-flutter-demo/build.yml?style=for-the-badge&logo=githubactions&logoColor=white&label=Build)](https://github.com/VincentZyuApps/dart-flutter-demo/actions)
+[![Build Release](https://img.shields.io/github/actions/workflow/status/VincentZyuApps/dart-flutter-demo/build-release.yml?style=for-the-badge&logo=githubactions&logoColor=white&label=Build%20Release)](https://github.com/VincentZyuApps/dart-flutter-demo/actions)
 
 <p align="center">
   <img src="assets/images/logo-icon-favicon.png" alt="dart_flutter_demo logo" width="280"/>
 </p>
 
 [![Windows x64](https://img.shields.io/static/v1?label=Windows&message=x64&color=0078D4&style=for-the-badge&logo=data:image/svg%2bxml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZD0iTTAgMGgxMS4zNzd2MTEuMzcySDB6TTEyLjYyMyAwSDI0djExLjM3MkgxMi42MjN6TTAgMTIuNjIzaDExLjM3N1YyNEgweiBNMTIuNjIzIDEyLjYyM0gyNFYyNEgxMi42MjN6IiBmaWxsPSIjZmZmIi8+PC9zdmc+)](https://github.com/VincentZyuApps/dart-flutter-demo/releases)
-[![Linux x64 | ARM64](https://img.shields.io/badge/Linux-x64_|_ARM64-FCC624?style=for-the-badge&logo=linux&logoColor=black)](https://github.com/VincentZyuApps/dart-flutter-demo/releases)
+[![Linux x64](https://img.shields.io/badge/Linux-x64-FCC624?style=for-the-badge&logo=linux&logoColor=black)](https://github.com/VincentZyuApps/dart-flutter-demo/releases)
 [![macOS x64 | ARM64](https://img.shields.io/badge/macOS-x64_|_ARM64-000000?style=for-the-badge&logo=apple&logoColor=white)](https://github.com/VincentZyuApps/dart-flutter-demo/releases)
 
 [![Android x86_64 | ARM64](https://img.shields.io/badge/Android-x86_64_|_ARM64-3DDC84?style=for-the-badge&logo=android&logoColor=white)](https://github.com/VincentZyuApps/dart-flutter-demo/releases)
@@ -73,7 +73,7 @@ A step-by-step walkthrough dialog showing the app's download channels, build opt
 
 ### 0. 🖥️ System Info
 
-Displays system information through native C++ (Windows), Kotlin (Android), Swift (iOS), and dart:io fallbacks. Shows OS, hostname, kernel, uptime, CPU, memory, disk, and local IP. Includes built-in debug trace viewing plus copy/export actions for diagnostics.<br>
+Displays typed system information through the reusable local plugin `system_info_vincentzyu`: Win32 C++ FFI first on Windows, Kotlin/Swift MethodChannels on Android and Apple platforms, and Dart/OS interfaces on Linux. Formatting stays in the App layer. Every field shows its source, elapsed time, and fallback chain. Session logs are mirrored to memory, UI, console, and rotating files (10 MiB each, newest five retained); hostname and local IP are never uploaded automatically, and export requires a privacy confirmation.<br>
 Source: [lib/pages/page0_system_info.dart](https://github.com/VincentZyu233/dart-flutter-demo/blob/main/lib/pages/page0_system_info.dart)
 
 <div align="center">
@@ -137,13 +137,13 @@ Source: [lib/pages/page3_adaptive_grid.dart](https://github.com/VincentZyu233/da
 
 ### 4. 🎛️ Controls & Feedback
 
-A compact lab for interactive controls and user feedback. Includes radios, checkboxes, switches, progress indicators, snack bars, and bottom sheets. Useful for checking state transitions, motion, and component responsiveness.<br>
+A responsive control-state and accessibility lab. It combines radios, checkboxes (including an indeterminate state), switches, validation and loading states, text scaling, high-contrast previews, focus diagnostics, and live JSON state inspection. Its async task can run, pause, resume, fail, retry, cancel, or complete, with determinate and indeterminate progress plus SnackBar, dialog, banner, and bottom-sheet feedback.<br>
 Source: [lib/pages/page4_controls_feedback.dart](https://github.com/VincentZyu233/dart-flutter-demo/blob/main/lib/pages/page4_controls_feedback.dart)
 ![page4](doc/images/preview/page4.controls-schema-feedback.png)
 
 ## 📁 File Structure
 
-The `lib/` directory is organized by entry, app shell, feature pages, shared widgets, and service/model helpers:
+The app keeps all five platform projects in source control. Reusable system-information code lives in a local Flutter plugin:
 
 | File | Purpose |
 |---|---|
@@ -159,32 +159,48 @@ The `lib/` directory is organized by entry, app shell, feature pages, shared wid
 | `lib/services/android_home_widget_service.dart` | Android home-widget sync bridge. |
 | `lib/services/app_performance.dart` | FPS tracking and rebuild count helpers. |
 | `lib/services/github_repository_service.dart` | GitHub repository parsing, fetching, and data models. |
-| `lib/services/system_info_service.dart` | Cross-platform system info collection, debug snapshot, copy/export helpers. |
+| `lib/services/system_info_service.dart` | App formatting, logging setup, debug snapshot, and copy/export adapter. |
 | `lib/widgets/animated_page.dart` | Page transitions and staggered animation wrappers. |
 | `lib/widgets/repository_card.dart` | Grid-style repository card widget. |
 | `lib/widgets/repository_list_tile.dart` | List-style repository row widget. |
 | `lib/widgets/state_shell.dart` | Shared empty/loading/error state layout. |
 | `lib/widgets/tag.dart` | Small pill/tag display widget. |
+| `packages/system_info_vincentzyu/` | Reusable typed system-information plugin for all five platforms. |
+| `android/`, `ios/`, `windows/`, `linux/`, `macos/` | Committed Flutter platform projects; normal CI never regenerates them. |
+| `.github/workflows/profile-debug.yml` | Seven-day Windows/Linux/Android Profile and Debug artifacts. |
+| `.github/workflows/performance.yml` | Seven-day or permanent Pre-release desktop Profile build reports. |
 
 
 ## 🧪 Build Modes
 
-| Mode | GitHub CI release | JIT | AOT | Optimized | Debug symbols | Typical use |
-|:-----|:-----------------:|:---:|:---:|:---------:|:-------------:|:------------|
-| **Debug** | ❌ | ✅ | ❌ | ❌ | ✅ | Local development and debugging |
-| **Profile** | ❌ | ❌ | ✅ | ✅ | ❌ | Performance profiling |
-| **🚀 Release** | ✅ | ❌ | ✅ | ✅ | ❌ | GitHub Release packages and production use |
+| Mode | GitHub output | JIT | AOT | Optimized | Debug symbols | Typical use |
+|:-----|:--------------|:---:|:---:|:---------:|:-------------:|:------------|
+| **Debug** | 7-day Actions artifacts | ✅ | ❌ | ❌ | ✅ | Development and diagnostics |
+| **Profile** | Permanent Release assets plus 7-day developer artifacts | ❌ | ✅ | ✅ | Limited | Performance profiling on real devices or hosts |
+| **🚀 Release** | Permanent GitHub Release assets | ❌ | ✅ | ✅ | ❌ | Production-style use |
 
-> GitHub Release assets are built with `flutter build <platform> --release`.
-> For local Debug/Profile builds, run commands such as `flutter run --debug`, `flutter run --profile`, or `flutter build windows --profile` after selecting the target platform.
+> Release assets use `flutter build <platform> --release`. This repository runs Flutter analysis, tests, builds, and profiling through GitHub Actions rather than the local Flutter SDK.
 
 ## ⚙️🚀 CI/CD
 
-GitHub Actions handles automated builds and packaging. Push a commit containing `build action` or `build release` to trigger the pipeline. See [build.md](.github/workflows/build.md) for details.
+GitHub Actions uses exact, case-sensitive hyphenated tokens: `[build-release]` publishes an app Release; `[build-profile]` and `[build-debug]` create seven-day developer artifacts; `[run-performance]` keeps performance reports for seven days; `[release-performance]` creates a permanent Performance Pre-release. Brackets are commit-style punctuation, while CI matches the token itself. See [ci.md](.github/workflows/ci.md) for manual options and platform bootstrap details.
+
+## Platform Baselines
+
+| Platform | Declared baseline | Current release architecture |
+|---|---|---|
+| Windows | Windows 10 or newer | x64 |
+| Linux | Modern x64 desktop distribution with GTK 3 | x64 |
+| macOS | macOS 10.15 or newer | x64 and ARM64 |
+| Android | API 21 or newer | Universal, x86_64, and ARM64 |
+| iOS / iPadOS | iOS 13.0 or newer | ARM64 unsigned IPA |
+
+The iOS baseline is the configured build minimum, not a claim that every OS/device combination has been tested. The current known physical-device result is iPad Air 5 on iOS 17.
 
 ## ⚠️🩺 Troubleshooting
 
 - **🪟🐧 Windows / Linux GPU issues**: Launch with software rendering: `./dart_flutter_demo --disable-gpu`
+- **🍎 macOS security prompt**: If macOS blocks the app because Apple cannot verify it, open **System Settings → Privacy & Security**, scroll down to **Security**, then click **Open Anyway** for `dart_flutter_demo`.
 - **🍎 macOS virtual machines graphic issues** (VMware, VirtualBox, etc.): Flutter desktop apps require Apple Metal, which is unavailable in VMs. Use a physical Mac or [GitHub Actions macOS runners](https://github.com/VincentZyuApps/mac-test-action-runner) instead.
 - **🤖 Android APK**: Not signed with a persistent keystore. Each release uses a different debug key, so you must **uninstall the old version** before installing a new one to avoid signature conflicts.
 - **📱 iOS IPA**: CI does not configure code signing. To run on your own device, self-sign the `.ipa` before installing.<br>*(for reference — tested on iPad Air 5, iOS 17; other devices/versions may vary)*:
@@ -207,6 +223,8 @@ GitHub Actions handles automated builds and packaging. Push a commit containing 
 | Google Fonts | [![google_fonts](https://img.shields.io/badge/Google%20Fonts-%5E6.1.0-4285F4.svg?logo=googlefonts)](https://pub.dev/packages/google_fonts) |
 | Flutter Colorpicker | [![flutter_colorpicker](https://img.shields.io/badge/flutter__colorpicker-%5E1.1.0-6750A4.svg?logo=flutter)](https://github.com/mchome/flutter_colorpicker) |
 | Package Info Plus | [![package_info_plus](https://img.shields.io/badge/package__info__plus-%5E8.0.2-FF6F00.svg?logo=dart)](https://pub.dev/packages/package_info_plus) |
+| Path Provider | [![path_provider](https://img.shields.io/badge/path__provider-%5E2.1.5-02569B.svg?logo=flutter)](https://pub.dev/packages/path_provider) |
+| System Info VincentZyu | local package `packages/system_info_vincentzyu/` |
 | URL Launcher | [![url_launcher](https://img.shields.io/badge/url__launcher-%5E6.3.1-1E88E5.svg?logo=linktree)](https://pub.dev/packages/url_launcher) |
 | Testing | [![Flutter Test](https://img.shields.io/badge/Flutter%20Test-sdk-00A884.svg?logo=flutter)](https://docs.flutter.dev/testing) |
 | Linting | [![Flutter Lints](https://img.shields.io/badge/flutter__lints-%5E5.0.0-9B59B6.svg?logo=dart)](https://pub.dev/packages/flutter_lints) |
@@ -231,6 +249,6 @@ GitHub Actions handles automated builds and packaging. Push a commit containing 
 | Version | [![Version](https://img.shields.io/badge/Version-0.4.1--alpha.1-02569B.svg?logo=flutter&labelColor=181717)](https://github.com/VincentZyuApps/dart-flutter-demo/releases) |
 | Stars | [![Stars](https://img.shields.io/github/stars/VincentZyuApps/dart-flutter-demo?style=flat&logo=github&label=stars&labelColor=181717&color=FFD700)](https://github.com/VincentZyuApps/dart-flutter-demo/stargazers) |
 | Last Commit | [![Last Commit](https://img.shields.io/github/last-commit/VincentZyuApps/dart-flutter-demo?logo=github&label=last%20commit&labelColor=181717&color=02569B)](https://github.com/VincentZyuApps/dart-flutter-demo/commits/main/) |
-| Github Action CI/CD | [![release](https://img.shields.io/github/v/release/VincentZyuApps/dart-flutter-demo?logo=github&label=release&color=02569B&labelColor=181717)](https://github.com/VincentZyuApps/dart-flutter-demo/releases) · [![build](https://img.shields.io/github/actions/workflow/status/VincentZyuApps/dart-flutter-demo/build.yml?branch=main&logo=githubactions&label=build)](https://github.com/VincentZyuApps/dart-flutter-demo/actions) |
+| Github Action CI/CD | [![release](https://img.shields.io/github/v/release/VincentZyuApps/dart-flutter-demo?logo=github&label=release&color=02569B&labelColor=181717)](https://github.com/VincentZyuApps/dart-flutter-demo/releases) · [![build](https://img.shields.io/github/actions/workflow/status/VincentZyuApps/dart-flutter-demo/build-release.yml?branch=main&logo=githubactions&label=build)](https://github.com/VincentZyuApps/dart-flutter-demo/actions) |
 
 

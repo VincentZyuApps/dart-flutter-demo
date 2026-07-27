@@ -77,14 +77,19 @@ python download_release.py --list-only
 ├── 🏷️ v0.4.1-alpha.1/
 │   ├── 🤖 dart-flutter-demo-android-arm64-*.apk
 │   ├── 🤖 dart-flutter-demo-android-universal-*.apk
+│   ├── 🤖 dart-flutter-demo-android-universal-profile-*.apk
 │   ├── 🤖 dart-flutter-demo-android-x86_64-*.apk
 │   ├── 🍎 dart-flutter-demo-ios-arm64-*.ipa
 │   ├── 🐧 dart-flutter-demo-linux-x64-*.AppImage
 │   ├── 🐧 dart-flutter-demo-linux-x64-*.deb
 │   ├── 🐧 dart-flutter-demo-linux-x64-*.tar.gz
+│   ├── 🐧 dart-flutter-demo-linux-x64-profile-*.tar.gz
 │   ├── 🍎 dart-flutter-demo-macos-arm64-*.dmg
+│   ├── 🍎 dart-flutter-demo-macos-arm64-*.zip
 │   ├── 🍎 dart-flutter-demo-macos-x64-*.dmg
+│   ├── 🍎 dart-flutter-demo-macos-x64-*.zip
 │   ├── 🪟 dart-flutter-demo-windows-x64-*-setup.exe
+│   ├── 🪟 dart-flutter-demo-windows-x64-profile-*.zip
 │   └── 🪟 dart-flutter-demo-windows-x64-*.zip
 └── 🏷️ v0.4.0/
     └── ...

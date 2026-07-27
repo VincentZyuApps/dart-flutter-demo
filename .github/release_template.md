@@ -15,9 +15,19 @@
 | **Android** | [![android-x64](https://img.shields.io/badge/android-x64.apk-8FE388.svg?logo=android)](__BASE_URL__/dart-flutter-demo-android-x86_64-v__VERSION__.apk) | [![android-arm64](https://img.shields.io/badge/android-ARM64.apk-168039.svg?logo=android)](__BASE_URL__/dart-flutter-demo-android-arm64-v__VERSION__.apk) | [![android-universal](https://img.shields.io/badge/android-universal.apk-3DDC84.svg?logo=android)](__BASE_URL__/dart-flutter-demo-android-universal-v__VERSION__.apk) |
 | **iOS** | *none yet* | [![ios-arm64](https://img.shields.io/badge/iOS-ARM64.ipa-000000.svg?logo=apple)](__BASE_URL__/dart-flutter-demo-ios-arm64-v__VERSION__.ipa) | *none yet* |
 
+### Profile Builds
+
+These AOT-compiled Profile packages keep profiling support and are intended for measurements on your own hardware. They are not production Release builds.
+
+- [Windows x64 Profile ZIP](__BASE_URL__/dart-flutter-demo-windows-x64-profile-v__VERSION__.zip)
+- [Linux x64 Profile tar.gz](__BASE_URL__/dart-flutter-demo-linux-x64-profile-v__VERSION__.tar.gz)
+- [Android Universal Profile APK](__BASE_URL__/dart-flutter-demo-android-universal-profile-v__VERSION__.apk)
+
 > *`none yet`* means this platform is not included in the current GitHub Actions build matrix yet.
 >
 > ⚠️ **Linux / Windows GPU issues**: If the app fails to render correctly, launch it with software rendering: `./dart_flutter_demo --disable-gpu`
+>
+> ⚠️ **macOS security prompt**: If macOS blocks the app because Apple cannot verify it, open **System Settings → Privacy & Security**, scroll down to **Security**, then click **Open Anyway** for `dart_flutter_demo`.
 >
 > ⚠️ **macOS virtual machines**: Flutter desktop apps require Apple Metal, which is unavailable in VMware, VirtualBox, and similar VMs. Use a physical Mac or [GitHub Actions macOS runners](https://github.com/VincentZyuApps/mac-test-action-runner) instead.
 >
@@ -25,7 +35,7 @@
 >
 > ⚠️ **iOS**: The IPA is not code-signed for personal devices. To install it on your own iPhone or iPad, self-sign it first. You can use self-signing tools such as AltStore/AltServer or other solutions. For example, see the self-signing guide in the [Troubleshooting section](https://github.com/VincentZyuApps/dart-flutter-demo#%EF%B8%8F-troubleshooting) of the README.
 
-### 📄 Git Infomation
+### 📄 Git Information
 
 __BUILD_INFO__
 

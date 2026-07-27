@@ -1,0 +1,88 @@
+name: Platform Bootstrap
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: platform-bootstrap-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  generate:
+    name: Generate five platform projects
+    runs-on: macos-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.41.5
+          channel: stable
+          cache: true
+
+      - name: Generate platform projects
+        shell: bash
+        run: |
+          set -euo pipefail
+          GENERATED="$RUNNER_TEMP/dart_flutter_demo_platforms"
+          flutter pub get
+          flutter create \
+            --project-name dartflutterdemo \
+            --org io.github.vincentzyuapps \
+            --platforms android,ios,windows,linux,macos \
+            "$GENERATED"
+          python3 scripts/platform_bootstrap/configure_platforms.py \
+            --repo "$GITHUB_WORKSPACE" \
+            --generated "$GENERATED"
+          rm -rf "$GENERATED/lib" "$GENERATED/test" "$GENERATED/.dart_tool"
+          rm -rf "$GENERATED/ios/Flutter/ephemeral" \
+            "$GENERATED/macos/Flutter/ephemeral" \
+            "$GENERATED/linux/flutter/ephemeral" \
+            "$GENERATED/windows/flutter/ephemeral"
+          rm -f "$GENERATED/pubspec.yaml" "$GENERATED/pubspec.lock" \
+            "$GENERATED/analysis_options.yaml" "$GENERATED/README.md" \
+            "$GENERATED/android/local.properties" \
+            "$GENERATED/ios/Flutter/Generated.xcconfig" \
+            "$GENERATED/ios/Flutter/flutter_export_environment.sh"
+          cp "$GITHUB_WORKSPACE/pubspec.lock" "$GENERATED/pubspec.lock"
+
+      - name: Verify generated identity and roots
+        shell: bash
+        run: |
+          set -euo pipefail
+          GENERATED="$RUNNER_TEMP/dart_flutter_demo_platforms"
+          for platform in android ios windows linux macos; do
+            test -d "$GENERATED/$platform"
+          done
+          grep -R "io.github.vincentzyuapps.dartflutterdemo" \
+            "$GENERATED/android" "$GENERATED/ios" "$GENERATED/macos"
+          if grep -R "com.example\|dart_flutter_demo/system_info" \
+            "$GENERATED/android" "$GENERATED/ios" "$GENERATED/macos"; then
+            echo "Generated platform projects contain a stale identity or channel." >&2
+            exit 1
+          fi
+          if grep -R "/Users/runner\|/opt/hostedtoolcache" \
+            "$GENERATED/android" "$GENERATED/ios" "$GENERATED/windows" \
+            "$GENERATED/linux" "$GENERATED/macos"; then
+            echo "Generated platform projects contain a hosted-runner path." >&2
+            exit 1
+          fi
+
+      - name: Upload platform source tree
+        uses: actions/upload-artifact@v4
+        with:
+          name: dart-flutter-demo-platform-roots-flutter-3.41.5
+          path: |
+            ${{ runner.temp }}/dart_flutter_demo_platforms/android
+            ${{ runner.temp }}/dart_flutter_demo_platforms/ios
+            ${{ runner.temp }}/dart_flutter_demo_platforms/windows
+            ${{ runner.temp }}/dart_flutter_demo_platforms/linux
+            ${{ runner.temp }}/dart_flutter_demo_platforms/macos
+            ${{ runner.temp }}/dart_flutter_demo_platforms/.metadata
+            ${{ runner.temp }}/dart_flutter_demo_platforms/pubspec.lock
+          retention-days: 7
+          if-no-files-found: error

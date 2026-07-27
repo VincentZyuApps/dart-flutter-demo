@@ -1,0 +1,128 @@
+name: Profile & Debug Builds
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: Developer build mode
+        type: choice
+        options: [profile, debug, both]
+        default: profile
+
+permissions:
+  contents: read
+
+concurrency:
+  group: developer-builds-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  FLUTTER_VERSION: 3.41.5
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      run_profile: ${{ steps.modes.outputs.run_profile }}
+      run_debug: ${{ steps.modes.outputs.run_debug }}
+      short_sha: ${{ steps.modes.outputs.short_sha }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Select modes from exact trigger tokens
+        id: modes
+        shell: bash
+        env:
+          COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
+          MANUAL_MODE: ${{ inputs.mode || 'profile' }}
+        run: |
+          set -euo pipefail
+          PROFILE=false
+          DEBUG=false
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            [[ "$MANUAL_MODE" == "profile" || "$MANUAL_MODE" == "both" ]] && PROFILE=true
+            [[ "$MANUAL_MODE" == "debug" || "$MANUAL_MODE" == "both" ]] && DEBUG=true
+          else
+            python scripts/ci/ci_trigger.py --message "$COMMIT_MESSAGE" --token build-profile && PROFILE=true
+            python scripts/ci/ci_trigger.py --message "$COMMIT_MESSAGE" --token build-debug && DEBUG=true
+          fi
+          echo "run_profile=$PROFILE" >> "$GITHUB_OUTPUT"
+          echo "run_debug=$DEBUG" >> "$GITHUB_OUTPUT"
+          echo "short_sha=${GITHUB_SHA:0:7}" >> "$GITHUB_OUTPUT"
+
+  build:
+    needs: prepare
+    if: needs.prepare.outputs.run_profile == 'true' || needs.prepare.outputs.run_debug == 'true'
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: windows-x64
+            os: windows-latest
+            profile_path: build/windows/x64/runner/Profile
+            debug_path: build/windows/x64/runner/Debug
+          - platform: linux-x64
+            os: ubuntu-22.04
+            profile_path: build/linux/x64/profile/bundle
+            debug_path: build/linux/x64/debug/bundle
+          - platform: android-universal
+            os: ubuntu-latest
+            profile_path: build/app/outputs/flutter-apk/app-profile.apk
+            debug_path: build/app/outputs/flutter-apk/app-debug.apk
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Linux dependencies
+        if: matrix.platform == 'linux-x64'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - run: flutter pub get
+
+      - name: Build Profile
+        if: needs.prepare.outputs.run_profile == 'true'
+        shell: bash
+        run: |
+          case "${{ matrix.platform }}" in
+            windows-x64) flutter build windows --profile ;;
+            linux-x64) flutter build linux --profile ;;
+            android-universal) flutter build apk --profile ;;
+          esac
+
+      - name: Upload Profile
+        if: needs.prepare.outputs.run_profile == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: dart-flutter-demo-${{ matrix.platform }}-profile-${{ needs.prepare.outputs.short_sha }}
+          path: ${{ matrix.profile_path }}
+          retention-days: 7
+          if-no-files-found: error
+
+      - name: Build Debug
+        if: needs.prepare.outputs.run_debug == 'true'
+        shell: bash
+        run: |
+          case "${{ matrix.platform }}" in
+            windows-x64) flutter build windows --debug ;;
+            linux-x64) flutter build linux --debug ;;
+            android-universal) flutter build apk --debug ;;
+          esac
+
+      - name: Upload Debug
+        if: needs.prepare.outputs.run_debug == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: dart-flutter-demo-${{ matrix.platform }}-debug-${{ needs.prepare.outputs.short_sha }}
+          path: ${{ matrix.debug_path }}
+          retention-days: 7
+          if-no-files-found: error

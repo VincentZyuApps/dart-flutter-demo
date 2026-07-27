@@ -12,14 +12,14 @@
 一个跨平台的 Flutter UI 展示 PoC（Proof of Concept）应用，可以跑在 Android、Windows、Linux、macOS 和 iOS 上，使用 GitHub Actions CI 打包工作流构建。
 
 [![Last Commit](https://img.shields.io/github/last-commit/VincentZyuApps/dart-flutter-demo?style=for-the-badge&logo=github&color=181717&logoColor=white)](https://github.com/VincentZyuApps/dart-flutter-demo/commits/main/)
-[![Build](https://img.shields.io/github/actions/workflow/status/VincentZyuApps/dart-flutter-demo/build.yml?style=for-the-badge&logo=githubactions&logoColor=white&label=Build)](https://github.com/VincentZyuApps/dart-flutter-demo/actions)
+[![Build Release](https://img.shields.io/github/actions/workflow/status/VincentZyuApps/dart-flutter-demo/build-release.yml?style=for-the-badge&logo=githubactions&logoColor=white&label=Build%20Release)](https://github.com/VincentZyuApps/dart-flutter-demo/actions)
 
 <p align="center">
   <img src="assets/images/logo-icon-favicon.png" alt="dart_flutter_demo logo" width="280"/>
 </p>
 
 [![Windows x64](https://img.shields.io/static/v1?label=Windows&message=x64&color=0078D4&style=for-the-badge&logo=data:image/svg%2bxml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZD0iTTAgMGgxMS4zNzd2MTEuMzcySDB6TTEyLjYyMyAwSDI0djExLjM3MkgxMi42MjN6TTAgMTIuNjIzaDExLjM3N1YyNEgweiBNMTIuNjIzIDEyLjYyM0gyNFYyNEgxMi42MjN6IiBmaWxsPSIjZmZmIi8+PC9zdmc+)](https://github.com/VincentZyuApps/dart-flutter-demo/releases)
-[![Linux x64 | ARM64](https://img.shields.io/badge/Linux-x64_|_ARM64-FCC624?style=for-the-badge&logo=linux&logoColor=black)](https://github.com/VincentZyuApps/dart-flutter-demo/releases)
+[![Linux x64](https://img.shields.io/badge/Linux-x64-FCC624?style=for-the-badge&logo=linux&logoColor=black)](https://github.com/VincentZyuApps/dart-flutter-demo/releases)
 [![macOS x64 | ARM64](https://img.shields.io/badge/macOS-x64_|_ARM64-000000?style=for-the-badge&logo=apple&logoColor=white)](https://github.com/VincentZyuApps/dart-flutter-demo/releases)
 
 [![Android x86_64 | ARM64](https://img.shields.io/badge/Android-x86_64_|_ARM64-3DDC84?style=for-the-badge&logo=android&logoColor=white)](https://github.com/VincentZyuApps/dart-flutter-demo/releases)
@@ -73,7 +73,7 @@
 
 ### 0. 🖥️ 系统信息实验室
 
-通过原生 C++（Windows）、Kotlin（Android）、Swift（iOS）以及 dart:io fallback 获取系统信息。展示 OS、主机名、内核、运行时间、CPU、内存、磁盘和本地 IP。内置调试链路查看、复制与导出能力，便于诊断采集过程。<br>
+通过可复用的本地插件 `system_info_vincentzyu` 获取类型化系统信息：Windows 优先使用 Win32 C++ FFI，Android 与 Apple 平台使用 Kotlin/Swift MethodChannel，Linux 使用 Dart/系统接口，显示格式统一留在 App 层。每个字段显示来源、耗时和 fallback 链。会话日志同步到内存、UI、Console 与轮转文件（每份 10 MiB，保留最新五份）；主机名和局域网 IP 不会自动上传，主动导出前会显示隐私提醒。<br>
 源码： [lib/pages/page0_system_info.dart](https://github.com/VincentZyu233/dart-flutter-demo/blob/main/lib/pages/page0_system_info.dart)
 
 <div align="center">
@@ -137,13 +137,13 @@
 
 ### 4. 🎛️ 控件与反馈实验室
 
-一个用于交互控件与反馈模式的紧凑实验页。包含单选框、多选框、开关、进度指示器、SnackBar 和 BottomSheet。适合检查状态切换、动效反馈与组件响应性。<br>
+一个响应式控件状态与可访问性实验页。包含单选框、带不确定态的多选框、开关、验证与加载状态、字体缩放、高对比度预览、焦点诊断和实时 JSON 状态检查。异步任务支持运行、暂停、继续、失败、重试、取消与完成，并同时展示确定与不确定进度以及 SnackBar、对话框、Banner 和 BottomSheet 反馈。<br>
 源码： [lib/pages/page4_controls_feedback.dart](https://github.com/VincentZyu233/dart-flutter-demo/blob/main/lib/pages/page4_controls_feedback.dart)
 ![page4](doc/images/preview/page4.controls-schema-feedback.png)
 
 ## 📁 文件结构
 
-`lib/` 目录按入口、应用壳、页面、通用组件、服务和模型做了分层：
+应用将五个平台工程全部纳入版本控制，可复用的系统信息能力位于本地 Flutter 插件中：
 
 | 文件 | 作用 |
 |---|---|
@@ -159,32 +159,48 @@
 | `lib/services/android_home_widget_service.dart` | Android 桌面小组件同步桥接。 |
 | `lib/services/app_performance.dart` | FPS 和重建次数统计辅助。 |
 | `lib/services/github_repository_service.dart` | GitHub 仓库解析、抓取和数据模型。 |
-| `lib/services/system_info_service.dart` | 跨平台系统信息采集、调试快照、复制/导出辅助。 |
+| `lib/services/system_info_service.dart` | App 格式化、日志初始化、调试快照与复制/导出适配。 |
 | `lib/widgets/animated_page.dart` | 页面切换和层级动画封装。 |
 | `lib/widgets/repository_card.dart` | 网格样式的仓库卡片。 |
 | `lib/widgets/repository_list_tile.dart` | 列表样式的仓库条目。 |
 | `lib/widgets/state_shell.dart` | 通用的空态/加载态/错误态布局。 |
 | `lib/widgets/tag.dart` | 小型标签胶囊组件。 |
+| `packages/system_info_vincentzyu/` | 可供其他 Flutter App 复用的五平台类型化系统信息插件。 |
+| `android/`、`ios/`、`windows/`、`linux/`、`macos/` | 常驻源码树的平台工程，正常 CI 不会重新生成。 |
+| `.github/workflows/profile-debug.yml` | 保留七天的 Windows/Linux/Android Profile 与 Debug 产物。 |
+| `.github/workflows/performance.yml` | 保留七天或发布为永久 Pre-release 的桌面 Profile 构建报告。 |
 
 
 ## 🧪 构建模式
 
-| 模式 | GitHub CI 发布 | JIT | AOT | 优化 | 调试符号 | 适用场景 |
-|:-----|:--------------:|:---:|:---:|:----:|:--------:|:---------|
-| **Debug** | ❌ | ✅ | ❌ | ❌ | ✅ | 本地开发与调试 |
-| **Profile** | ❌ | ❌ | ✅ | ✅ | ❌ | 性能分析 |
-| **🚀 Release** | ✅ | ❌ | ✅ | ✅ | ❌ | GitHub Release 发布包与生产使用 |
+| 模式 | GitHub 输出 | JIT | AOT | 优化 | 调试符号 | 适用场景 |
+|:-----|:------------|:---:|:---:|:----:|:--------:|:---------|
+| **Debug** | 保留七天的 Actions 产物 | ✅ | ❌ | ❌ | ✅ | 开发与故障诊断 |
+| **Profile** | 永久 Release 附件加保留七天的开发产物 | ❌ | ✅ | ✅ | 有限 | 在真机或实体主机上做性能分析 |
+| **🚀 Release** | 永久 GitHub Release 附件 | ❌ | ✅ | ✅ | ❌ | 类生产环境使用 |
 
-> GitHub Release 产物使用 `flutter build <platform> --release` 构建。
-> 本地 Debug/Profile 构建可按目标平台运行 `flutter run --debug`、`flutter run --profile` 或 `flutter build windows --profile` 等命令。
+> Release 附件使用 `flutter build <platform> --release` 构建。本仓库统一通过 GitHub Actions 运行 Flutter 分析、测试、构建和性能报告，不使用本地 Flutter SDK。
 
 ## ⚙️🚀 CI/CD
 
-GitHub Actions 负责自动构建与打包。提交信息包含 `build action` 或 `build release` 即可触发流水线。详见 [build.zh-cn.md](.github/workflows/build.zh-cn.md)。
+GitHub Actions 使用精确且区分大小写的连字符关键词：`[build-release]` 发布应用 Release，`[build-profile]` 与 `[build-debug]` 生成保留七天的开发产物，`[run-performance]` 将性能报告保留七天，`[release-performance]` 创建永久 Performance Pre-release。方括号只是 commit 风格，CI 实际匹配其中的关键词。手动选项与平台 bootstrap 详见 [ci.zh-cn.md](.github/workflows/ci.zh-cn.md)。
+
+## 平台基线
+
+| 平台 | 声明的最低版本 | 当前发布架构 |
+|---|---|---|
+| Windows | Windows 10 或更高版本 | x64 |
+| Linux | 带 GTK 3 的现代 x64 桌面发行版 | x64 |
+| macOS | macOS 10.15 或更高版本 | x64 与 ARM64 |
+| Android | API 21 或更高版本 | Universal、x86_64 与 ARM64 |
+| iOS / iPadOS | iOS 13.0 或更高版本 | ARM64 未签名 IPA |
+
+iOS 基线表示工程配置的理论最低构建版本，不代表所有系统与设备组合都经过实测。目前已知的实体设备验证结果是 iPad Air 5 / iOS 17。
 
 ## ⚠️🩺 故障排除
 
 - **🪟🐧 Windows / Linux GPU问题**：使用软件渲染启动：`./dart_flutter_demo --disable-gpu`
+- **🍎 macOS 安全提示**：如果 macOS 拦截启动 并提示 Apple 无法验证此 app，请打开**系统设置 → 隐私与安全性**，向下滑到**安全性**，然后为 `dart_flutter_demo` 点击**仍要打开**。
 - **🍎 macOS 虚拟机 图形问题**（VMware、VirtualBox 等）：Flutter 桌面应用依赖 Apple Metal，虚拟机无法提供 Metal 支持，因此无法运行。请使用物理 Mac 或 [GitHub Actions macOS runners](https://github.com/VincentZyuApps/mac-test-action-runner)。
 - **🤖 Android APK**：未使用固定 keystore 签名。每次 release 使用不同的 debug key，安装新版本前需要**先卸载旧版本**以避免签名冲突。
 - **📱 iOS IPA**：CI 未配置代码签名，想在自己设备上运行需要自行签名。<br>*(仅供参考 — 测试设备 iPad Air 5，iOS 17；其他设备/系统版本可能有差异)*：
@@ -207,6 +223,8 @@ GitHub Actions 负责自动构建与打包。提交信息包含 `build action` �
 | Google Fonts | [![google_fonts](https://img.shields.io/badge/Google%20Fonts-%5E6.1.0-4285F4.svg?logo=googlefonts)](https://pub.dev/packages/google_fonts) |
 | Flutter Colorpicker | [![flutter_colorpicker](https://img.shields.io/badge/flutter__colorpicker-%5E1.1.0-6750A4.svg?logo=flutter)](https://github.com/mchome/flutter_colorpicker) |
 | Package Info Plus | [![package_info_plus](https://img.shields.io/badge/package__info__plus-%5E8.0.2-FF6F00.svg?logo=dart)](https://pub.dev/packages/package_info_plus) |
+| Path Provider | [![path_provider](https://img.shields.io/badge/path__provider-%5E2.1.5-02569B.svg?logo=flutter)](https://pub.dev/packages/path_provider) |
+| System Info VincentZyu | 本地包 `packages/system_info_vincentzyu/` |
 | URL Launcher | [![url_launcher](https://img.shields.io/badge/url__launcher-%5E6.3.1-1E88E5.svg?logo=linktree)](https://pub.dev/packages/url_launcher) |
 | Testing | [![Flutter Test](https://img.shields.io/badge/Flutter%20Test-sdk-00A884.svg?logo=flutter)](https://docs.flutter.dev/testing) |
 | Linting | [![Flutter Lints](https://img.shields.io/badge/flutter__lints-%5E5.0.0-9B59B6.svg?logo=dart)](https://pub.dev/packages/flutter_lints) |
@@ -231,6 +249,4 @@ GitHub Actions 负责自动构建与打包。提交信息包含 `build action` �
 | Version | [![Version](https://img.shields.io/badge/Version-0.4.1--alpha.1-02569B.svg?logo=flutter&labelColor=181717)](https://github.com/VincentZyuApps/dart-flutter-demo/releases) |
 | Stars | [![Stars](https://img.shields.io/github/stars/VincentZyuApps/dart-flutter-demo?style=flat&logo=github&label=stars&labelColor=181717&color=FFD700)](https://github.com/VincentZyuApps/dart-flutter-demo/stargazers) |
 | Last Commit | [![Last Commit](https://img.shields.io/github/last-commit/VincentZyuApps/dart-flutter-demo?logo=github&label=last%20commit&labelColor=181717&color=02569B)](https://github.com/VincentZyuApps/dart-flutter-demo/commits/main/) |
-| Github Action CI/CD | [![release](https://img.shields.io/github/v/release/VincentZyuApps/dart-flutter-demo?logo=github&label=发布&color=02569B&labelColor=181717)](https://github.com/VincentZyuApps/dart-flutter-demo/releases) · [![build](https://img.shields.io/github/actions/workflow/status/VincentZyuApps/dart-flutter-demo/build.yml?branch=main&logo=githubactions&label=构建)](https://github.com/VincentZyuApps/dart-flutter-demo/actions) |
-
-
+| Github Action CI/CD | [![release](https://img.shields.io/github/v/release/VincentZyuApps/dart-flutter-demo?logo=github&label=发布&color=02569B&labelColor=181717)](https://github.com/VincentZyuApps/dart-flutter-demo/releases) · [![build](https://img.shields.io/github/actions/workflow/status/VincentZyuApps/dart-flutter-demo/build-release.yml?branch=main&logo=githubactions&label=构建)](https://github.com/VincentZyuApps/dart-flutter-demo/actions) |

@@ -103,7 +103,9 @@ class _Page0SystemInfoState extends State<Page0SystemInfo> {
       if (!mounted || generation != _loadGeneration) return;
 
       if (mounted && generation == _loadGeneration) {
-        await AndroidHomeWidgetService.syncSystemInfoWidget();
+        await AndroidHomeWidgetService.syncSystemInfoWidget(
+          _service.latestSnapshot,
+        );
         setState(() {
           _info.addAll(info);
           _loadingKeys.removeAll(info.keys);
@@ -134,6 +136,29 @@ class _Page0SystemInfoState extends State<Page0SystemInfo> {
 
   Future<void> _exportLogs() async {
     if (_exporting) return;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Export system information log?'),
+        content: const Text(
+          'The exported log contains device information, including the '
+          'hostname and local IP address. The app never uploads it '
+          'automatically; share it only with people you trust.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton.icon(
+            onPressed: () => Navigator.of(context).pop(true),
+            icon: const Icon(Icons.download_rounded),
+            label: const Text('Export'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
     setState(() {
       _exporting = true;
     });
@@ -242,6 +267,7 @@ class _Page0SystemInfoState extends State<Page0SystemInfo> {
                   label: key,
                   value: _info[key],
                   loading: _loadingKeys.contains(key),
+                  diagnostic: _diagnosticForLabel(key),
                 ),
               const SizedBox(height: 16),
               Wrap(
@@ -368,6 +394,9 @@ class _Page0SystemInfoState extends State<Page0SystemInfo> {
     final fields = _debug.data.entries
         .map((entry) => '${entry.key}=${entry.value}')
         .join('\n');
+    final diagnostics = _debug.fieldDiagnostics.entries
+        .map((entry) => '${entry.key}: ${entry.value}')
+        .join('\n');
 
     return Container(
       decoration: BoxDecoration(
@@ -407,7 +436,9 @@ class _Page0SystemInfoState extends State<Page0SystemInfo> {
           _DebugKv(label: 'platform', value: _debug.platform),
           _DebugKv(label: 'source', value: _debug.source),
           _DebugKv(label: 'ffi_status', value: _debug.ffiStatus),
+          _DebugKv(label: 'live_log', value: _debug.logFilePath ?? 'unavailable'),
           _DebugKv(label: 'fields', value: fields),
+          _DebugKv(label: 'field_diagnostics', value: diagnostics),
           SelectableText(
             logs.isEmpty ? 'No debug logs captured yet.' : logs.join('\n'),
             style: TextStyle(
@@ -421,17 +452,35 @@ class _Page0SystemInfoState extends State<Page0SystemInfo> {
       ),
     );
   }
+
+  String? _diagnosticForLabel(String label) {
+    final wireName = switch (label) {
+      'OS' => 'operatingSystem',
+      'Host' => 'host',
+      'Kernel' => 'kernel',
+      'Uptime' => 'uptimeSeconds',
+      'CPU' => 'cpuModel',
+      'Memory' => 'memoryUsedBytes',
+      'Local IP' => 'localIp',
+      'Locale' => 'locale',
+      _ when label.startsWith('Disk') => 'diskUsedBytes',
+      _ => null,
+    };
+    return wireName == null ? null : _debug.fieldDiagnostics[wireName];
+  }
 }
 
 class _InfoRow extends StatelessWidget {
   final String label;
   final String? value;
   final bool loading;
+  final String? diagnostic;
 
   const _InfoRow({
     required this.label,
     required this.value,
     required this.loading,
+    this.diagnostic,
   });
 
   Future<void> _copyRow(BuildContext context) async {
@@ -493,14 +542,32 @@ class _InfoRow extends StatelessWidget {
                         ),
                       ],
                     )
-                  : SelectableText(
-                      value ?? '-',
-                      style: TextStyle(
-                        fontFamily: 'JetBrainsMono',
-                        fontSize: 15.6,
-                        color: theme.colorScheme.onSurface,
-                        height: 1.4,
-                      ),
+                  : Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SelectableText(
+                          value ?? '-',
+                          style: TextStyle(
+                            fontFamily: 'JetBrainsMono',
+                            fontSize: 15.6,
+                            color: theme.colorScheme.onSurface,
+                            height: 1.4,
+                          ),
+                        ),
+                        if (diagnostic != null) ...[
+                          const SizedBox(height: 2),
+                          Text(
+                            diagnostic!,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontFamily: 'JetBrainsMono',
+                              fontSize: 9.5,
+                              color: theme.colorScheme.onSurface.withOpacity(0.48),
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
             ),
           ],

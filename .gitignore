@@ -1,7 +1,7 @@
 # Flutter/Dart
 .dart_tool/
 .packages
-pubspec.lock
+# The root project is an application, so its pubspec.lock is committed.
 .flutter-plugins
 .flutter-plugins-dependencies
 build/
@@ -18,23 +18,30 @@ android/key.properties
 *.jks
 *.keystore
 
-# iOS (if ever added)
+# iOS
 ios/Pods/
 ios/.symlinks/
 ios/Flutter/Flutter.framework
 ios/Flutter/Flutter.podspec
+ios/Flutter/Generated.xcconfig
+ios/Flutter/ephemeral/
 
 # Linux
 linux/build/
 linux/flutter/ephemeral/
 linux/runner/*.g.dart
 
-# macOS (if ever added)
+# macOS
 macos/Pods/
 macos/Flutter/ephemeral/
 
 # Windows
 windows/flutter/ephemeral/
+
+# Package examples and generated native assets
+packages/**/.dart_tool/
+packages/**/build/
+packages/**/pubspec.lock
 
 # IDE
 .vscode/
