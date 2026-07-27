@@ -60,6 +60,9 @@ jobs:
           done
           test -f "$GENERATED/.metadata"
           test -f "$GENERATED/windows/packaging/exe/inno_setup.iss"
+          test -f "$GENERATED/linux/packaging/appimage/make_config.yaml"
+          test -f "$GENERATED/linux/packaging/deb/make_config.yaml"
+          test -f "$GENERATED/linux/packaging/rpm/make_config.yaml"
           grep -R "io.github.vincentzyuapps.dartflutterdemo" \
             "$GENERATED/android" "$GENERATED/ios" "$GENERATED/macos"
           if grep -R "com.example\|dart_flutter_demo/system_info" \

@@ -154,8 +154,12 @@ def configure_windows(repo: Path, generated: Path) -> None:
     runner_rc.write_text(text, encoding="utf-8")
 
 
-def configure_linux(generated: Path) -> None:
+def configure_linux(repo: Path, generated: Path) -> None:
     linux = generated / "linux"
+    copy_directory_contents(
+        repo / "linux" / "packaging",
+        linux / "packaging",
+    )
     replace_in_file(linux / "CMakeLists.txt", 'set(BINARY_NAME "dartflutterdemo")',
                     'set(BINARY_NAME "dart_flutter_demo")')
     replace_in_file(linux / "CMakeLists.txt", 'set(APPLICATION_ID "io.github.vincentzyuapps.dartflutterdemo")',
@@ -193,7 +197,7 @@ def main() -> None:
     configure_ios(repo, generated)
     configure_macos(repo, generated)
     configure_windows(repo, generated)
-    configure_linux(generated)
+    configure_linux(repo, generated)
 
 
 if __name__ == "__main__":
