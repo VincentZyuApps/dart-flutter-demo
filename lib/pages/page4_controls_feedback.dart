@@ -299,37 +299,34 @@ class _Page4ControlsFeedbackState extends State<Page4ControlsFeedback>
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
                               if (wide)
-                                IntrinsicHeight(
-                                  child: Row(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.stretch,
-                                    children: [
-                                      Expanded(
-                                        child: FocusTraversalOrder(
-                                          order: const NumericFocusOrder(1),
-                                          child: _focusRegion(
-                                            'Selection controls',
-                                            _buildSelectionControls(
-                                              activeTheme,
-                                            ),
+                                Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Expanded(
+                                      child: FocusTraversalOrder(
+                                        order: const NumericFocusOrder(1),
+                                        child: _focusRegion(
+                                          'Selection controls',
+                                          _buildSelectionControls(
+                                            activeTheme,
                                           ),
                                         ),
                                       ),
-                                      const VerticalDivider(width: 40),
-                                      Expanded(
-                                        child: FocusTraversalOrder(
-                                          order: const NumericFocusOrder(2),
-                                          child: _focusRegion(
-                                            'Accessibility preview',
-                                            _buildAccessibilityPreview(
-                                              activeTheme,
-                                              systemHighContrast,
-                                            ),
+                                    ),
+                                    const SizedBox(width: 40),
+                                    Expanded(
+                                      child: FocusTraversalOrder(
+                                        order: const NumericFocusOrder(2),
+                                        child: _focusRegion(
+                                          'Accessibility preview',
+                                          _buildAccessibilityPreview(
+                                            activeTheme,
+                                            systemHighContrast,
                                           ),
                                         ),
                                       ),
-                                    ],
-                                  ),
+                                    ),
+                                  ],
                                 )
                               else ...[
                                 FocusTraversalOrder(

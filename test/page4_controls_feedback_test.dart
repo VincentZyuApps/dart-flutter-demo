@@ -93,6 +93,8 @@ void main() {
     );
 
     final pause = find.byKey(const Key('page4-task-pause'));
+    await tester.ensureVisible(pause);
+    await tester.pump();
     await tester.tap(pause);
     await tester.pump();
     final before = tester
@@ -108,7 +110,11 @@ void main() {
         .value!;
     expect(after, closeTo(before, 0.0001));
 
-    await tester.tap(find.byKey(const Key('page4-task-resume')));
+    final resume = find.byKey(const Key('page4-task-resume'));
+    await tester.ensureVisible(resume);
+    await tester.pump();
+    await tester.tap(resume);
+    await tester.pump();
     await tester.pump(const Duration(milliseconds: 500));
     final resumed = tester
         .widget<LinearProgressIndicator>(
@@ -117,7 +123,10 @@ void main() {
         .value!;
     expect(resumed, greaterThan(after));
 
-    await tester.tap(find.byKey(const Key('page4-task-cancel')));
+    final cancel = find.byKey(const Key('page4-task-cancel'));
+    await tester.ensureVisible(cancel);
+    await tester.pump();
+    await tester.tap(cancel);
     await tester.pump();
     expect(find.text('Canceled'), findsWidgets);
   });
@@ -153,9 +162,16 @@ void main() {
       closeTo(0.65, 0.0001),
     );
 
+    await tester.ensureVisible(failureSwitch);
+    await tester.pump();
     await tester.tap(failureSwitch);
     await tester.pump();
-    await tester.tap(find.byKey(const Key('page4-task-retry')));
+    expect(tester.widget<SwitchListTile>(failureSwitch).value, isFalse);
+
+    final retry = find.byKey(const Key('page4-task-retry'));
+    await tester.ensureVisible(retry);
+    await tester.pump();
+    await tester.tap(retry);
     await tester.pump(const Duration(milliseconds: 5100));
     await tester.pump();
     expect(find.text('Succeeded'), findsWidgets);
