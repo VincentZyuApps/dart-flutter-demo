@@ -1,5 +1,3 @@
-library system_info_vincentzyu;
-
 export 'src/logging/system_info_session_log_sink.dart';
 export 'src/model/system_info_diagnostics.dart';
 export 'src/model/system_info_event.dart';

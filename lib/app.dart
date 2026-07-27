@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/scheduler.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -417,10 +416,10 @@ class _PerfChip extends StatelessWidget {
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
           decoration: BoxDecoration(
-            color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.55),
+            color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.55),
             borderRadius: BorderRadius.circular(999),
             border: Border.all(
-              color: theme.colorScheme.outlineVariant.withOpacity(0.5),
+              color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
             ),
           ),
           child: Text(

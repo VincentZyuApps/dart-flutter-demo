@@ -99,7 +99,7 @@ class PageSwitcher extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _AnimatedSwitcherInternal(child: child, key: ValueKey(key_));
+    return _AnimatedSwitcherInternal(key: ValueKey(key_), child: child);
   }
 }
 

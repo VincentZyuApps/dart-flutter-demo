@@ -95,8 +95,9 @@ class _Page3AdaptiveGridState extends State<Page3AdaptiveGrid> {
         _logs = ['Error: $e'];
       });
     } finally {
-      if (!mounted) return;
-      setState(() => _loading = false);
+      if (mounted) {
+        setState(() => _loading = false);
+      }
     }
   }
 
@@ -123,12 +124,6 @@ class _Page3AdaptiveGridState extends State<Page3AdaptiveGrid> {
       };
     });
     return sorted;
-  }
-
-  void _addSource() {
-    setState(() {
-      _sourceControllers.add(TextEditingController());
-    });
   }
 
   void _removeSource(int index) {

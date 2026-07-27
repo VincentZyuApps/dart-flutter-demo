@@ -12,7 +12,7 @@ class FrameFpsTracker {
 
   void addTimings(List<FrameTiming> timings) {
     final nowMicros = DateTime.now().microsecondsSinceEpoch;
-    for (final timing in timings) {
+    for (final _ in timings) {
       _frameTimestampsMicros.add(nowMicros);
     }
     if (_frameTimestampsMicros.length > 180) {

@@ -598,7 +598,7 @@ class SystemInfoClient {
   }
 
   static bool _isUsable(Object? value) =>
-      value != null && (!(value is String) || value.trim().isNotEmpty);
+      value != null && (value is! String || value.trim().isNotEmpty);
   static String? _asString(Object? value) =>
       _isUsable(value) ? value.toString().trim() : null;
   static int? _asInt(Object? value) => value is int

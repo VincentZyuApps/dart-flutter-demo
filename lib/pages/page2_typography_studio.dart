@@ -24,9 +24,6 @@ enum _FontMode {
 class _Page2TypographyStudioState extends State<Page2TypographyStudio> {
   static const _defaultSentence =
       '你好，The quick brown fox jumps over the lazy dog ✨🎨🦊';
-  static const _paragraph =
-      'Typography is not neutral. Weight, rhythm, spacing, and color all change how the same words feel on screen.';
-
   double _fontSize = 32;
   double _letterSpacing = 0;
   double _lineHeight = 1.5;
@@ -60,10 +57,15 @@ class _Page2TypographyStudioState extends State<Page2TypographyStudio> {
     Color(0xFFF97316),
   ];
 
-  String get _rgbText => 'RGB(${_textColor.red}, ${_textColor.green}, ${_textColor.blue})';
+  String get _rgbText {
+    final red = (_textColor.r * 255).round().clamp(0, 255);
+    final green = (_textColor.g * 255).round().clamp(0, 255);
+    final blue = (_textColor.b * 255).round().clamp(0, 255);
+    return 'RGB($red, $green, $blue)';
+  }
 
   String get _hexText =>
-      '#${_textColor.value.toRadixString(16).padLeft(8, '0').substring(2).toUpperCase()}';
+      '#${_textColor.toARGB32().toRadixString(16).padLeft(8, '0').substring(2).toUpperCase()}';
 
   @override
   void dispose() {
@@ -122,10 +124,11 @@ class _Page2TypographyStudioState extends State<Page2TypographyStudio> {
         _localFontStatus = 'Load failed: $e';
       });
     } finally {
-      if (!mounted) return;
-      setState(() {
-        _loadingLocalFont = false;
-      });
+      if (mounted) {
+        setState(() {
+          _loadingLocalFont = false;
+        });
+      }
     }
   }
 
@@ -307,36 +310,35 @@ class _Page2TypographyStudioState extends State<Page2TypographyStudio> {
           onChanged: (value) => setState(() => _lineHeight = value),
         ),
         const SizedBox(height: 12),
-        RadioListTile<_FontMode>(
-          title: const Text('System Default'),
-          value: _FontMode.systemDefault,
+        RadioGroup<_FontMode>(
           groupValue: _fontMode,
           onChanged: (value) {
             if (value == null) return;
             setState(() => _fontMode = value);
           },
-        ),
-        RadioListTile<_FontMode>(
-          title: const Text('Google Fonts – Playfair Display'),
-          subtitle: const Text('Online packaged font from the Google Fonts plugin.'),
-          value: _FontMode.googleFonts,
-          groupValue: _fontMode,
-          onChanged: (value) {
-            if (value == null) return;
-            setState(() => _fontMode = value);
-          },
-        ),
-        RadioListTile<_FontMode>(
-          title: const Text('Local Font File'),
-          subtitle: Text(
-            _localFontStatus ?? 'Load one local font from disk for this session.',
+          child: Column(
+            children: [
+              const RadioListTile<_FontMode>(
+                title: Text('System Default'),
+                value: _FontMode.systemDefault,
+              ),
+              const RadioListTile<_FontMode>(
+                title: Text('Google Fonts – Playfair Display'),
+                subtitle: Text(
+                  'Online packaged font from the Google Fonts plugin.',
+                ),
+                value: _FontMode.googleFonts,
+              ),
+              RadioListTile<_FontMode>(
+                title: const Text('Local Font File'),
+                subtitle: Text(
+                  _localFontStatus ??
+                      'Load one local font from disk for this session.',
+                ),
+                value: _FontMode.localFile,
+              ),
+            ],
           ),
-          value: _FontMode.localFile,
-          groupValue: _fontMode,
-          onChanged: (value) {
-            if (value == null) return;
-            setState(() => _fontMode = value);
-          },
         ),
         const SizedBox(height: 8),
         TextField(
@@ -395,7 +397,7 @@ class _Page2TypographyStudioState extends State<Page2TypographyStudio> {
           spacing: 8,
           runSpacing: 8,
           children: _palette.map((color) {
-            final selected = _textColor.value == color.value;
+            final selected = _textColor.toARGB32() == color.toARGB32();
             final borderColor = color.computeLuminance() > 0.65 ? Colors.black26 : Colors.white70;
             return GestureDetector(
               onTap: () => setState(() => _textColor = color),

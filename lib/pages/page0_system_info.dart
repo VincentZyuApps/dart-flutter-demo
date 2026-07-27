@@ -17,7 +17,7 @@ class Page0SystemInfo extends StatefulWidget {
 
 class _Page0SystemInfoState extends State<Page0SystemInfo> {
   final _service = createSystemInfoService();
-  Map<String, String> _info = {};
+  final Map<String, String> _info = {};
   Set<String> _loadingKeys = {};
   SystemInfoDebugSnapshot _debug = getSystemInfoDebugSnapshot();
   bool _loading = false;
@@ -256,7 +256,7 @@ class _Page0SystemInfoState extends State<Page0SystemInfo> {
                     'Loaded in ${_loadDurationMs ?? 0} ms',
                     style: TextStyle(
                       fontSize: 11,
-                      color: theme.colorScheme.onSurface.withOpacity(0.5),
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
                       fontFamily: 'JetBrainsMono',
                     ),
                   ),
@@ -339,7 +339,7 @@ class _Page0SystemInfoState extends State<Page0SystemInfo> {
             'fastfetch style',
             style: TextStyle(
               fontSize: 10,
-              color: theme.colorScheme.onSurface.withOpacity(0.3),
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.3),
             ),
           ),
         ],
@@ -350,7 +350,7 @@ class _Page0SystemInfoState extends State<Page0SystemInfo> {
   Widget _buildSeparator(ThemeData theme) {
     return Container(
       height: 1,
-      color: theme.colorScheme.outlineVariant.withOpacity(0.5),
+      color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
     );
   }
 
@@ -400,10 +400,10 @@ class _Page0SystemInfoState extends State<Page0SystemInfo> {
 
     return Container(
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.28),
+        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.28),
         borderRadius: BorderRadius.circular(10),
         border: Border.all(
-          color: theme.colorScheme.outlineVariant.withOpacity(0.5),
+          color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
         ),
       ),
       child: ExpansionTile(
@@ -429,7 +429,7 @@ class _Page0SystemInfoState extends State<Page0SystemInfo> {
           style: TextStyle(
             fontFamily: 'JetBrainsMono',
             fontSize: 10.5,
-            color: theme.colorScheme.onSurface.withOpacity(0.6),
+            color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
           ),
         ),
         children: [
@@ -537,7 +537,7 @@ class _InfoRow extends StatelessWidget {
                           style: TextStyle(
                             fontFamily: 'JetBrainsMono',
                             fontSize: 15.6,
-                            color: theme.colorScheme.onSurface.withOpacity(0.55),
+                            color: theme.colorScheme.onSurface.withValues(alpha: 0.55),
                           ),
                         ),
                       ],
@@ -563,7 +563,7 @@ class _InfoRow extends StatelessWidget {
                             style: TextStyle(
                               fontFamily: 'JetBrainsMono',
                               fontSize: 9.5,
-                              color: theme.colorScheme.onSurface.withOpacity(0.48),
+                              color: theme.colorScheme.onSurface.withValues(alpha: 0.48),
                             ),
                           ),
                         ],
@@ -610,7 +610,7 @@ class _DebugKv extends StatelessWidget {
               fontFamily: 'JetBrainsMono',
               fontSize: 11,
               height: 1.35,
-              color: theme.colorScheme.onSurface.withOpacity(0.9),
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.9),
             ),
           ),
         ],
