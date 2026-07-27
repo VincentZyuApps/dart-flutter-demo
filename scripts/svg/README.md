@@ -18,10 +18,10 @@ uv pip install "fonttools[woff2]" brotli
 
 ```bash
 # 📊 Generate language line count card
-uv run python ./scripts/svg/generate_lang_line_stats.py
+uv run python ./scripts/svg/generate-lang-line-stats.py
 
 # 📏 Generate language byte size card
-uv run python ./scripts/svg/generate_lang_byte_stats.py
+uv run python ./scripts/svg/generate-lang-byte-stats.py
 ```
 
 ## 🖼️ Output

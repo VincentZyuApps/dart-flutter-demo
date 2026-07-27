@@ -31,6 +31,8 @@ Legacy forms such as `build release`, `build action`, or `BUILD-RELEASE` do not 
 
 `build-release.yml` runs on a push containing `build-release`, or through `workflow_dispatch`.
 
+Only application Release Notes contain a commit log. The range starts after the nearest reachable application tag matching `v[0-9]*`; Performance, Profile, Debug, and Bootstrap outputs do not include commit history.
+
 The pipeline first runs `flutter analyze`, root tests, local-plugin tests, and CI trigger tests. It then builds:
 
 | 🎯 Target | 🖥️ Runner | 📦 Release output |

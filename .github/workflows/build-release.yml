@@ -44,7 +44,7 @@ jobs:
           if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
             echo "should_build=true" >> "$GITHUB_OUTPUT"
             echo "should_publish=$MANUAL_PUBLISH" >> "$GITHUB_OUTPUT"
-          elif python scripts/ci/ci_trigger.py --message "$COMMIT_MESSAGE" --token build-release; then
+          elif python scripts/ci/common/ci-trigger.py --message "$COMMIT_MESSAGE" --token build-release; then
             echo "should_build=true" >> "$GITHUB_OUTPUT"
             echo "should_publish=true" >> "$GITHUB_OUTPUT"
           else
@@ -68,17 +68,11 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          BASE_SHA="${{ github.event.before }}"
-          if [[ -z "$BASE_SHA" || "$BASE_SHA" == "0000000000000000000000000000000000000000" ]]; then
-            BASE_SHA="$(git rev-list --max-parents=0 HEAD | tail -1)"
-          fi
-          DELIMITER="COMMITS_$(date +%s)_$RANDOM"
-          {
-            echo "log<<$DELIMITER"
-            git log "$BASE_SHA..${{ github.sha }}" --pretty=format:'- %s (%h) - @%an' --reverse
-            echo
-            echo "$DELIMITER"
-          } >> "$GITHUB_OUTPUT"
+          git fetch --force --tags origin
+          python scripts/ci/release/collect-commits.py \
+            --repository . \
+            --head "${{ github.sha }}" \
+            --github-output "$GITHUB_OUTPUT"
 
   quality:
     needs: prepare
@@ -175,7 +169,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          python scripts/ci/render-iss.py "${{ needs.prepare.outputs.version }}"
+          python scripts/ci/packaging/windows/render-iss.py "${{ needs.prepare.outputs.version }}"
           "/c/Program Files (x86)/Inno Setup 6/ISCC.exe" dist/dart-flutter-demo-setup.iss
 
       - name: Install Linux packaging tool
@@ -186,7 +180,7 @@ jobs:
           curl -fsSL "https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage" -o /tmp/appimagetool.real
           chmod +x /tmp/appimagetool.real
           sudo mv /tmp/appimagetool.real /usr/local/bin/appimagetool.real
-          sudo install -m 0755 scripts/ci/appimagetool-wrapper.sh /usr/local/bin/appimagetool
+          sudo install -m 0755 scripts/ci/packaging/linux/appimagetool-wrapper.sh /usr/local/bin/appimagetool
           dart pub global activate flutter_distributor
           echo "$HOME/.pub-cache/bin" >> "$GITHUB_PATH"
 
@@ -396,7 +390,7 @@ jobs:
         env:
           COMMITS_LOG: ${{ needs.prepare.outputs.commits_log }}
         run: |
-          python3 scripts/ci/render_release_notes.py \
+          python3 scripts/ci/release/render-release-notes.py \
             --repository "${{ github.repository }}" \
             --version "${{ needs.prepare.outputs.version }}" \
             --sha "${{ github.sha }}" \

@@ -35,7 +35,7 @@ jobs:
             --org io.github.vincentzyuapps \
             --platforms android,ios,windows,linux,macos \
             "$GENERATED"
-          python3 scripts/platform_bootstrap/configure_platforms.py \
+          python3 scripts/ci/platform/bootstrap/configure-platforms.py \
             --repo "$GITHUB_WORKSPACE" \
             --generated "$GENERATED"
           rm -rf "$GENERATED/lib" "$GENERATED/test" "$GENERATED/.dart_tool"

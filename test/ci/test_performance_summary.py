@@ -1,3 +1,4 @@
+import importlib.util
 import json
 import sys
 import tempfile
@@ -6,9 +7,14 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(ROOT / "scripts" / "ci"))
-
-from performance_summary import load_reports, render_markdown  # noqa: E402
+SCRIPT = ROOT / "scripts" / "ci" / "performance" / "performance-summary.py"
+SPEC = importlib.util.spec_from_file_location("performance_summary", SCRIPT)
+assert SPEC is not None and SPEC.loader is not None
+MODULE = importlib.util.module_from_spec(SPEC)
+sys.modules[SPEC.name] = MODULE
+SPEC.loader.exec_module(MODULE)
+load_reports = MODULE.load_reports
+render_markdown = MODULE.render_markdown
 
 
 class PerformanceSummaryTest(unittest.TestCase):

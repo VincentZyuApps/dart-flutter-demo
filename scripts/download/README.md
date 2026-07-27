@@ -9,14 +9,14 @@
 
 ```bash
 # 💻 Run with default settings (no proxy)
-python download_release.py
+python download-release.py
 ```
 
 ### 🌐 Proxy via --proxy argument (highest priority)
 
 ```bash
 # 🔌 Specify a proxy server via CLI argument
-python download_release.py --proxy http://127.0.0.1:7890
+python download-release.py --proxy http://127.0.0.1:7890
 ```
 
 ### 🔧 Proxy via environment variable
@@ -26,7 +26,7 @@ python download_release.py --proxy http://127.0.0.1:7890
 # 🪟 Set proxy environment variables in PowerShell
 $env:HTTP_PROXY="http://127.0.0.1:7890"
 $env:HTTPS_PROXY="http://127.0.0.1:7890"
-python download_release.py
+python download-release.py
 ```
 
 **🐧 Bash / zsh / Git Bash:**
@@ -34,22 +34,22 @@ python download_release.py
 # 🐧 Set proxy environment variables in Bash
 export HTTP_PROXY=http://127.0.0.1:7890
 export HTTPS_PROXY=http://127.0.0.1:7890
-python download_release.py
+python download-release.py
 ```
 
 ### 📁 Custom download path (CLI arg, highest priority)
 
 ```bash
 # 📂 Specify a custom download directory
-python download_release.py --path D:\downloads
-# python download_release.py --proxy http://127.0.0.1:7890 --path X:\packs\dart-flutter-demo-showcase
+python download-release.py --path D:\downloads
+# python download-release.py --proxy http://127.0.0.1:7890 --path X:\packs\dart-flutter-demo-showcase
 ```
 
 ### ⌨️ Custom download path (interactive, default = current dir)
 
 ```bash
 # 💬 Run and enter path interactively
-python download_release.py
+python download-release.py
 Download path [C:\Users\you]: D:\downloads
 ```
 
@@ -57,7 +57,7 @@ Download path [C:\Users\you]: D:\downloads
 
 ```bash
 # 🔍 Preview all release assets without downloading
-python download_release.py --list-only
+python download-release.py --list-only
 ```
 
 ## 🏆 Proxy priority
@@ -72,7 +72,7 @@ python download_release.py --list-only
 
 ```
 📂 scripts/download/
-├── 📜 download_release.py
+├── 📜 download-release.py
 ├── 📖 README.md
 ├── 🏷️ v0.4.1-alpha.1/
 │   ├── 🤖 dart-flutter-demo-android-arm64-*.apk

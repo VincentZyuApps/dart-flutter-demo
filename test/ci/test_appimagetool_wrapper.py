@@ -36,7 +36,10 @@ class AppImageToolWrapperTests(unittest.TestCase):
             subprocess.run(
                 [
                     "bash",
-                    (repository / "scripts/ci/appimagetool-wrapper.sh").as_posix(),
+                    (
+                        repository
+                        / "scripts/ci/packaging/linux/appimagetool-wrapper.sh"
+                    ).as_posix(),
                     *arguments,
                 ],
                 check=True,

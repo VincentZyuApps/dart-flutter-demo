@@ -1,12 +1,17 @@
+import importlib.util
 import sys
 import unittest
 from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(ROOT / "scripts" / "ci"))
-
-from ci_trigger import contains_token  # noqa: E402
+SCRIPT = ROOT / "scripts" / "ci" / "common" / "ci-trigger.py"
+SPEC = importlib.util.spec_from_file_location("ci_trigger", SCRIPT)
+assert SPEC is not None and SPEC.loader is not None
+MODULE = importlib.util.module_from_spec(SPEC)
+sys.modules[SPEC.name] = MODULE
+SPEC.loader.exec_module(MODULE)
+contains_token = MODULE.contains_token
 
 
 class CiTriggerTest(unittest.TestCase):

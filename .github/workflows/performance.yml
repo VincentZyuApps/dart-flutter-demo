@@ -78,11 +78,11 @@ jobs:
             else
               echo "Scheduled performance reports are disabled."
             fi
-          elif python scripts/ci/ci_trigger.py --message "$COMMIT_MESSAGE" --token release-performance; then
+          elif python scripts/ci/common/ci-trigger.py --message "$COMMIT_MESSAGE" --token release-performance; then
             SHOULD_RUN=true
             SHOULD_PUBLISH=true
             TRIGGER_SOURCE="commit:release-performance"
-          elif python scripts/ci/ci_trigger.py --message "$COMMIT_MESSAGE" --token run-performance; then
+          elif python scripts/ci/common/ci-trigger.py --message "$COMMIT_MESSAGE" --token run-performance; then
             SHOULD_RUN=true
             TRIGGER_SOURCE="commit:run-performance"
           fi
@@ -185,7 +185,7 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p report
-          python scripts/ci/performance_report.py \
+          python scripts/ci/performance/performance-report.py \
             --platform "${{ matrix.platform }}" \
             --artifact "${{ matrix.output }}" \
             --elapsed-seconds "${{ steps.build.outputs.elapsed_seconds }}" \
@@ -223,7 +223,7 @@ jobs:
           mkdir -p release-files
           find collected -maxdepth 1 -type f \( -name '*.json' -o -name '*.md' \) \
             -exec cp '{}' release-files/ \;
-          python scripts/ci/performance_summary.py \
+          python scripts/ci/performance/performance-summary.py \
             --input-directory collected \
             --output-directory release-files \
             --file-stamp "${{ needs.prepare.outputs.file_stamp }}" \

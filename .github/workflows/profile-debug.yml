@@ -44,8 +44,8 @@ jobs:
             [[ "$MANUAL_MODE" == "profile" || "$MANUAL_MODE" == "both" ]] && PROFILE=true
             [[ "$MANUAL_MODE" == "debug" || "$MANUAL_MODE" == "both" ]] && DEBUG=true
           else
-            python scripts/ci/ci_trigger.py --message "$COMMIT_MESSAGE" --token build-profile && PROFILE=true
-            python scripts/ci/ci_trigger.py --message "$COMMIT_MESSAGE" --token build-debug && DEBUG=true
+            python scripts/ci/common/ci-trigger.py --message "$COMMIT_MESSAGE" --token build-profile && PROFILE=true
+            python scripts/ci/common/ci-trigger.py --message "$COMMIT_MESSAGE" --token build-debug && DEBUG=true
           fi
           echo "run_profile=$PROFILE" >> "$GITHUB_OUTPUT"
           echo "run_debug=$DEBUG" >> "$GITHUB_OUTPUT"

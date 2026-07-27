@@ -31,6 +31,8 @@ feat(system-info): migrate collection into a reusable plugin
 
 `build-release.yml` 在 push 包含 `build-release` 时运行，也可以从 `workflow_dispatch` 手动运行。
 
+只有应用 Release Notes 包含 Commit Log，范围从最近一个可达且匹配 `v[0-9]*` 的应用 tag 之后开始；Performance、Profile、Debug 和 Bootstrap 输出都不包含提交历史。
+
 流水线先运行 `flutter analyze`、根项目测试、本地插件测试和 CI 触发词测试，然后构建：
 
 | 🎯 目标 | 🖥️ Runner | 📦 Release 输出 |

@@ -24,16 +24,17 @@ def copy_directory_contents(source: Path, destination: Path) -> None:
 def configure_android(repo: Path, generated: Path) -> None:
     android = generated / "android"
     main = android / "app" / "src" / "main"
+    templates = Path(__file__).resolve().parent / "android"
     package_path = main / "kotlin" / Path(*APP_ID.split("."))
     package_path.mkdir(parents=True, exist_ok=True)
     for kotlin in (main / "kotlin").rglob("*.kt"):
         kotlin.unlink()
     shutil.copy2(
-        repo / "scripts" / "platform_bootstrap" / "android" / "MainActivity.kt",
+        templates / "MainActivity.kt",
         package_path / "MainActivity.kt",
     )
     shutil.copy2(
-        repo / "scripts" / "platform_bootstrap" / "android" / "DemoAppWidgetProvider.kt",
+        templates / "DemoAppWidgetProvider.kt",
         package_path / "DemoAppWidgetProvider.kt",
     )
 
@@ -41,11 +42,11 @@ def configure_android(repo: Path, generated: Path) -> None:
     (res / "layout").mkdir(parents=True, exist_ok=True)
     (res / "xml").mkdir(parents=True, exist_ok=True)
     shutil.copy2(
-        repo / "scripts" / "platform_bootstrap" / "android" / "demo_widget.xml",
+        templates / "demo-widget.xml",
         res / "layout" / "demo_widget.xml",
     )
     shutil.copy2(
-        repo / "scripts" / "platform_bootstrap" / "android" / "demo_widget_info.xml",
+        templates / "demo-widget-info.xml",
         res / "xml" / "demo_widget_info.xml",
     )
     values = res / "values"
