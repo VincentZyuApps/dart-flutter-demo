@@ -4,7 +4,6 @@
 #ifdef GDK_WINDOWING_X11
 #include <gdk/gdkx.h>
 #endif
-#include <glib/gstdio.h>
 
 #include "flutter/generated_plugin_registrant.h"
 
@@ -15,15 +14,24 @@ struct _MyApplication {
 
 G_DEFINE_TYPE(MyApplication, my_application, GTK_TYPE_APPLICATION)
 
+// Called when first Flutter frame received.
 static void first_frame_cb(MyApplication* self, FlView* view) {
   gtk_widget_show(gtk_widget_get_toplevel(GTK_WIDGET(view)));
 }
 
+// Implements GApplication::activate.
 static void my_application_activate(GApplication* application) {
   MyApplication* self = MY_APPLICATION(application);
   GtkWindow* window =
       GTK_WINDOW(gtk_application_window_new(GTK_APPLICATION(application)));
 
+  // Use a header bar when running in GNOME as this is the common style used
+  // by applications and is the setup most users will be using (e.g. Ubuntu
+  // desktop).
+  // If running on X and not using GNOME then just use a traditional title bar
+  // in case the window manager does more exotic layout, e.g. tiling.
+  // If running on Wayland assume the header bar will work (may need changing
+  // if future cases occur).
   gboolean use_header_bar = TRUE;
 #ifdef GDK_WINDOWING_X11
   GdkScreen* screen = gtk_window_get_screen(window);
@@ -37,46 +45,32 @@ static void my_application_activate(GApplication* application) {
   if (use_header_bar) {
     GtkHeaderBar* header_bar = GTK_HEADER_BAR(gtk_header_bar_new());
     gtk_widget_show(GTK_WIDGET(header_bar));
-    gtk_header_bar_set_title(header_bar, "Dart + Flutter Demo");
+    gtk_header_bar_set_title(header_bar, "DartFlutterDemo");
     gtk_header_bar_set_show_close_button(header_bar, TRUE);
     gtk_window_set_titlebar(window, GTK_WIDGET(header_bar));
   } else {
-    gtk_window_set_title(window, "Dart + Flutter Demo");
+    gtk_window_set_title(window, "DartFlutterDemo");
   }
 
   gtk_window_set_default_size(window, 1280, 720);
 
-  g_autoptr(GError) icon_error = NULL;
-  const char* icon_paths[] = {
-    "assets/images/logo-icon-favicon.png",
-    "../assets/images/logo-icon-favicon.png",
-    "data/flutter_assets/assets/images/logo-icon-favicon.png",
-    NULL
-  };
-  for (int i = 0; icon_paths[i]; i++) {
-    if (g_file_test(icon_paths[i], G_FILE_TEST_EXISTS)) {
-      gtk_window_set_icon_from_file(window, icon_paths[i], &icon_error);
-      if (icon_error) {
-        g_warning("Failed to set window icon from %s: %s",
-                  icon_paths[i], icon_error->message);
-        g_clear_error(&icon_error);
-      }
-      break;
-    }
-  }
-
   g_autoptr(FlDartProject) project = fl_dart_project_new();
-  fl_dart_project_set_dart_entrypoint_arguments(project,
-                                                self->dart_entrypoint_arguments);
+  fl_dart_project_set_dart_entrypoint_arguments(
+      project, self->dart_entrypoint_arguments);
 
   FlView* view = fl_view_new(project);
   GdkRGBA background_color;
+  // Background defaults to black, override it here if necessary, e.g. #00000000
+  // for transparent.
   gdk_rgba_parse(&background_color, "#000000");
   fl_view_set_background_color(view, &background_color);
   gtk_widget_show(GTK_WIDGET(view));
   gtk_container_add(GTK_CONTAINER(window), GTK_WIDGET(view));
 
-  g_signal_connect_swapped(view, "first-frame", G_CALLBACK(first_frame_cb), self);
+  // Show the window when Flutter renders.
+  // Requires the view to be realized so we can start rendering.
+  g_signal_connect_swapped(view, "first-frame", G_CALLBACK(first_frame_cb),
+                           self);
   gtk_widget_realize(GTK_WIDGET(view));
 
   fl_register_plugins(FL_PLUGIN_REGISTRY(view));
@@ -84,10 +78,12 @@ static void my_application_activate(GApplication* application) {
   gtk_widget_grab_focus(GTK_WIDGET(view));
 }
 
+// Implements GApplication::local_command_line.
 static gboolean my_application_local_command_line(GApplication* application,
                                                   gchar*** arguments,
                                                   int* exit_status) {
   MyApplication* self = MY_APPLICATION(application);
+  // Strip out the first argument as it is the binary name.
   self->dart_entrypoint_arguments = g_strdupv(*arguments + 1);
 
   g_autoptr(GError) error = nullptr;
@@ -99,17 +95,29 @@ static gboolean my_application_local_command_line(GApplication* application,
 
   g_application_activate(application);
   *exit_status = 0;
+
   return TRUE;
 }
 
+// Implements GApplication::startup.
 static void my_application_startup(GApplication* application) {
+  // MyApplication* self = MY_APPLICATION(object);
+
+  // Perform any actions required at application startup.
+
   G_APPLICATION_CLASS(my_application_parent_class)->startup(application);
 }
 
+// Implements GApplication::shutdown.
 static void my_application_shutdown(GApplication* application) {
+  // MyApplication* self = MY_APPLICATION(object);
+
+  // Perform any actions required at application shutdown.
+
   G_APPLICATION_CLASS(my_application_parent_class)->shutdown(application);
 }
 
+// Implements GObject::dispose.
 static void my_application_dispose(GObject* object) {
   MyApplication* self = MY_APPLICATION(object);
   g_clear_pointer(&self->dart_entrypoint_arguments, g_strfreev);
@@ -127,82 +135,14 @@ static void my_application_class_init(MyApplicationClass* klass) {
 
 static void my_application_init(MyApplication* self) {}
 
-static void register_user_desktop_file() {
-  const gchar* home = g_get_home_dir();
-  if (!home) return;
-
-  g_autofree gchar* apps_dir = g_build_filename(home, ".local", "share", "applications", NULL);
-  g_autofree gchar* icons_dir = g_build_filename(home, ".local", "share", "icons", "hicolor", "256x256", "apps", NULL);
-
-  g_mkdir_with_parents(apps_dir, 0755);
-  g_mkdir_with_parents(icons_dir, 0755);
-
-  g_autofree gchar* icon_dst = g_build_filename(icons_dir, APPLICATION_ID ".png", NULL);
-  if (!g_file_test(icon_dst, G_FILE_TEST_EXISTS)) {
-    gboolean icon_copied = FALSE;
-
-    g_autofree gchar* exe_path = g_file_read_link("/proc/self/exe", NULL);
-    if (exe_path) {
-      g_autofree gchar* exe_dir = g_path_get_dirname(exe_path);
-      g_autofree gchar* p = g_build_filename(exe_dir, "data", "flutter_assets",
-                                              "assets", "images", "logo-icon-favicon.png", NULL);
-      if (g_file_test(p, G_FILE_TEST_EXISTS)) {
-        g_autoptr(GFile) src = g_file_new_for_path(p);
-        g_autoptr(GFile) dst = g_file_new_for_path(icon_dst);
-        g_file_copy(src, dst, G_FILE_COPY_OVERWRITE, NULL, NULL, NULL, NULL);
-        icon_copied = TRUE;
-      }
-    }
-
-    if (!icon_copied) {
-      const gchar* fallbacks[] = {
-        "assets/images/logo-icon-favicon.png",
-        "../assets/images/logo-icon-favicon.png",
-        "data/flutter_assets/assets/images/logo-icon-favicon.png",
-        NULL
-      };
-      for (int i = 0; fallbacks[i]; i++) {
-        if (g_file_test(fallbacks[i], G_FILE_TEST_EXISTS)) {
-          g_autoptr(GFile) src = g_file_new_for_path(fallbacks[i]);
-          g_autoptr(GFile) dst = g_file_new_for_path(icon_dst);
-          g_file_copy(src, dst, G_FILE_COPY_OVERWRITE, NULL, NULL, NULL, NULL);
-          break;
-        }
-      }
-    }
-  }
-
-  g_autofree gchar* desktop_path = g_build_filename(apps_dir, APPLICATION_ID ".desktop", NULL);
-  if (!g_file_test(desktop_path, G_FILE_TEST_EXISTS)) {
-    g_autofree gchar* exec_path = g_file_read_link("/proc/self/exe", NULL);
-    if (!exec_path) exec_path = g_strdup("dart_flutter_demo");
-
-    g_autofree gchar* content = g_strdup_printf(
-      "[Desktop Entry]\n"
-      "Type=Application\n"
-      "Name=DartFlutterDemo\n"
-      "Comment=A Flutter UI showcase PoC app\n"
-      "Exec=%s\n"
-      "Icon=%s\n"
-      "Terminal=false\n"
-      "Categories=Development;Utility;\n"
-      "StartupWMClass=%s\n",
-      exec_path, APPLICATION_ID, APPLICATION_ID
-    );
-    g_file_set_contents(desktop_path, content, -1, NULL);
-
-    g_spawn_command_line_async("kbuildsycoca7 --noincrements 2>/dev/null || "
-                               "gtk-update-icon-cache ~/.local/share/icons/hicolor/ -f -t 2>/dev/null || true",
-                               NULL);
-  }
-}
-
 MyApplication* my_application_new() {
-  register_user_desktop_file();
+  // Set the program name to the application ID, which helps various systems
+  // like GTK and desktop environments map this running application to its
+  // corresponding .desktop file. This ensures better integration by allowing
+  // the application to be recognized beyond its binary name.
   g_set_prgname(APPLICATION_ID);
-  return MY_APPLICATION(g_object_new(my_application_get_type(),
-                                     "application-id", APPLICATION_ID,
-                                     "flags", G_APPLICATION_NON_UNIQUE,
-                                     nullptr));
-}
 
+  return MY_APPLICATION(g_object_new(my_application_get_type(),
+                                     "application-id", APPLICATION_ID, "flags",
+                                     G_APPLICATION_NON_UNIQUE, nullptr));
+}
