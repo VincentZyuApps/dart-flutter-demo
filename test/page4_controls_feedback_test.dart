@@ -172,6 +172,7 @@ void main() {
     await tester.ensureVisible(retry);
     await tester.pump();
     await tester.tap(retry);
+    await tester.pump();
     await tester.pump(const Duration(milliseconds: 5100));
     await tester.pump();
     expect(find.text('Succeeded'), findsWidgets);
