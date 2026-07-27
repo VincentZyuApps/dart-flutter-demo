@@ -129,6 +129,10 @@ def configure_macos(repo: Path, generated: Path) -> None:
 
 def configure_windows(repo: Path, generated: Path) -> None:
     windows = generated / "windows"
+    copy_directory_contents(
+        repo / "windows" / "packaging",
+        windows / "packaging",
+    )
     shutil.copy2(
         repo / "assets" / "generated-icons" / "windows" / "app_icon.ico",
         windows / "runner" / "resources" / "app_icon.ico",

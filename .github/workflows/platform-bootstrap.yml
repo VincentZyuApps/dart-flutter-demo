@@ -58,6 +58,8 @@ jobs:
           for platform in android ios windows linux macos; do
             test -d "$GENERATED/$platform"
           done
+          test -f "$GENERATED/.metadata"
+          test -f "$GENERATED/windows/packaging/exe/inno_setup.iss"
           grep -R "io.github.vincentzyuapps.dartflutterdemo" \
             "$GENERATED/android" "$GENERATED/ios" "$GENERATED/macos"
           if grep -R "com.example\|dart_flutter_demo/system_info" \
@@ -86,3 +88,4 @@ jobs:
             ${{ runner.temp }}/dart_flutter_demo_platforms/pubspec.lock
           retention-days: 7
           if-no-files-found: error
+          include-hidden-files: true
