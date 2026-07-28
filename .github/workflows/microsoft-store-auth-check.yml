@@ -22,6 +22,49 @@ jobs:
         with:
           version: v0.3.9
 
+      - name: Validate Microsoft identity client credentials
+        shell: pwsh
+        env:
+          PARTNER_CENTER_TENANT_ID: ${{ secrets.PARTNER_CENTER_TENANT_ID }}
+          PARTNER_CENTER_CLIENT_ID: ${{ secrets.PARTNER_CENTER_CLIENT_ID }}
+          PARTNER_CENTER_CLIENT_SECRET: ${{ secrets.PARTNER_CENTER_CLIENT_SECRET }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $tokenEndpoint = "https://login.microsoftonline.com/$env:PARTNER_CENTER_TENANT_ID/oauth2/v2.0/token"
+          $body = @{
+            client_id = $env:PARTNER_CENTER_CLIENT_ID
+            client_secret = $env:PARTNER_CENTER_CLIENT_SECRET
+            scope = 'https://api.store.microsoft.com/.default'
+            grant_type = 'client_credentials'
+          }
+
+          try {
+            $response = Invoke-RestMethod `
+              -Method Post `
+              -Uri $tokenEndpoint `
+              -ContentType 'application/x-www-form-urlencoded' `
+              -Body $body
+          } catch {
+            $code = 'unknown_error'
+            $description = 'Microsoft identity rejected the token request.'
+            if (-not [string]::IsNullOrWhiteSpace($_.ErrorDetails.Message)) {
+              try {
+                $errorBody = $_.ErrorDetails.Message | ConvertFrom-Json
+                $code = $errorBody.error
+                $description = $errorBody.error_description -replace '[\r\n]+', ' '
+              } catch {
+                $description = 'Microsoft identity returned a non-JSON error response.'
+              }
+            }
+            throw "Microsoft identity token request failed [$code]: $description"
+          }
+
+          if ([string]::IsNullOrWhiteSpace($response.access_token)) {
+            throw 'Microsoft identity returned no access token.'
+          }
+          Write-Host 'Microsoft identity client-credential validation succeeded.'
+          $response = $null
+
       - name: Authenticate and list visible Store apps
         shell: pwsh
         env:
