@@ -160,6 +160,22 @@ jobs:
           Compress-Archive -Path build/windows/x64/runner/Release/* `
             -DestinationPath dart-flutter-demo-windows-x64.zip
 
+      - name: Install MSIX packaging dependency
+        if: matrix.platform == 'windows-x64'
+        run: python -m pip install --disable-pip-version-check Pillow==11.3.0
+
+      - name: Package and validate Windows Store MSIX
+        if: matrix.platform == 'windows-x64'
+        shell: pwsh
+        run: |
+          python scripts/ci/packaging/windows/build-msix.py `
+            --bundle build/windows/x64/runner/Release `
+            --output dart-flutter-demo-windows-x64-store.msix `
+            --identity-name "${{ vars.MS_STORE_IDENTITY_NAME }}" `
+            --publisher "${{ vars.MS_STORE_PUBLISHER }}" `
+            --publisher-display-name "${{ vars.MS_STORE_PUBLISHER_DISPLAY_NAME }}" `
+            --display-name "${{ vars.MS_STORE_DISPLAY_NAME }}"
+
       - name: Install Inno Setup
         if: matrix.platform == 'windows-x64'
         run: choco install innosetup --no-progress
@@ -243,6 +259,8 @@ jobs:
           name: release-windows-x64
           path: |
             dart-flutter-demo-windows-x64.zip
+            dart-flutter-demo-windows-x64-store.msix
+            dart-flutter-demo-windows-x64-store.msix.json
             dist/dart-flutter-demo-setup.exe
           retention-days: 7
           if-no-files-found: error
@@ -358,6 +376,8 @@ jobs:
             "release-files/dart-flutter-demo-windows-x64-v${VERSION}.zip"
           cp artifacts/release-windows-x64/dist/dart-flutter-demo-setup.exe \
             "release-files/dart-flutter-demo-windows-x64-v${VERSION}-setup.exe"
+          cp artifacts/release-windows-x64/dart-flutter-demo-windows-x64-store.msix \
+            "release-files/dart-flutter-demo-windows-x64-store-v${VERSION}.msix"
           cp artifacts/release-linux-x64/dart-flutter-demo-linux-x64.tar.gz \
             "release-files/dart-flutter-demo-linux-x64-v${VERSION}.tar.gz"
           find artifacts/release-linux-x64 -type f \( -name '*.deb' -o -name '*.AppImage' \) -print0 | while IFS= read -r -d '' file; do
@@ -416,7 +436,9 @@ jobs:
           name: dart-flutter-demo v${{ needs.prepare.outputs.version }}
           body_path: release_body.md
           files: release-files/*
-          prerelease: ${{ contains(needs.prepare.outputs.version, '-') }}
+          draft: false
+          prerelease: false
+          make_latest: true
           fail_on_unmatched_files: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

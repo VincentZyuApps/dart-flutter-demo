@@ -1,0 +1,60 @@
+name: Microsoft Store Auth Check
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: microsoft-store-auth-check-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  list-apps:
+    if: github.ref == 'refs/heads/main'
+    runs-on: windows-latest
+    timeout-minutes: 10
+    environment: microsoft-store-production
+    steps:
+      - name: Install Microsoft Store Developer CLI
+        uses: microsoft/microsoft-store-apppublisher@cc9910a8d59f2eb55cbb83df0a3800cf3b5300e0 # v1.4
+        with:
+          version: v0.3.9
+
+      - name: Authenticate and list visible Store apps
+        shell: pwsh
+        env:
+          PARTNER_CENTER_TENANT_ID: ${{ secrets.PARTNER_CENTER_TENANT_ID }}
+          PARTNER_CENTER_SELLER_ID: ${{ secrets.PARTNER_CENTER_SELLER_ID }}
+          PARTNER_CENTER_CLIENT_ID: ${{ secrets.PARTNER_CENTER_CLIENT_ID }}
+          PARTNER_CENTER_CLIENT_SECRET: ${{ secrets.PARTNER_CENTER_CLIENT_SECRET }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $PSNativeCommandUseErrorActionPreference = $true
+          $required = @(
+            'PARTNER_CENTER_TENANT_ID',
+            'PARTNER_CENTER_SELLER_ID',
+            'PARTNER_CENTER_CLIENT_ID',
+            'PARTNER_CENTER_CLIENT_SECRET'
+          )
+          foreach ($name in $required) {
+            $value = [Environment]::GetEnvironmentVariable($name)
+            if ([string]::IsNullOrWhiteSpace($value)) {
+              throw "Required Environment secret is missing: $name"
+            }
+          }
+
+          msstore reconfigure `
+            --tenantId "$env:PARTNER_CENTER_TENANT_ID" `
+            --sellerId "$env:PARTNER_CENTER_SELLER_ID" `
+            --clientId "$env:PARTNER_CENTER_CLIENT_ID" `
+            --clientSecret "$env:PARTNER_CENTER_CLIENT_SECRET"
+          if ($LASTEXITCODE -ne 0) {
+            throw "Microsoft Store CLI authentication failed with exit code $LASTEXITCODE"
+          }
+
+          msstore apps list
+          if ($LASTEXITCODE -ne 0) {
+            throw "Microsoft Store app listing failed with exit code $LASTEXITCODE"
+          }

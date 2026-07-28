@@ -31,13 +31,15 @@ feat(system-info): migrate collection into a reusable plugin
 
 `build-release.yml` 在 push 包含 `build-release` 时运行，也可以从 `workflow_dispatch` 手动运行。
 
+所有发布的应用版本，包括带有 `alpha`、`beta` 或 `rc` 后缀的版本，都会创建为非草稿的正式 Release，并明确标记为仓库的 Latest Release。
+
 只有应用 Release Notes 包含 Commit Log，范围从最近一个可达且匹配 `v[0-9]*` 的应用 tag 之后开始；Performance、Profile、Debug 和 Bootstrap 输出都不包含提交历史。
 
 流水线先运行 `flutter analyze`、根项目测试、本地插件测试和 CI 触发词测试，然后构建：
 
 | 🎯 目标 | 🖥️ Runner | 📦 Release 输出 |
 |---|---|---|
-| Windows x64 | `windows-latest` | 便携 ZIP 和 Inno Setup EXE |
+| Windows x64 | `windows-latest` | 便携 ZIP、Inno Setup EXE 和 Store 提交用 MSIX |
 | Linux x64 | `ubuntu-22.04` | tar.gz、DEB 和 AppImage |
 | macOS x64 | `macos-15-intel` | DMG 和 ZIP |
 | macOS ARM64 | `macos-latest` | DMG 和 ZIP |
@@ -48,7 +50,7 @@ feat(system-info): migrate collection into a reusable plugin
 
 ### 🧪 手动 Dry-Run
 
-手动运行默认 `publish=false`。它会执行质量检查、全部 Release 构建、三项永久 Profile 构建、打包和 Release Notes 渲染，但只上传保留七天的 `release-dry-run-*` Artifact，不创建 tag 或 GitHub Release。
+手动运行默认 `publish=false`。它会执行质量检查、全部 Release 构建、三项永久 Profile 构建、打包、MSIX 校验和 Release Notes 渲染，但只上传保留七天的 `release-dry-run-*` Artifact，不创建 tag 或 GitHub Release。
 
 确认 dry-run 全部通过后再使用 `publish=true`。push 中的 `build-release` 会在所有必要 job 成功后自动发布。
 
@@ -101,7 +103,7 @@ dart-flutter-demo-android-universal-profile-93ac817
 
 | 🧩 类型 | 📝 模式 |
 |---|---|
-| Windows | `dart-flutter-demo-windows-x64-v<version>.zip` / `-setup.exe` |
+| Windows | `dart-flutter-demo-windows-x64-v<version>.zip` / `-setup.exe` / `dart-flutter-demo-windows-x64-store-v<version>.msix` |
 | Linux | `dart-flutter-demo-linux-x64-v<version>.tar.gz` / `.deb` / `.AppImage` |
 | macOS | `dart-flutter-demo-macos-<arch>-v<version>.dmg` / `.zip` |
 | Android | `dart-flutter-demo-android-<abi>-v<version>.apk` |
@@ -109,7 +111,7 @@ dart-flutter-demo-android-universal-profile-93ac817
 | Profile | `dart-flutter-demo-<platform>-profile-v<version>.<extension>` |
 | Performance | `performance-summary-<UTC>-<sha>.md` / `.json`、各平台 `.md` / `.json`，以及 `performance-workflow-<UTC>-<sha>.log` |
 
-GitHub tag 和文件名使用 `pubspec.yaml` 版本中 `+` 之前的部分。例如 `0.4.2-beta.8+20260727` 会生成 tag `v0.4.2-beta.8`。
+GitHub tag 和文件名使用 `pubspec.yaml` 版本中 `+` 之前的部分。例如 `X.Y.Z-beta.W+YYYYMMDD` 会生成 tag `vX.Y.Z-beta.W`。
 
 ## 🔐 权限与签名
 
@@ -119,11 +121,11 @@ Android 产物使用 CI 临时签名；iOS IPA 与 macOS 包均未签名。AltSt
 
 ## 🏪 Microsoft Store 初始化与 `build-publish`
 
-> **🚧 当前状态：** `build-publish` 是预留关键词，尚未启用。在 Partner Center 首次提交正式上线、MSIX 身份值完成审查、商店发布 job 实现并验证之前，不要使用该关键词。
+> **🚧 当前状态：** package-only Windows x64 MSIX 构建与只读认证检查已经实现。`build-publish` 仍是预留关键词，在 Partner Center 首次提交正式上线、商店发布 job 实现并验证之前保持禁用。
 
-规划中的 `build-publish` 会扩展 `build-release`：先执行完全相同的质量检查、Release 构建、永久 Profile 构建和 GitHub Release 发布，再生成 Windows x64 MSIX，并在 `microsoft-store-production` GitHub Environment 等待人工批准，之后才提交 Microsoft Store。工作流成功只表示提交已经送达 Partner Center，微软认证仍会在此后继续运行。
+规划中的 `build-publish` 会扩展 `build-release`：先执行完全相同的质量检查、Release 构建、永久 Profile 构建、GitHub Release 发布和 Windows x64 MSIX 校验，再在 `microsoft-store-production` GitHub Environment 等待人工批准，之后才把该包提交 Microsoft Store。工作流成功只表示提交已经送达 Partner Center，微软认证仍会在此后继续运行。
 
-本项目保持永久免费。`0.5.0-beta.9` 等预发布版本也会直接提交正式商店页面，不使用 Package Flight，因此批准 Environment 部署前必须仔细检查版本和 Release Notes。
+本项目保持永久免费。`vX.Y.Z-beta.W` 等预发布版本也会直接提交正式商店页面，不使用 Package Flight，因此批准 Environment 部署前必须仔细检查版本和 Release Notes。
 
 现有 Windows x64 便携 ZIP 与 Inno Setup EXE 继续作为 GitHub Release 附件。本项目不规划 MSI：MSI 会重复 EXE 已覆盖的传统安装器职责，增加一套打包流水线，并且仍然需要 Authenticode 签名。MSIX 才是商店发布格式；微软会在认证通过后重新签名，因此只通过商店分发时不需要购买 CA 代码签名证书。
 
@@ -132,43 +134,122 @@ Android 产物使用 CI 临时签名；iOS IPA 与 macOS 包均未签名。AltSt
 微软目前只支持通过 GitHub Actions 自动更新已经发布并处于 Live 状态的免费产品。启用 `build-publish` 前依次完成：
 
 1. 在 [Partner Center](https://storedeveloper.microsoft.com/) 注册 Windows 开发者账号，并完成要求的身份验证。
-2. 保留应用名称，并在 Partner Center 创建产品。
-3. 将现有 Microsoft Entra 租户关联到 Partner Center，或从 Partner Center 创建租户。
-4. 为 CI 注册 Microsoft Entra 应用，在 Partner Center 的账号用户管理中添加该应用，并授予 **Manager** 角色。
-5. 打开产品身份页面，准确记录 Product ID、Package/Identity/Name、Publisher、Publisher 展示名和应用展示名。不得根据 Dart 包名猜测这些值。
-6. 仓库实现 MSIX 打包 job 后，手动运行仅打包的 dry-run，并下载 Windows x64 `.msix` Artifact。
-7. 在 Partner Center 人工创建第一次提交，上传该 MSIX，填写商店介绍、隐私、年龄分级、可用地区和政策信息，然后提交认证。
+2. 从 Partner Center 主页进入 **应用和游戏**，创建新产品并选择 **MSIX 或 PWA 应用**，然后保留应用名称。
+3. 打开新建的产品，从左侧导航进入 **产品标识**，按下一节记录 Store 与 MSIX 的公共身份值。
+4. 将现有 Microsoft Entra 租户关联到 Partner Center，或从 Partner Center 创建租户。
+5. 为 CI 注册 Microsoft Entra 应用，在 Partner Center 的账号用户管理中添加该应用，并授予 **Manager** 角色。
+6. 手动运行 `build-release.yml` 并保持 `publish=false`，下载保留七天的 `release-dry-run-*` Artifact，再选择其中的 Windows x64 Store `.msix`。
+7. 按照 [Microsoft Store 首次提交清单](../../doc/microsoft-store-submission.md)，在 Partner Center 人工创建第一次提交，上传该 MSIX，填写商店介绍、隐私、年龄分级、可用地区和政策信息，然后提交认证。
 8. 等待产品完成发布并显示为 **Live**，之后再配置自动更新。
 
-商店包版本独立于 `pubspec.yaml` SemVer。它必须是四段纯数字，第一段不能为零，每段不超过 65535，第四段必须为零。未来工作流会单独生成并验证商店版本，不会直接传入 `0.5.0-beta.9`。
+商店包版本独立于 `pubspec.yaml` SemVer。它必须是四段纯数字，第一段不能为零，每段不超过 65535，第四段必须为零。未来工作流会单独生成并验证商店版本，不会直接传入 `vX.Y.Z-beta.W`。
 
-### 🔒 GitHub Environment
+### 🪪 产品标识页面
+
+创建产品后，路径是 **Partner Center 主页 -> 应用和游戏 -> dart-flutter-demo -> 产品标识**。当前产品也可以直接打开 [`9PP2SRN17C4F` 产品标识页面](https://partner.microsoft.com/dashboard/products/9PP2SRN17C4F/identity)。这里主要展示可以写入 MSIX Manifest、工作流配置或公开文档的产品公共身份；其中 MSA 应用 ID 可能同时对应 Entra 应用注册，因此仍需按凭据处理。
+
+当前页面给出的准确值如下：
+
+| 🧩 Partner Center 字段 | 📋 当前值 | 🎯 使用方式 |
+|---|---|---|
+| Store ID | `9PP2SRN17C4F` | `MS_STORE_PRODUCT_ID`，并用于商店公开链接与发布目标 |
+| Package/Identity/Name | `VincentZyu.dart-flutter-demo` | `MS_STORE_IDENTITY_NAME`，写入 MSIX `Package/Identity/Name` |
+| Package/Identity/Publisher | `CN=A12FF185-DB00-4CAC-ADE2-C501823ECC8F` | `MS_STORE_PUBLISHER`，写入 MSIX `Package/Identity/Publisher` |
+| Package/Properties/PublisherDisplayName | `VincentZyu` | `MS_STORE_PUBLISHER_DISPLAY_NAME`，写入 MSIX PublisherDisplayName |
+| Package Family Name (PFN) | `VincentZyu.dart-flutter-demo_j4jaay73mj39p` | 商店根据 Package Identity 计算；不单独写入 Manifest |
+| Package SID | `S-1-15-2-4052166922-3111628424-3389906557-1246929253-1774262628-4171725999-764323245` | 商店计算标识；当前工作流不使用 |
+| Store URL | `https://apps.microsoft.com/detail/9PP2SRN17C4F` | 产品上线后供用户访问的公开链接 |
+| Store protocol link | `ms-windows-store://pdp/?productid=9PP2SRN17C4F` | 在 Windows 上打开 Microsoft Store 产品页 |
+| MSA 应用 ID | 不写入仓库 | 当前值与 Entra 应用注册 `dart-flutter-demo.ae0811c38249` 的 Application (client) ID 相同，可在完成授权后作为 `PARTNER_CENTER_CLIENT_ID` |
+
+`MS_STORE_DISPLAY_NAME` 不由上述 Package Identity 字段提供。它来自本仓库统一的应用展示名，当前固定为 `DartFlutterDemo`。不要用产品标题 `dart-flutter-demo` 或 Dart package 名替代这些字段。MSA 应用 ID 与当前 Entra Client ID 的对应关系已经在 Entra 应用注册列表中核实，但仍不把真实 Client ID 提交到仓库。
+
+### 🔒 GitHub Environment 与 Repository Variables
 
 打开 GitHub 仓库的 **Settings -> Environments -> New environment**，创建 `microsoft-store-production`，并配置：
 
 - 设置 required reviewers，确保只有 commit 关键词不能直接对外发布；
 - 将部署分支限制为 `main` 和 `master`；
 - 仓库套餐支持时启用禁止自审；
-- 添加下面列出的 Environment Secrets 与 Variables。
+- 添加下面列出的四项 Environment Secrets 与五项 Repository Variables。
+
+最终配置是 **4 个 Environment Secrets + 5 个 Repository Variables**。公开的 Store/MSIX 身份放在仓库级 Variables，只有发布凭据受 `microsoft-store-production` Environment 审批保护。
 
 优先使用 Environment Secrets，不使用仓库全局 Secrets，这样只有人工批准后发布 job 才能得到凭据：
 
 | 🔐 Environment Secret | 📍 获取位置 | 🎯 用途 |
 |---|---|---|
 | `PARTNER_CENTER_TENANT_ID` | Microsoft Entra 租户概览 | 选择与 Partner Center 关联的租户 |
-| `PARTNER_CENTER_SELLER_ID` | Partner Center 账号设置 / 标识符 | 选择商店卖家账号 |
+| `PARTNER_CENTER_SELLER_ID` | Partner Center 法律信息 / Developer | 选择商店卖家账号 |
 | `PARTNER_CENTER_CLIENT_ID` | Microsoft Entra 应用注册 | 标识 CI 应用 |
 | `PARTNER_CENTER_CLIENT_SECRET` | Microsoft Entra 应用注册的 Secret Value | 验证 CI 应用身份 |
 
-使用产品身份页面中的准确值添加以下非敏感 Environment Variables：
+这些凭据不在产品的 **产品标识** 页面。依次按下面的位置取得：
 
-| 🔧 Environment Variable | 📍 获取位置 | 🎯 用途 |
+1. 在 [Microsoft Entra 管理中心](https://entra.microsoft.com/) 打开 **Entra ID -> 概述**，复制 **租户 ID** 作为 `PARTNER_CENTER_TENANT_ID`。
+2. 打开 **Entra ID -> 应用注册**。当前已有 `dart-flutter-demo.ae0811c38249`，且其 **应用程序(客户端) ID** 与产品标识页的 MSA 应用 ID 相同；可以复用它，或另建 CI 专用的单租户应用。将最终选用应用的 **应用程序(客户端) ID** 作为 `PARTNER_CENTER_CLIENT_ID`。
+3. 在该应用的 **证书和密码 -> 客户端密码** 创建 Secret，立即复制 **值（Value）** 作为 `PARTNER_CENTER_CLIENT_SECRET`；不要复制 Secret ID。
+4. 打开 Partner Center 的 **账户设置 -> 法律信息 -> Developer**，复制 **卖家 ID（Seller ID）** 作为 `PARTNER_CENTER_SELLER_ID`；不要使用 Publisher、Store ID、Partner ID 或 `CN=...`。
+5. 在 Partner Center 的 **账户设置 -> 用户管理 -> Microsoft Entra 应用程序** 中添加该 CI 应用并授予 **Manager** 角色。
+
+当前使用的 Entra 页面入口如下。Credentials 地址中的占位符应由门户自动生成；不要把真实 Client ID 写入文档：
+
+| 🌐 Entra 页面 | 🔗 入口 URL 或模板 | 📋 需要复制的字段 |
 |---|---|---|
-| `MS_STORE_PRODUCT_ID` | Partner Center 产品概览 | 选择目标应用提交 |
-| `MS_STORE_IDENTITY_NAME` | Package Identity 详情 | 写入 `Package/Identity/Name` |
-| `MS_STORE_PUBLISHER` | Package Identity 详情 | 写入 Manifest Publisher，通常是 `CN=...` 值 |
-| `MS_STORE_PUBLISHER_DISPLAY_NAME` | Partner Center 身份详情 | 写入用户可见的发布者名称 |
-| `MS_STORE_DISPLAY_NAME` | Partner Center 产品身份 | 写入用户可见的应用名称，预期为 `DartFlutterDemo` |
+| 租户概览 | `https://entra.microsoft.com/#view/Microsoft_AAD_IAM/EntraLanding.ReactView` | **租户 ID** -> `PARTNER_CENTER_TENANT_ID` |
+| 应用注册列表 | `https://entra.microsoft.com/#view/Microsoft_AAD_RegisteredApps/ApplicationsListBlade/quickStartType~/null/sourceType/Microsoft_AAD_IAM` | 打开 `dart-flutter-demo.ae0811c38249`，复制 **应用程序(客户端) ID** -> `PARTNER_CENTER_CLIENT_ID` |
+| 证书和密码 | `https://entra.microsoft.com/#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/Credentials/appId/__APPLICATION_CLIENT_ID__/isMSAApp~/true` | 新建客户端密码并复制一次性 **Value** -> `PARTNER_CENTER_CLIENT_SECRET` |
+
+已确认的 Seller ID 入口是 [Partner Center 法律信息的 Developer 页面](https://partner.microsoft.com/dashboard/account/v3/organization/legalinfo#developer)。复制页面中的 **卖家 ID（Seller ID）** 作为 `PARTNER_CENTER_SELLER_ID`。
+
+`https://partner.microsoft.com/dashboard/account/v3/overview` 是新版 **账户设置 | 概述** 页面，不是产品标识页面。页面搜索“租户”没有结果并不能证明租户不存在；先展开左上角汉堡菜单查找 **租户** 或 **用户管理**。如果当前账号看不到这些项目，应检查是否使用了已关联的 Entra 账号、是否进入正确租户，以及是否拥有 Partner Center **Manager** 权限。
+
+使用产品身份页面中的准确值添加以下非敏感 Repository Variables：
+
+| 🔧 Repository Variable | 📍 获取位置 | 🎯 用途 |
+|---|---|---|
+| `MS_STORE_PRODUCT_ID` | 产品标识页的 Store ID | 选择目标应用提交 |
+| `MS_STORE_IDENTITY_NAME` | 产品标识页的 Package/Identity/Name | 写入 `Package/Identity/Name` |
+| `MS_STORE_PUBLISHER` | 产品标识页的 Package/Identity/Publisher | 写入 Manifest Publisher |
+| `MS_STORE_PUBLISHER_DISPLAY_NAME` | 产品标识页的 Package/Properties/PublisherDisplayName | 写入用户可见的发布者名称 |
+| `MS_STORE_DISPLAY_NAME` | 仓库统一的应用展示名 | 写入用户可见的应用名称，当前为 `DartFlutterDemo` |
+
+在仓库根目录运行以下命令，可以创建或覆盖五项非敏感 Repository Variables：
+
+```bash
+gh variable set MS_STORE_PRODUCT_ID --body "9PP2SRN17C4F"
+gh variable set MS_STORE_IDENTITY_NAME --body "VincentZyu.dart-flutter-demo"
+gh variable set MS_STORE_PUBLISHER --body "CN=A12FF185-DB00-4CAC-ADE2-C501823ECC8F"
+gh variable set MS_STORE_PUBLISHER_DISPLAY_NAME --body "VincentZyu"
+gh variable set MS_STORE_DISPLAY_NAME --body "DartFlutterDemo"
+```
+
+四项发布凭据必须交互式写入 Environment Secrets。逐条运行命令，在提示后粘贴对应值；不要把真实值放进命令参数、Shell 历史、文档或聊天记录：
+
+```bash
+gh secret set PARTNER_CENTER_TENANT_ID --env microsoft-store-production
+gh secret set PARTNER_CENTER_SELLER_ID --env microsoft-store-production
+gh secret set PARTNER_CENTER_CLIENT_ID --env microsoft-store-production
+gh secret set PARTNER_CENTER_CLIENT_SECRET --env microsoft-store-production
+```
+
+GitHub 不允许重新读取 Secret Value，但可以核对已经创建的名称：
+
+```bash
+gh variable list
+gh secret list --env microsoft-store-production
+```
+
+### 🔎 只读认证检查
+
+为选定的 Entra 应用授予 Partner Center **Manager** 角色后，从 `main` 手动运行专用认证检查：
+
+```bash
+gh workflow run microsoft-store-auth-check.yml --ref main
+gh run list --workflow microsoft-store-auth-check.yml --limit 1
+```
+
+该工作流进入 `microsoft-store-production`，安装固定为 `v1.4` 的微软官方 Microsoft Store App Publisher Action 与 Microsoft Store Developer CLI `v0.3.9`，使用四项 Environment Secrets 认证，并且只运行 `msstore apps list`。它不会创建提交、上传包、修改元数据或发布应用。成功表示微软接受凭据并允许只读访问；第一次人工提交前，还应在输出的应用列表中确认 Store ID `9PP2SRN17C4F`。
 
 `GITHUB_TOKEN` 由 GitHub 自动提供，不需要手动创建。只向商店提交的 MSIX 不需要 PFX Secret，因为微软会在认证后为包签名。绝不能把 Client Secret、租户凭据、证书或它们的编码形式写入源码、日志、Artifact 或 Release Notes。
 
@@ -189,6 +270,8 @@ release: publish DartFlutterDemo
 ### 📚 官方参考资料
 
 - [使用 GitHub Actions 发布应用更新](https://learn.microsoft.com/windows/apps/publish/msstore-dev-cli/github-actions)
+- [将现有 Microsoft Entra ID 租户关联到 Partner Center](https://learn.microsoft.com/windows/apps/publish/partner-center/associate-existing-azure-ad-tenant-with-partner-center-account)
+- [在 Microsoft Entra ID 中注册应用](https://learn.microsoft.com/entra/identity-platform/quickstart-register-app)
 - [Microsoft Store Developer CLI（MSIX）](https://learn.microsoft.com/windows/apps/publish/msstore-dev-cli/overview)
 - [Microsoft Store Developer CLI 命令参考](https://learn.microsoft.com/windows/apps/publish/msstore-dev-cli/commands)
 - [Microsoft Store MSIX 包要求](https://learn.microsoft.com/windows/apps/publish/publish-your-app/msix/app-package-requirements)

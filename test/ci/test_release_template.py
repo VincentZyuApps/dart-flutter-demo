@@ -17,6 +17,7 @@ class ReleaseTemplateTests(unittest.TestCase):
         self.assertIn("> - [Windows x64 Profile ZIP]", content)
         self.assertIn("> - [Linux x64 Profile tar.gz]", content)
         self.assertIn("> - [Android Universal Profile APK]", content)
+        self.assertIn("dart-flutter-demo-windows-x64-store-v__VERSION__.msix", content)
 
         quoted = content.split("> #### Profile Builds", maxsplit=1)[1]
         quoted = quoted.split("### 📄 Git Information", maxsplit=1)[0]

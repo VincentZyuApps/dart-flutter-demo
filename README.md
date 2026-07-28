@@ -1,5 +1,6 @@
 > **[📖 English](README.md)**
 > **[📖 简体中文(大陆)](README.zh-cn.md)**
+> **Privacy:** [English](PRIVACY.md) · [简体中文](PRIVACY.zh-cn.md)
 
 [![GitHub](https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/VincentZyuApps/dart-flutter-demo)
 [![Gitee](https://img.shields.io/badge/Gitee-C71D23?style=for-the-badge&logo=gitee&logoColor=white)](https://gitee.com/vincent-zyu/dart-flutter-demo)
@@ -195,6 +196,8 @@ GitHub Actions uses exact, case-sensitive hyphenated tokens: `[build-release]` p
 | Android | API 21 or newer | Universal, x86_64, and ARM64 |
 | iOS / iPadOS | iOS 13.0 or newer | ARM64 unsigned IPA |
 
+Every Windows artifact, including the Microsoft Store submission MSIX, is x64-only. The unsigned MSIX is intended for Partner Center submission; use the EXE or portable ZIP for normal GitHub downloads.
+
 The iOS baseline is the configured build minimum, not a claim that every OS/device combination has been tested. The current known physical-device result is iPad Air 5 on iOS 17.
 
 ## ⚠️🩺 Troubleshooting
@@ -224,7 +227,7 @@ The iOS baseline is the configured build minimum, not a claim that every OS/devi
 | Flutter Colorpicker | [![flutter_colorpicker](https://img.shields.io/badge/flutter__colorpicker-%5E1.1.0-6750A4.svg?logo=flutter)](https://github.com/mchome/flutter_colorpicker) |
 | Package Info Plus | [![package_info_plus](https://img.shields.io/badge/package__info__plus-%5E8.0.2-FF6F00.svg?logo=dart)](https://pub.dev/packages/package_info_plus) |
 | Path Provider | [![path_provider](https://img.shields.io/badge/path__provider-%5E2.1.5-02569B.svg?logo=flutter)](https://pub.dev/packages/path_provider) |
-| System Info VincentZyu | local package `packages/system_info_vincentzyu/` |
+| System Info VincentZyu | [![system_info_vincentzyu](https://img.shields.io/badge/system__info__vincentzyu-local-02569B.svg?logo=dart)](https://github.com/VincentZyuApps/dart-flutter-demo/tree/main/packages/system_info_vincentzyu) |
 | URL Launcher | [![url_launcher](https://img.shields.io/badge/url__launcher-%5E6.3.1-1E88E5.svg?logo=linktree)](https://pub.dev/packages/url_launcher) |
 | Testing | [![Flutter Test](https://img.shields.io/badge/Flutter%20Test-sdk-00A884.svg?logo=flutter)](https://docs.flutter.dev/testing) |
 | Linting | [![Flutter Lints](https://img.shields.io/badge/flutter__lints-%5E5.0.0-9B59B6.svg?logo=dart)](https://pub.dev/packages/flutter_lints) |
@@ -234,13 +237,13 @@ The iOS baseline is the configured build minimum, not a claim that every OS/devi
 | Tech | Badge |
 |---|---|
 | Language | [![Dart](https://img.shields.io/badge/Dart-3.x-0175C2.svg?logo=dart)](https://dart.dev/) |
+| Min SDK | [![SDK](https://img.shields.io/badge/SDK-%3E%3D3.0.0-02569B.svg?logo=dart)](https://dart.dev/tools/pub/pubspec) |
 | Design | [![Material 3](https://img.shields.io/badge/Material%203-design%20system-6750A4.svg?logo=materialdesign)](https://m3.material.io/) |
 | Windows | [![Windows](https://img.shields.io/static/v1?label=Windows&message=supported&color=0078D4&logo=data:image/svg%2bxml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZD0iTTAgMGgxMS4zNzd2MTEuMzcySDB6TTEyLjYyMyAwSDI0djExLjM3MkgxMi42MjN6TTAgMTIuNjIzaDExLjM3N1YyNEgweiBNMTIuNjIzIDEyLjYyM0gyNFYyNEgxMi42MjN6IiBmaWxsPSIjZmZmIi8+PC9zdmc+)](https://docs.flutter.dev/platform-integration/desktop) |
 | Linux | [![Linux](https://img.shields.io/badge/Linux-supported-f84e29.svg?logo=linux)](https://docs.flutter.dev/platform-integration/linux) |
 | macOS | [![macOS](https://img.shields.io/badge/macOS-supported-8E8E93.svg?logo=apple)](https://docs.flutter.dev/platform-integration/macos) |
 | Android | [![Android](https://img.shields.io/badge/Android-supported-3DDC84.svg?logo=android)](https://docs.flutter.dev/platform-integration/android) |
 | iOS | [![iOS](https://img.shields.io/badge/iOS-supported-000000.svg?logo=apple)](https://docs.flutter.dev/platform-integration/ios) |
-| Min SDK | [![SDK](https://img.shields.io/badge/SDK-%3E%3D3.0.0-02569B.svg?logo=dart)](https://dart.dev/tools/pub/pubspec) |
 
 ## 🏷️ Other Badge
 
