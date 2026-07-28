@@ -146,7 +146,7 @@ The Store package version is separate from `pubspec.yaml` SemVer. It must contai
 
 ### 🪪 Product Identity Page
 
-After creating the product, follow **Partner Center home -> Apps and games -> dart-flutter-demo -> Product identity**. The current product can also be opened directly on the [`9PP2SRN17C4F` product identity page](https://partner.microsoft.com/dashboard/products/9PP2SRN17C4F/identity). This page primarily contains public product identity values that may be used in the MSIX manifest, workflow configuration, or public documentation. Its MSA application ID may also identify an Entra app registration and must therefore still be handled as a credential.
+After creating the product, follow **Partner Center home -> Apps and games -> dart-flutter-demo -> Product identity**. The current product can also be opened directly on the [`9PP2SRN17C4F` product identity page](https://partner.microsoft.com/dashboard/products/9PP2SRN17C4F/identity). This page primarily contains public product identity values that may be used in the MSIX manifest, workflow configuration, or public documentation. Its MSA application ID is a product identity value, not a CI client credential.
 
 The exact current values are:
 
@@ -160,9 +160,9 @@ The exact current values are:
 | Package SID | `S-1-15-2-4052166922-3111628424-3389906557-1246929253-1774262628-4171725999-764323245` | Calculated Store identity; unused by the current workflow |
 | Store URL | `https://apps.microsoft.com/detail/9PP2SRN17C4F` | Public product link after the product is published |
 | Store protocol link | `ms-windows-store://pdp/?productid=9PP2SRN17C4F` | Opens the Microsoft Store product page on Windows |
-| MSA application ID | Not stored in the repository | The current value matches the Application (client) ID of the `dart-flutter-demo.ae0811c38249` Entra app registration and can become `PARTNER_CENTER_CLIENT_ID` after authorization is completed |
+| MSA application ID | Not stored in the repository | The current `dart-flutter-demo.ae0811c38249` registration is Microsoft-account-only and must not be used as `PARTNER_CENTER_CLIENT_ID` |
 
-`MS_STORE_DISPLAY_NAME` does not come from the Package Identity fields above. It is the repository's canonical application display name and is currently fixed to `DartFlutterDemo`. Do not substitute the product title `dart-flutter-demo` or the Dart package name for these fields. The MSA application ID-to-Entra Client ID relationship has been verified in the current Entra app registrations list, but the real Client ID is still not committed to the repository.
+`MS_STORE_DISPLAY_NAME` does not come from the Package Identity fields above. It is the repository's canonical application display name and is currently fixed to `DartFlutterDemo`. Do not substitute the product title `dart-flutter-demo` or the Dart package name for these fields. Use a separate single-tenant Entra application for CI and never commit its Client ID or credentials to the repository.
 
 ### 🔒 GitHub Environment And Repository Variables
 
@@ -187,18 +187,20 @@ Use Environment secrets rather than repository-wide secrets so they are released
 These credentials are not available on the product's **Product identity** page. Obtain them in this order:
 
 1. In the [Microsoft Entra admin center](https://entra.microsoft.com/), open **Entra ID -> Overview** and copy **Tenant ID** as `PARTNER_CENTER_TENANT_ID`.
-2. Open **Entra ID -> App registrations**. An existing `dart-flutter-demo.ae0811c38249` registration currently has the same **Application (client) ID** as the MSA application ID on the product identity page. Reuse it or create a dedicated single-tenant CI application, then use the selected application's **Application (client) ID** as `PARTNER_CENTER_CLIENT_ID`.
-3. In that application, open **Certificates & secrets -> Client secrets**, create a secret, and immediately copy its **Value** as `PARTNER_CENTER_CLIENT_SECRET`. Do not copy the Secret ID.
+2. Open **Entra ID -> App registrations -> New registration**, create a dedicated application such as `dart-flutter-demo-store-ci`, select **Accounts in this organizational directory only (Single tenant)**, and leave Redirect URI empty. Copy its **Application (client) ID** as `PARTNER_CENTER_CLIENT_ID`. Do not reuse the MSA-only `dart-flutter-demo.ae0811c38249` registration.
+3. In the new single-tenant application, open **Certificates & secrets -> Client secrets**, create a secret, and immediately copy its **Value** as `PARTNER_CENTER_CLIENT_SECRET`. Do not copy the Secret ID.
 4. In Partner Center, open **Account settings -> Legal info -> Developer** and copy **Seller ID** as `PARTNER_CENTER_SELLER_ID`. Do not use Publisher, Store ID, Partner ID, or `CN=...`.
-5. In Partner Center, open **Account settings -> User management -> Microsoft Entra applications**, add the CI application, and assign it the **Manager** role.
+5. In Partner Center, open **Account settings -> User management -> Microsoft Entra applications**, add the new CI application, and assign it the **Manager (Windows)** role.
 
 The current Entra portal entry points are listed below. The portal should populate the placeholder in the Credentials URL; do not put the real Client ID in documentation:
 
 | 🌐 Entra page | 🔗 Entry URL or template | 📋 Field to copy |
 |---|---|---|
 | Tenant overview | `https://entra.microsoft.com/#view/Microsoft_AAD_IAM/EntraLanding.ReactView` | **Tenant ID** -> `PARTNER_CENTER_TENANT_ID` |
-| App registrations list | `https://entra.microsoft.com/#view/Microsoft_AAD_RegisteredApps/ApplicationsListBlade/quickStartType~/null/sourceType/Microsoft_AAD_IAM` | Open `dart-flutter-demo.ae0811c38249`, then copy **Application (client) ID** -> `PARTNER_CENTER_CLIENT_ID` |
-| Certificates & secrets | `https://entra.microsoft.com/#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/Credentials/appId/__APPLICATION_CLIENT_ID__/isMSAApp~/true` | Create a client secret and copy its one-time **Value** -> `PARTNER_CENTER_CLIENT_SECRET` |
+| App registrations list | `https://entra.microsoft.com/#view/Microsoft_AAD_RegisteredApps/ApplicationsListBlade/quickStartType~/null/sourceType/Microsoft_AAD_IAM` | Create or open the dedicated single-tenant `dart-flutter-demo-store-ci`, then copy **Application (client) ID** -> `PARTNER_CENTER_CLIENT_ID` |
+| Certificates & secrets | `https://entra.microsoft.com/#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/Credentials/appId/__APPLICATION_CLIENT_ID__` | In that single-tenant app, create a client secret and copy its one-time **Value** -> `PARTNER_CENTER_CLIENT_SECRET` |
+
+`AADSTS9002331` means the selected registration accepts Microsoft Account users only and cannot use the tenant client-credential flow. Create a single-tenant Entra app as described above instead of changing the token endpoint to `/consumers`.
 
 The confirmed Seller ID entry is the [Developer page under Partner Center Legal info](https://partner.microsoft.com/dashboard/account/v3/organization/legalinfo#developer). Copy **Seller ID** from that page as `PARTNER_CENTER_SELLER_ID`.
 

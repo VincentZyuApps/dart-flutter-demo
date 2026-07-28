@@ -146,7 +146,7 @@ Android 产物使用 CI 临时签名；iOS IPA 与 macOS 包均未签名。AltSt
 
 ### 🪪 产品标识页面
 
-创建产品后，路径是 **Partner Center 主页 -> 应用和游戏 -> dart-flutter-demo -> 产品标识**。当前产品也可以直接打开 [`9PP2SRN17C4F` 产品标识页面](https://partner.microsoft.com/dashboard/products/9PP2SRN17C4F/identity)。这里主要展示可以写入 MSIX Manifest、工作流配置或公开文档的产品公共身份；其中 MSA 应用 ID 可能同时对应 Entra 应用注册，因此仍需按凭据处理。
+创建产品后，路径是 **Partner Center 主页 -> 应用和游戏 -> dart-flutter-demo -> 产品标识**。当前产品也可以直接打开 [`9PP2SRN17C4F` 产品标识页面](https://partner.microsoft.com/dashboard/products/9PP2SRN17C4F/identity)。这里主要展示可以写入 MSIX Manifest、工作流配置或公开文档的产品公共身份；其中 MSA 应用 ID 是产品身份值，不是 CI 客户端凭据。
 
 当前页面给出的准确值如下：
 
@@ -160,9 +160,9 @@ Android 产物使用 CI 临时签名；iOS IPA 与 macOS 包均未签名。AltSt
 | Package SID | `S-1-15-2-4052166922-3111628424-3389906557-1246929253-1774262628-4171725999-764323245` | 商店计算标识；当前工作流不使用 |
 | Store URL | `https://apps.microsoft.com/detail/9PP2SRN17C4F` | 产品上线后供用户访问的公开链接 |
 | Store protocol link | `ms-windows-store://pdp/?productid=9PP2SRN17C4F` | 在 Windows 上打开 Microsoft Store 产品页 |
-| MSA 应用 ID | 不写入仓库 | 当前值与 Entra 应用注册 `dart-flutter-demo.ae0811c38249` 的 Application (client) ID 相同，可在完成授权后作为 `PARTNER_CENTER_CLIENT_ID` |
+| MSA 应用 ID | 不写入仓库 | 当前 `dart-flutter-demo.ae0811c38249` 注册仅支持 Microsoft Account，不能用作 `PARTNER_CENTER_CLIENT_ID` |
 
-`MS_STORE_DISPLAY_NAME` 不由上述 Package Identity 字段提供。它来自本仓库统一的应用展示名，当前固定为 `DartFlutterDemo`。不要用产品标题 `dart-flutter-demo` 或 Dart package 名替代这些字段。MSA 应用 ID 与当前 Entra Client ID 的对应关系已经在 Entra 应用注册列表中核实，但仍不把真实 Client ID 提交到仓库。
+`MS_STORE_DISPLAY_NAME` 不由上述 Package Identity 字段提供。它来自本仓库统一的应用展示名，当前固定为 `DartFlutterDemo`。不要用产品标题 `dart-flutter-demo` 或 Dart package 名替代这些字段。CI 必须使用独立的单租户 Entra 应用，并且绝不能把它的 Client ID 或凭据提交到仓库。
 
 ### 🔒 GitHub Environment 与 Repository Variables
 
@@ -187,18 +187,20 @@ Android 产物使用 CI 临时签名；iOS IPA 与 macOS 包均未签名。AltSt
 这些凭据不在产品的 **产品标识** 页面。依次按下面的位置取得：
 
 1. 在 [Microsoft Entra 管理中心](https://entra.microsoft.com/) 打开 **Entra ID -> 概述**，复制 **租户 ID** 作为 `PARTNER_CENTER_TENANT_ID`。
-2. 打开 **Entra ID -> 应用注册**。当前已有 `dart-flutter-demo.ae0811c38249`，且其 **应用程序(客户端) ID** 与产品标识页的 MSA 应用 ID 相同；可以复用它，或另建 CI 专用的单租户应用。将最终选用应用的 **应用程序(客户端) ID** 作为 `PARTNER_CENTER_CLIENT_ID`。
-3. 在该应用的 **证书和密码 -> 客户端密码** 创建 Secret，立即复制 **值（Value）** 作为 `PARTNER_CENTER_CLIENT_SECRET`；不要复制 Secret ID。
+2. 打开 **Entra ID -> 应用注册 -> 新注册**，创建 `dart-flutter-demo-store-ci` 等 CI 专用应用，账户类型选择 **仅此组织目录中的账户（单租户）**，重定向 URI 留空。复制它的 **应用程序(客户端) ID** 作为 `PARTNER_CENTER_CLIENT_ID`，不要复用仅支持 MSA 的 `dart-flutter-demo.ae0811c38249`。
+3. 在新建的单租户应用中打开 **证书和密码 -> 客户端密码**，创建 Secret 并立即复制 **值（Value）** 作为 `PARTNER_CENTER_CLIENT_SECRET`；不要复制 Secret ID。
 4. 打开 Partner Center 的 **账户设置 -> 法律信息 -> Developer**，复制 **卖家 ID（Seller ID）** 作为 `PARTNER_CENTER_SELLER_ID`；不要使用 Publisher、Store ID、Partner ID 或 `CN=...`。
-5. 在 Partner Center 的 **账户设置 -> 用户管理 -> Microsoft Entra 应用程序** 中添加该 CI 应用并授予 **Manager** 角色。
+5. 在 Partner Center 的 **账户设置 -> 用户管理 -> Microsoft Entra 应用程序** 中添加新 CI 应用并授予 **Manager (Windows)** 角色。
 
 当前使用的 Entra 页面入口如下。Credentials 地址中的占位符应由门户自动生成；不要把真实 Client ID 写入文档：
 
 | 🌐 Entra 页面 | 🔗 入口 URL 或模板 | 📋 需要复制的字段 |
 |---|---|---|
 | 租户概览 | `https://entra.microsoft.com/#view/Microsoft_AAD_IAM/EntraLanding.ReactView` | **租户 ID** -> `PARTNER_CENTER_TENANT_ID` |
-| 应用注册列表 | `https://entra.microsoft.com/#view/Microsoft_AAD_RegisteredApps/ApplicationsListBlade/quickStartType~/null/sourceType/Microsoft_AAD_IAM` | 打开 `dart-flutter-demo.ae0811c38249`，复制 **应用程序(客户端) ID** -> `PARTNER_CENTER_CLIENT_ID` |
-| 证书和密码 | `https://entra.microsoft.com/#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/Credentials/appId/__APPLICATION_CLIENT_ID__/isMSAApp~/true` | 新建客户端密码并复制一次性 **Value** -> `PARTNER_CENTER_CLIENT_SECRET` |
+| 应用注册列表 | `https://entra.microsoft.com/#view/Microsoft_AAD_RegisteredApps/ApplicationsListBlade/quickStartType~/null/sourceType/Microsoft_AAD_IAM` | 创建或打开单租户 `dart-flutter-demo-store-ci`，复制 **应用程序(客户端) ID** -> `PARTNER_CENTER_CLIENT_ID` |
+| 证书和密码 | `https://entra.microsoft.com/#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/Credentials/appId/__APPLICATION_CLIENT_ID__` | 在该单租户应用中创建客户端密码并复制一次性 **Value** -> `PARTNER_CENTER_CLIENT_SECRET` |
+
+`AADSTS9002331` 表示所选注册仅接受 Microsoft Account 用户，无法使用租户客户端凭据流程。应按上面步骤新建单租户 Entra 应用，不能把令牌端点改成 `/consumers`。
 
 已确认的 Seller ID 入口是 [Partner Center 法律信息的 Developer 页面](https://partner.microsoft.com/dashboard/account/v3/organization/legalinfo#developer)。复制页面中的 **卖家 ID（Seller ID）** 作为 `PARTNER_CENTER_SELLER_ID`。
 
