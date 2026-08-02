@@ -12,6 +12,15 @@ MANIFEST = FLATPAK_DIR / f"{APP_ID}.yml"
 METADATA_TEMPLATE = FLATPAK_DIR / f"{APP_ID}.metainfo.xml.in"
 DESKTOP_FILE = FLATPAK_DIR / f"{APP_ID}.desktop"
 WORKFLOW = ROOT / ".github" / "workflows" / "flatpak-check.yml"
+RELEASE_WORKFLOW = ROOT / ".github" / "workflows" / "build-release.yml"
+VERIFY_SCRIPT = (
+    ROOT
+    / "scripts"
+    / "ci"
+    / "packaging"
+    / "linux"
+    / "verify-flatpak-package.sh"
+)
 SCRIPT = (
     ROOT
     / "scripts"
@@ -94,13 +103,37 @@ class FlatpakConfigurationTests(unittest.TestCase):
             "bf5cafdfd97dcf5a89c7475bbc86a616e1f86acb",
             workflow,
         )
+        self.assertIn("verify-flatpak-package.sh", workflow)
+        self.assertIn("retention-days: 7", workflow)
+
+        verifier = VERIFY_SCRIPT.read_text(encoding="utf-8")
         self.assertIn(
-            '"/app/share/metainfo/${FLATPAK_APP_ID}.metainfo.xml"',
+            '"/app/share/metainfo/${APP_ID}.metainfo.xml"',
+            verifier,
+        )
+        self.assertIn('<release version=\\"$EXPECTED_VERSION\\"', verifier)
+        self.assertNotIn("--show-version", verifier)
+        self.assertIn("filesystems=(host|home)", verifier)
+        self.assertIn("timeout --signal=TERM --kill-after=5s 20s", verifier)
+
+    def test_release_workflow_packages_flatpak_and_gates_repository_request(self) -> None:
+        workflow = RELEASE_WORKFLOW.read_text(encoding="utf-8")
+        self.assertIn("--token build-publish", workflow)
+        self.assertIn("should_publish_flatpak_repository", workflow)
+        self.assertIn("name: release-flatpak-x64", workflow)
+        self.assertIn(
+            "dart-flutter-demo-linux-x64-v${{ needs.prepare.outputs.version }}.flatpak",
             workflow,
         )
-        self.assertIn('<release version=\\"$EXPECTED_VERSION\\"', workflow)
-        self.assertNotIn("--show-version", workflow)
-        self.assertIn("retention-days: 7", workflow)
+        self.assertIn(
+            "flatpak/flatpak-github-actions/flatpak-builder@"
+            "bf5cafdfd97dcf5a89c7475bbc86a616e1f86acb",
+            workflow,
+        )
+        self.assertIn("verify-flatpak-package.sh", workflow)
+        self.assertIn("flatpak-publish-request.json", workflow)
+        self.assertIn("schema_version: 1", workflow)
+        self.assertNotIn("microsoft-store-apppublisher", workflow)
 
 
 if __name__ == "__main__":

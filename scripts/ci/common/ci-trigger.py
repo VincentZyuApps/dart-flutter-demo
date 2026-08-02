@@ -5,6 +5,7 @@ import re
 
 
 ALLOWED_TOKENS = {
+    "build-publish",
     "build-release",
     "build-profile",
     "build-debug",

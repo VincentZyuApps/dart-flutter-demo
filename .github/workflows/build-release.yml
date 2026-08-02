@@ -9,6 +9,10 @@ on:
         description: Create the GitHub Release after all builds pass
         type: boolean
         default: false
+      publish_flatpak_repository:
+        description: Request a signed Flatpak repository update after publishing
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -19,6 +23,7 @@ concurrency:
 
 env:
   FLUTTER_VERSION: 3.41.5
+  FLATPAK_APP_ID: io.github.vincentzyuapps.dartflutterdemo
 
 jobs:
   prepare:
@@ -26,6 +31,7 @@ jobs:
     outputs:
       should_build: ${{ steps.trigger.outputs.should_build }}
       should_publish: ${{ steps.trigger.outputs.should_publish }}
+      should_publish_flatpak_repository: ${{ steps.trigger.outputs.should_publish_flatpak_repository }}
       version: ${{ steps.version.outputs.version }}
       commits_log: ${{ steps.commits.outputs.log }}
     steps:
@@ -39,17 +45,29 @@ jobs:
         env:
           COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
           MANUAL_PUBLISH: ${{ inputs.publish || false }}
+          MANUAL_PUBLISH_FLATPAK: ${{ inputs.publish_flatpak_repository || false }}
         run: |
           set -euo pipefail
           if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            if [[ "$MANUAL_PUBLISH_FLATPAK" == "true" && "$MANUAL_PUBLISH" != "true" ]]; then
+              echo "A Flatpak repository update requires publish=true." >&2
+              exit 1
+            fi
             echo "should_build=true" >> "$GITHUB_OUTPUT"
             echo "should_publish=$MANUAL_PUBLISH" >> "$GITHUB_OUTPUT"
+            echo "should_publish_flatpak_repository=$MANUAL_PUBLISH_FLATPAK" >> "$GITHUB_OUTPUT"
+          elif python scripts/ci/common/ci-trigger.py --message "$COMMIT_MESSAGE" --token build-publish; then
+            echo "should_build=true" >> "$GITHUB_OUTPUT"
+            echo "should_publish=true" >> "$GITHUB_OUTPUT"
+            echo "should_publish_flatpak_repository=true" >> "$GITHUB_OUTPUT"
           elif python scripts/ci/common/ci-trigger.py --message "$COMMIT_MESSAGE" --token build-release; then
             echo "should_build=true" >> "$GITHUB_OUTPUT"
             echo "should_publish=true" >> "$GITHUB_OUTPUT"
+            echo "should_publish_flatpak_repository=false" >> "$GITHUB_OUTPUT"
           else
             echo "should_build=false" >> "$GITHUB_OUTPUT"
             echo "should_publish=false" >> "$GITHUB_OUTPUT"
+            echo "should_publish_flatpak_repository=false" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Extract version
@@ -209,6 +227,17 @@ jobs:
             --targets deb,appimage --build-target-platform linux-x64
           tar -C build/linux/x64/release/bundle -czf dart-flutter-demo-linux-x64.tar.gz .
 
+      - name: Preserve Flatpak package input
+        if: matrix.platform == 'linux-x64'
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 scripts/ci/packaging/linux/render-flatpak-metadata.py
+          test -x build/linux/x64/release/bundle/dart_flutter_demo
+          tar -czf flatpak-package-input.tar.gz \
+            build/linux/x64/release/bundle \
+            build/flatpak/metadata
+
       - name: Build macOS Release
         if: startsWith(matrix.platform, 'macos-')
         run: flutter build macos --release
@@ -272,6 +301,7 @@ jobs:
           name: release-linux-x64
           path: |
             dart-flutter-demo-linux-x64.tar.gz
+            flatpak-package-input.tar.gz
             dist/
           retention-days: 7
           if-no-files-found: error
@@ -354,8 +384,76 @@ jobs:
           retention-days: 7
           if-no-files-found: error
 
+  flatpak-package:
+    name: Package and verify Flatpak x86_64
+    needs: [prepare, release-builds]
+    if: needs.prepare.outputs.should_build == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    container:
+      image: ghcr.io/flathub-infra/flatpak-github-actions:freedesktop-25.08
+      options: --privileged
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download Linux Release input
+        uses: actions/download-artifact@v4
+        with:
+          name: release-linux-x64
+          path: .flatpak-input
+
+      - name: Restore Linux bundle and metadata
+        shell: bash
+        run: |
+          set -euo pipefail
+          tar -xzf .flatpak-input/flatpak-package-input.tar.gz
+          test -x build/linux/x64/release/bundle/dart_flutter_demo
+          test -f "build/flatpak/metadata/${FLATPAK_APP_ID}.metainfo.xml"
+
+      - name: Validate desktop and AppStream metadata
+        shell: bash
+        run: |
+          set -euo pipefail
+          desktop-file-validate \
+            "linux/packaging/flatpak/${FLATPAK_APP_ID}.desktop"
+          appstreamcli validate --no-net \
+            "build/flatpak/metadata/${FLATPAK_APP_ID}.metainfo.xml"
+
+      - name: Build Flatpak bundle
+        uses: flatpak/flatpak-github-actions/flatpak-builder@bf5cafdfd97dcf5a89c7475bbc86a616e1f86acb # v6.7
+        with:
+          bundle: dart-flutter-demo-linux-x64-v${{ needs.prepare.outputs.version }}.flatpak
+          manifest-path: linux/packaging/flatpak/io.github.vincentzyuapps.dartflutterdemo.yml
+          branch: stable
+          arch: x86_64
+          repository-name: flathub
+          repository-url: https://dl.flathub.org/repo/flathub.flatpakrepo
+          cache-key: flatpak-builder-x86_64-25.08-${{ hashFiles('linux/packaging/flatpak/**', 'pubspec.lock') }}
+          upload-artifact: false
+          verbose: true
+
+      - name: Verify package identity, version, sandbox, and startup
+        shell: bash
+        run: |
+          bash scripts/ci/packaging/linux/verify-flatpak-package.sh \
+            "dart-flutter-demo-linux-x64-v${{ needs.prepare.outputs.version }}.flatpak" \
+            "${{ needs.prepare.outputs.version }}"
+
+      - name: Upload verified Flatpak
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-flatpak-x64
+          path: |
+            dart-flutter-demo-linux-x64-v${{ needs.prepare.outputs.version }}.flatpak
+            build/flatpak/metadata/io.github.vincentzyuapps.dartflutterdemo.metainfo.xml
+            flatpak-info.txt
+            flatpak-permissions.txt
+            flatpak-smoke.log
+          retention-days: 7
+          if-no-files-found: error
+
   publish:
-    needs: [prepare, release-builds, profile-builds]
+    needs: [prepare, release-builds, profile-builds, flatpak-package]
     if: needs.prepare.outputs.should_build == 'true'
     runs-on: ubuntu-latest
     permissions:
@@ -380,6 +478,8 @@ jobs:
             "release-files/dart-flutter-demo-windows-x64-store-v${VERSION}.msix"
           cp artifacts/release-linux-x64/dart-flutter-demo-linux-x64.tar.gz \
             "release-files/dart-flutter-demo-linux-x64-v${VERSION}.tar.gz"
+          cp "artifacts/release-flatpak-x64/dart-flutter-demo-linux-x64-v${VERSION}.flatpak" \
+            "release-files/dart-flutter-demo-linux-x64-v${VERSION}.flatpak"
           find artifacts/release-linux-x64 -type f \( -name '*.deb' -o -name '*.AppImage' \) -print0 | while IFS= read -r -d '' file; do
             extension="${file##*.}"
             cp "$file" "release-files/dart-flutter-demo-linux-x64-v${VERSION}.${extension}"
@@ -404,6 +504,29 @@ jobs:
             "release-files/dart-flutter-demo-linux-x64-profile-v${VERSION}.tar.gz" .
           cp artifacts/profile-android-universal/app-profile.apk \
             "release-files/dart-flutter-demo-android-universal-profile-v${VERSION}.apk"
+
+      - name: Create Flatpak repository publication request
+        if: needs.prepare.outputs.should_publish_flatpak_repository == 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION="${{ needs.prepare.outputs.version }}"
+          jq -n \
+            --arg app_id "$FLATPAK_APP_ID" \
+            --arg arch "x86_64" \
+            --arg branch "stable" \
+            --arg bundle "dart-flutter-demo-linux-x64-v${VERSION}.flatpak" \
+            --arg release_tag "v${VERSION}" \
+            --arg repository "VincentZyuApps/flatpak-repo" \
+            '{
+              schema_version: 1,
+              app_id: $app_id,
+              arch: $arch,
+              branch: $branch,
+              bundle: $bundle,
+              release_tag: $release_tag,
+              repository: $repository
+            }' > release-files/flatpak-publish-request.json
 
       - name: Render Release notes
         shell: bash

@@ -36,17 +36,17 @@
 
 - Commit 首行使用 Conventional Commits，例如 `chore(docs): ...`。
 - CI 标记写在 commit message 末尾，推荐使用方括号风格。
-- 已实现 `[build-release]`、`[build-profile]`、`[build-debug]`、`[run-performance]`、`[release-performance]`。
-- `[build-publish]` 为外部分发预留词，Flatpak 仓库发布验证完成前不得声称可用；微软商店 job 必须等首次人工上架 Live 后再启用。
+- 已实现 `[build-release]`、`[build-publish]`、`[build-profile]`、`[build-debug]`、`[run-performance]`、`[release-performance]`。
+- `[build-publish]` 创建完整应用 Release 并请求更新签名 Flatpak 仓库；微软商店 job 必须等首次人工上架 Live 后再启用。
 - CI 只匹配连字符关键词，方括号只是提交风格规范。
-- `build-release.yml` 负责 Release 构建与 GitHub Release。
+- `build-release.yml` 负责 Release 构建、Flatpak 校验、GitHub Release 和 Flatpak 仓库发布请求。
 - `profile-debug.yml` 负责保留七天的 Profile 与 Debug 产物。
 - `performance.yml` 的每周计划默认关闭，`run-performance` 保留七天报告，`release-performance` 创建永久 Pre-release。
 - `platform-bootstrap.yml` 只生成待人工审查的平台源码 Artifact，不自动 commit。
 - `flatpak-check.yml` 只生成并验证保留七天的 x86_64 package-only Flatpak，不使用生产签名密钥或更新外部仓库。
 - 手动下载的 GitHub Actions Artifact 统一保存到 `tmp/downloads/ci/<artifact-kind>-<run-id>/`，目录名必须包含 Action Run ID，并保留 Artifact 内部目录结构。
-- 启用后的 `build-publish` 必须复用 `build-release` 的质量检查与产物，并更新签名 Flatpak 仓库；微软商店 job 上线后再并行执行。
-- 只有 `build-release`、`release-performance` 和启用后的 `build-publish` 可以创建 GitHub Release。
+- `build-publish` 必须复用 `build-release` 的质量检查与产物，并通过固定发布标记更新签名 Flatpak 仓库；微软商店 job 上线后再并行执行。
+- 只有 `build-release`、`release-performance` 和 `build-publish` 可以创建 GitHub Release。
 - 性能 Release 必须是独立 Pre-release，不得替代应用的 Latest Release。
 
 ## External Publishing
@@ -54,7 +54,7 @@
 - 外部仓库或商店发布必须与普通构建分阶段，构建成功后才能进入发布 job。
 - 微软商店 Package Identity、Publisher、Product ID 与认证方式必须来自 Partner Center，不得猜测。
 - 商店凭据只存放在 GitHub Secrets 或受保护的 GitHub Environment 中。
-- 生产发布使用独立 Environment、最小权限和人工审批，不允许在 fork 或 Pull Request 上运行。
+- 生产发布使用独立 Environment 与最小权限，并按风险配置保护规则；不允许在 fork 或 Pull Request 上运行。
 - 微软商店优先发布 MSIX，并使用微软官方 `microsoft-store-apppublisher` 与 `msstore` CLI。
 - MSIX 的公开身份配置可以提交，Tenant ID、Client ID、Client Secret 与 Seller ID 不得提交。
 - Flatpak 仓库 GPG 私钥与口令只存放在 `flatpak-production` Environment Secrets，公开公钥和指纹可以提交。

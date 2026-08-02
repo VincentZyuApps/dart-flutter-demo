@@ -115,59 +115,12 @@ jobs:
           upload-artifact: false
           verbose: true
 
-      - name: Verify identity, version, and strict sandbox
-        shell: bash
-        env:
-          BUNDLE: dart-flutter-demo-linux-x64-v${{ steps.version.outputs.version }}.flatpak
-          EXPECTED_VERSION: ${{ steps.version.outputs.version }}
-        run: |
-          set -euo pipefail
-          flatpak install --user --noninteractive "$BUNDLE"
-          flatpak info --user "$FLATPAK_APP_ID" > flatpak-info.txt
-          flatpak info --user --show-permissions "$FLATPAK_APP_ID" \
-            > flatpak-permissions.txt
-          flatpak run --user --command=cat "$FLATPAK_APP_ID" \
-            "/app/share/metainfo/${FLATPAK_APP_ID}.metainfo.xml" \
-            > installed-metainfo.xml
-
-          REF="$(flatpak info --user --show-ref "$FLATPAK_APP_ID")"
-          test "$REF" = "app/${FLATPAK_APP_ID}/x86_64/stable"
-
-          if ! grep -Fq "<release version=\"$EXPECTED_VERSION\"" \
-            installed-metainfo.xml; then
-            echo "Expected Flatpak release version was not installed." >&2
-            cat installed-metainfo.xml >&2
-            exit 1
-          fi
-
-          if grep -Eq 'filesystems=(host|home)|devices=all|system-bus|session-bus' \
-            flatpak-permissions.txt; then
-            echo "Unexpected broad Flatpak permission detected." >&2
-            cat flatpak-permissions.txt >&2
-            exit 1
-          fi
-
-          flatpak run --user --command=sh "$FLATPAK_APP_ID" -c \
-            'test -x /app/lib/dart-flutter-demo/dart_flutter_demo'
-
-      - name: Launch Flatpak smoke test
+      - name: Verify package identity, version, sandbox, and startup
         shell: bash
         run: |
-          set -euo pipefail
-          set +e
-          timeout --signal=TERM --kill-after=5s 20s \
-            dbus-run-session -- xvfb-run -a \
-            flatpak run --user \
-              --env=LIBGL_ALWAYS_SOFTWARE=1 \
-              --env=NO_AT_BRIDGE=1 \
-              "$FLATPAK_APP_ID" > flatpak-smoke.log 2>&1
-          STATUS=$?
-          set -e
-          if [[ "$STATUS" -ne 124 ]]; then
-            echo "Flatpak exited before the 20-second smoke window (status $STATUS)." >&2
-            cat flatpak-smoke.log >&2
-            exit 1
-          fi
+          bash scripts/ci/packaging/linux/verify-flatpak-package.sh \
+            "dart-flutter-demo-linux-x64-v${{ steps.version.outputs.version }}.flatpak" \
+            "${{ steps.version.outputs.version }}"
 
       - name: Upload package-only Flatpak
         uses: actions/upload-artifact@v4

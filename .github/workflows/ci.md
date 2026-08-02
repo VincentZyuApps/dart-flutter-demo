@@ -19,7 +19,8 @@ Tokens are exact, case-sensitive, and hyphenated. Brackets are style punctuation
 
 | 🔑 Token | ⚙️ Workflow | 📦 Output | ⏳ Retention | 🚀 Creates Release |
 |---|---|---|---|:---:|
-| `build-release` | `build-release.yml` | Six Release targets plus three Profile targets | Permanent after publishing | Yes |
+| `build-release` | `build-release.yml` | Six platform Release targets, x86_64 Flatpak, and three Profile targets | Permanent after publishing | Yes |
+| `build-publish` | `build-release.yml` | Everything in `build-release`, plus a signed Flatpak repository request | Permanent and self-hosted update repository | Yes |
 | `build-profile` | `profile-debug.yml` | Windows x64, Linux x64, Android Universal Profile | 7 days | No |
 | `build-debug` | `profile-debug.yml` | Windows x64, Linux x64, Android Universal Debug | 7 days | No |
 | `run-performance` | `performance.yml` | Windows, Linux, and macOS JSON/Markdown/log bundle | 7 days | No |
@@ -29,7 +30,7 @@ Legacy forms such as `build release`, `build action`, or `BUILD-RELEASE` do not 
 
 ## 🚀 Build Release
 
-`build-release.yml` runs on a push containing `build-release`, or through `workflow_dispatch`.
+`build-release.yml` runs on a push containing `build-release` or `build-publish`, or through `workflow_dispatch`. `build-publish` is a strict superset: both tokens create the same tested GitHub Release, while only `build-publish` requests a signed Flatpak repository update.
 
 Every published application version, including versions with `alpha`, `beta`, or `rc` suffixes, is created as a regular non-draft Release and explicitly marked as the repository's Latest Release.
 
@@ -40,7 +41,7 @@ The pipeline first runs `flutter analyze`, root tests, local-plugin tests, and C
 | 🎯 Target | 🖥️ Runner | 📦 Release output |
 |---|---|---|
 | Windows x64 | `windows-latest` | portable ZIP, Inno Setup EXE, and Store submission MSIX |
-| Linux x64 | `ubuntu-22.04` | tar.gz, DEB, and AppImage |
+| Linux x64 | `ubuntu-22.04` plus the Freedesktop `25.08` container | tar.gz, DEB, AppImage, and Flatpak |
 | macOS x64 | `macos-15-intel` | DMG and ZIP |
 | macOS ARM64 | `macos-latest` | DMG and ZIP |
 | Android | `ubuntu-latest` | universal, ARM64, and x86_64 APKs |
@@ -50,9 +51,9 @@ The same run builds permanent Profile assets for Windows x64, Linux x64, and And
 
 ### 🧪 Manual Dry-Run
 
-Manual runs default to `publish=false`. They execute quality checks, all Release builds, all permanent Profile builds, packaging, MSIX validation, and release-note rendering, but upload a seven-day `release-dry-run-*` artifact instead of creating a tag or GitHub Release.
+Manual runs default to `publish=false`. They execute quality checks, all Release builds, the Flatpak package and smoke test, all permanent Profile builds, MSIX validation, and release-note rendering, but upload a seven-day `release-dry-run-*` artifact instead of creating a tag or GitHub Release.
 
-Set `publish=true` only after the dry-run passes. A push containing `build-release` publishes automatically after every required job succeeds.
+Set `publish=true` only after the dry-run passes. Set `publish_flatpak_repository=true` as well to reproduce `build-publish`; this option is rejected unless `publish=true`. A push containing either release token publishes automatically after every required job succeeds.
 
 ## 📦 Flatpak Package Check
 
@@ -73,7 +74,7 @@ gh run download "$RUN_ID" --name "flatpak-package-only-$RUN_ID" --dir "tmp/downl
 
 The workflow validates the desktop file and AppStream metadata, installs the generated bundle, checks the exact `app/io.github.vincentzyuapps.dartflutterdemo/x86_64/stable` ref and version, rejects broad sandbox permissions, and requires the application to remain running through a 20-second virtual-display smoke test.
 
-The downloaded `.flatpak` is a versioned side-load bundle and does not configure automatic updates. After package-only testing succeeds, it will be added to `build-release.yml`; the separate `VincentZyuApps/flatpak-repo` GitHub Pages repository and its fixed `.flatpakref` will later provide signed automatic updates through `[build-publish]`.
+The downloaded `.flatpak` is a versioned side-load bundle and does not configure automatic updates. `build-release.yml` reuses the same package verifier and attaches a versioned bundle to every application Release. `[build-publish]` additionally attaches `flatpak-publish-request.json`; the separate [`VincentZyuApps/flatpak-repo`](https://github.com/VincentZyuApps/flatpak-repo) workflow discovers that marker and publishes signed `stable` updates through its fixed [`.flatpakref`](https://vincentzyuapps.github.io/flatpak-repo/dart-flutter-demo.flatpakref).
 
 ## 🧰 Profile And Debug Builds
 
@@ -125,7 +126,7 @@ It uploads `dart-flutter-demo-platform-roots-flutter-3.41.5` for seven days, inc
 | 🧩 Type | 📝 Pattern |
 |---|---|
 | Windows | `dart-flutter-demo-windows-x64-v<version>.zip` / `-setup.exe` / `dart-flutter-demo-windows-x64-store-v<version>.msix` |
-| Linux | `dart-flutter-demo-linux-x64-v<version>.tar.gz` / `.deb` / `.AppImage` |
+| Linux | `dart-flutter-demo-linux-x64-v<version>.tar.gz` / `.deb` / `.AppImage` / `.flatpak` |
 | macOS | `dart-flutter-demo-macos-<arch>-v<version>.dmg` / `.zip` |
 | Android | `dart-flutter-demo-android-<abi>-v<version>.apk` |
 | iOS | `dart-flutter-demo-ios-arm64-v<version>.ipa` |
@@ -142,9 +143,9 @@ Android artifacts use ephemeral CI signing. The iOS IPA and macOS packages are u
 
 ## 🏪 External Publishing And Microsoft Store
 
-> **🚧 Current status:** `flatpak-check.yml`, package-only Windows x64 MSIX builds, and the read-only Store authentication check are implemented. `build-publish` remains disabled until the signed `flatpak-repo` path has passed package, deployment, and public `stable` update tests. The Microsoft Store job remains separately disabled until the first Partner Center submission is Live.
+> **Current status:** `build-publish`, signed self-hosted Flatpak publication, package-only Windows x64 MSIX builds, and the read-only Store authentication check are implemented. The Microsoft Store submission job remains separately disabled until the first Partner Center submission is Live.
 
-The planned `build-publish` path extends `build-release`: it runs the same quality checks, Release builds, permanent Profile builds, GitHub Release publication, Flatpak packaging, and Windows x64 MSIX validation. It then publishes the signed Flatpak to the self-hosted repository after `flatpak-production` approval. Once the Store product is Live, a separate `microsoft-store-production` job will submit the same release's MSIX; Microsoft certification still runs afterward.
+`build-publish` extends `build-release`: it runs the same quality checks, Release builds, permanent Profile builds, GitHub Release publication, Flatpak packaging, and Windows x64 MSIX validation. It also attaches `flatpak-publish-request.json`. The public `flatpak-repo` workflow discovers that marker every 15 minutes, or can be dispatched immediately with the Release tag, then imports the bundle into its persistent OSTree repository, signs it with the `flatpak-production` Environment key, and deploys GitHub Pages. No personal token or private key crosses repository boundaries. Once the Store product is Live, a separate future `microsoft-store-production` job may submit the same Release's MSIX; Microsoft certification will still run afterward.
 
 This project will remain free. Pre-release versions such as `vX.Y.Z-beta.W` will be submitted directly to the production Store listing, not to a Package Flight. Review the version and release notes carefully before approving the Environment deployment.
 
@@ -280,7 +281,7 @@ The second command captures the newest run ID, the third follows it to completio
 
 ### 🚀 Automatic Publication
 
-After the signed Flatpak repository is initialized and the workflow is enabled, use:
+To create a GitHub Release and request a signed Flatpak repository update, use:
 
 ```text
 release: publish DartFlutterDemo
@@ -288,7 +289,13 @@ release: publish DartFlutterDemo
 [build-publish]
 ```
 
-The workflow will build all normal Release/Profile artifacts, create the GitHub Release, attach the versioned `.flatpak`, pause for `flatpak-production` approval, and update the signed `stable` repository. After the Store product is Live and its job is enabled, it will also pause independently for `microsoft-store-production` approval and submit the MSIX. Reject either deployment when its version, changelog, identity, or generated package is unexpected.
+The application workflow builds all normal Release/Profile artifacts, creates the GitHub Release, attaches the verified versioned `.flatpak`, and adds `flatpak-publish-request.json`. The target repository checks for that marker every 15 minutes. To publish immediately after the Release succeeds, run:
+
+```bash
+gh workflow run publish.yml --repo VincentZyuApps/flatpak-repo --ref main -f release_tag=vX.Y.Z-beta.W
+```
+
+The target workflow uses its own `flatpak-production` Environment, GPG-signs the OSTree commit and summary, deploys the `stable` repository to GitHub Pages, and verifies the public GPG-enabled remote. The Microsoft Store job is not part of the current path and remains disabled until the product is Live.
 
 Rotate `PARTNER_CENTER_CLIENT_SECRET` before it expires and update only the Environment secret value. If certification later fails, inspect Partner Center; do not treat the earlier GitHub job success as proof that the update is live.
 

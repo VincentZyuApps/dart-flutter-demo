@@ -19,7 +19,8 @@ feat(system-info): migrate collection into a reusable plugin
 
 | 🔑 关键词 | ⚙️ 工作流 | 📦 输出 | ⏳ 保留时间 | 🚀 创建 Release |
 |---|---|---|---|:---:|
-| `build-release` | `build-release.yml` | 六个 Release 目标加三个 Profile 目标 | 发布后永久保留 | 是 |
+| `build-release` | `build-release.yml` | 六个平台 Release 目标、x86_64 Flatpak 和三个 Profile 目标 | 发布后永久保留 | 是 |
+| `build-publish` | `build-release.yml` | `build-release` 的全部内容，加签名 Flatpak 仓库发布请求 | 永久，并更新自建仓库 | 是 |
 | `build-profile` | `profile-debug.yml` | Windows x64、Linux x64、Android Universal Profile | 7 天 | 否 |
 | `build-debug` | `profile-debug.yml` | Windows x64、Linux x64、Android Universal Debug | 7 天 | 否 |
 | `run-performance` | `performance.yml` | Windows、Linux、macOS 的 JSON/Markdown/日志报告包 | 7 天 | 否 |
@@ -29,7 +30,7 @@ feat(system-info): migrate collection into a reusable plugin
 
 ## 🚀 Release 构建
 
-`build-release.yml` 在 push 包含 `build-release` 时运行，也可以从 `workflow_dispatch` 手动运行。
+`build-release.yml` 在 push 包含 `build-release` 或 `build-publish` 时运行，也可以从 `workflow_dispatch` 手动运行。`build-publish` 是严格超集：两个关键词都会创建完全相同且经过验证的 GitHub Release，只有 `build-publish` 会请求更新签名 Flatpak 仓库。
 
 所有发布的应用版本，包括带有 `alpha`、`beta` 或 `rc` 后缀的版本，都会创建为非草稿的正式 Release，并明确标记为仓库的 Latest Release。
 
@@ -40,7 +41,7 @@ feat(system-info): migrate collection into a reusable plugin
 | 🎯 目标 | 🖥️ Runner | 📦 Release 输出 |
 |---|---|---|
 | Windows x64 | `windows-latest` | 便携 ZIP、Inno Setup EXE 和 Store 提交用 MSIX |
-| Linux x64 | `ubuntu-22.04` | tar.gz、DEB 和 AppImage |
+| Linux x64 | `ubuntu-22.04` 加 Freedesktop `25.08` 容器 | tar.gz、DEB、AppImage 和 Flatpak |
 | macOS x64 | `macos-15-intel` | DMG 和 ZIP |
 | macOS ARM64 | `macos-latest` | DMG 和 ZIP |
 | Android | `ubuntu-latest` | Universal、ARM64 和 x86_64 APK |
@@ -50,9 +51,9 @@ feat(system-info): migrate collection into a reusable plugin
 
 ### 🧪 手动 Dry-Run
 
-手动运行默认 `publish=false`。它会执行质量检查、全部 Release 构建、三项永久 Profile 构建、打包、MSIX 校验和 Release Notes 渲染，但只上传保留七天的 `release-dry-run-*` Artifact，不创建 tag 或 GitHub Release。
+手动运行默认 `publish=false`。它会执行质量检查、全部 Release 构建、Flatpak 打包与冒烟测试、三项永久 Profile 构建、MSIX 校验和 Release Notes 渲染，但只上传保留七天的 `release-dry-run-*` Artifact，不创建 tag 或 GitHub Release。
 
-确认 dry-run 全部通过后再使用 `publish=true`。push 中的 `build-release` 会在所有必要 job 成功后自动发布。
+确认 dry-run 全部通过后再使用 `publish=true`。同时设置 `publish_flatpak_repository=true` 可以复现 `build-publish`；若没有启用 `publish=true`，该选项会被拒绝。push 中包含任一发布关键词时，都会在所有必要 job 成功后自动发布。
 
 ## 📦 Flatpak 包校验
 
@@ -73,7 +74,7 @@ gh run download "$RUN_ID" --name "flatpak-package-only-$RUN_ID" --dir "tmp/downl
 
 工作流会校验 Desktop 文件与 AppStream 元数据、安装生成的 bundle、核对准确的 `app/io.github.vincentzyuapps.dartflutterdemo/x86_64/stable` ref 与版本、拒绝宽泛沙箱权限，并要求应用在虚拟显示器的 20 秒冒烟测试期间持续运行。
 
-下载的 `.flatpak` 是版本固定的侧载 bundle，不会配置自动更新。package-only 测试成功后，它会接入 `build-release.yml`；独立的 `VincentZyuApps/flatpak-repo` GitHub Pages 仓库及其固定 `.flatpakref` 后续会通过 `[build-publish]` 提供签名自动更新。
+下载的 `.flatpak` 是版本固定的侧载 bundle，不会配置自动更新。`build-release.yml` 复用相同校验脚本，并把版本化 bundle 附加到每次应用 Release。`[build-publish]` 还会附加 `flatpak-publish-request.json`；独立的 [`VincentZyuApps/flatpak-repo`](https://github.com/VincentZyuApps/flatpak-repo) 工作流发现该标记后发布签名 `stable` 更新，并通过固定的 [`.flatpakref`](https://vincentzyuapps.github.io/flatpak-repo/dart-flutter-demo.flatpakref) 提供更新。
 
 ## 🧰 Profile 与 Debug 构建
 
@@ -125,7 +126,7 @@ dart-flutter-demo-android-universal-profile-93ac817
 | 🧩 类型 | 📝 模式 |
 |---|---|
 | Windows | `dart-flutter-demo-windows-x64-v<version>.zip` / `-setup.exe` / `dart-flutter-demo-windows-x64-store-v<version>.msix` |
-| Linux | `dart-flutter-demo-linux-x64-v<version>.tar.gz` / `.deb` / `.AppImage` |
+| Linux | `dart-flutter-demo-linux-x64-v<version>.tar.gz` / `.deb` / `.AppImage` / `.flatpak` |
 | macOS | `dart-flutter-demo-macos-<arch>-v<version>.dmg` / `.zip` |
 | Android | `dart-flutter-demo-android-<abi>-v<version>.apk` |
 | iOS | `dart-flutter-demo-ios-arm64-v<version>.ipa` |
@@ -142,9 +143,9 @@ Android 产物使用 CI 临时签名；iOS IPA 与 macOS 包均未签名。AltSt
 
 ## 🏪 外部分发与 Microsoft Store
 
-> **🚧 当前状态：** `flatpak-check.yml`、package-only Windows x64 MSIX 构建与商店只读认证检查已经实现。`build-publish` 在签名 `flatpak-repo` 路径通过打包、部署与公开 `stable` 更新测试前保持禁用。Microsoft Store job 独立保持禁用，直到 Partner Center 首次提交变为 Live。
+> **当前状态：** `build-publish`、签名自建 Flatpak 发布、package-only Windows x64 MSIX 构建与商店只读认证检查已经实现。Microsoft Store 提交 job 继续独立禁用，直到 Partner Center 首次提交变为 Live。
 
-规划中的 `build-publish` 会扩展 `build-release`：先执行完全相同的质量检查、Release 构建、永久 Profile 构建、GitHub Release 发布、Flatpak 打包和 Windows x64 MSIX 校验，再等待 `flatpak-production` 批准并将签名 Flatpak 发布到自建仓库。商店产品变为 Live 后，独立的 `microsoft-store-production` job 会提交同一 Release 的 MSIX；微软认证仍会在此后继续运行。
+`build-publish` 扩展 `build-release`：执行完全相同的质量检查、Release 构建、永久 Profile 构建、GitHub Release 发布、Flatpak 打包和 Windows x64 MSIX 校验，并额外附加 `flatpak-publish-request.json`。公开 `flatpak-repo` 工作流每 15 分钟发现一次该标记，也可用 Release tag 立即手动触发；随后它把 bundle 导入持久 OSTree 仓库，使用 `flatpak-production` Environment 密钥签名并部署 GitHub Pages。个人 Token 和私钥都不会跨仓库传递。商店产品变为 Live 后，未来可增加独立的 `microsoft-store-production` job 来提交同一 Release 的 MSIX；微软认证仍会在此后继续运行。
 
 本项目保持永久免费。`vX.Y.Z-beta.W` 等预发布版本也会直接提交正式商店页面，不使用 Package Flight，因此批准 Environment 部署前必须仔细检查版本和 Release Notes。
 
@@ -280,7 +281,7 @@ gh run view "$RUN_ID" --log-failed
 
 ### 🚀 自动发布
 
-完成签名 Flatpak 仓库初始化并启用工作流后，使用：
+要创建 GitHub Release 并请求更新签名 Flatpak 仓库，使用：
 
 ```text
 release: publish DartFlutterDemo
@@ -288,7 +289,13 @@ release: publish DartFlutterDemo
 [build-publish]
 ```
 
-工作流会构建全部常规 Release/Profile 产物、创建 GitHub Release、附加版本化 `.flatpak`、等待 `flatpak-production` 人工批准，并更新签名 `stable` 仓库。商店产品变为 Live 且对应 job 启用后，它还会独立等待 `microsoft-store-production` 批准并提交 MSIX。发现任一部署的版本、更新日志、身份或生成包不符合预期时，应拒绝对应部署。
+应用工作流会构建全部常规 Release/Profile 产物、创建 GitHub Release、附加验证过的版本化 `.flatpak`，并加入 `flatpak-publish-request.json`。目标仓库每 15 分钟检查一次该标记；要在 Release 成功后立即发布，运行：
+
+```bash
+gh workflow run publish.yml --repo VincentZyuApps/flatpak-repo --ref main -f release_tag=vX.Y.Z-beta.W
+```
+
+目标工作流使用自己的 `flatpak-production` Environment，对 OSTree commit 与 summary 进行 GPG 签名，将 `stable` 仓库部署到 GitHub Pages，并验证公开的 GPG 仓库。Microsoft Store job 不在当前流程中，产品变为 Live 前继续保持禁用。
 
 在 `PARTNER_CENTER_CLIENT_SECRET` 到期前轮换它，并且只更新 Environment Secret 的值。如果后续认证失败，应前往 Partner Center 检查；不能把之前 GitHub job 的成功当作更新已经上线的证明。
 

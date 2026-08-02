@@ -186,7 +186,7 @@
 
 ## ⚙️🚀 CI/CD
 
-GitHub Actions 使用精确且区分大小写的连字符关键词：`[build-release]` 发布应用 Release，`[build-profile]` 与 `[build-debug]` 生成保留七天的开发产物，`[run-performance]` 将性能报告保留七天，`[release-performance]` 创建永久 Performance Pre-release。方括号只是 commit 风格，CI 实际匹配其中的关键词。手动选项与平台 bootstrap 详见 [ci.zh-cn.md](.github/workflows/ci.zh-cn.md)。
+GitHub Actions 使用精确且区分大小写的连字符关键词：`[build-release]` 发布包含已验证 x86_64 `.flatpak` 的应用 Release，`[build-publish]` 还会请求通过自建 [Flatpak 仓库](https://vincentzyuapps.github.io/flatpak-repo/) 发布签名 `stable` 更新，`[build-profile]` 与 `[build-debug]` 生成保留七天的开发产物，`[run-performance]` 将性能报告保留七天，`[release-performance]` 创建永久 Performance Pre-release。方括号只是 commit 风格，CI 实际匹配其中的关键词。手动选项与平台 bootstrap 详见 [ci.zh-cn.md](.github/workflows/ci.zh-cn.md)。
 
 ## 平台基线
 

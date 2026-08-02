@@ -186,7 +186,7 @@ The app keeps all five platform projects in source control. Reusable system-info
 
 ## ⚙️🚀 CI/CD
 
-GitHub Actions uses exact, case-sensitive hyphenated tokens: `[build-release]` publishes an app Release; `[build-profile]` and `[build-debug]` create seven-day developer artifacts; `[run-performance]` keeps performance reports for seven days; `[release-performance]` creates a permanent Performance Pre-release. Brackets are commit-style punctuation, while CI matches the token itself. See [ci.md](.github/workflows/ci.md) for manual options and platform bootstrap details.
+GitHub Actions uses exact, case-sensitive hyphenated tokens: `[build-release]` publishes an app Release with a verified x86_64 `.flatpak`; `[build-publish]` additionally requests a signed `stable` update through the self-hosted [Flatpak repository](https://vincentzyuapps.github.io/flatpak-repo/); `[build-profile]` and `[build-debug]` create seven-day developer artifacts; `[run-performance]` keeps performance reports for seven days; `[release-performance]` creates a permanent Performance Pre-release. Brackets are commit-style punctuation, while CI matches the token itself. See [ci.md](.github/workflows/ci.md) for manual options and platform bootstrap details.
 
 ## Platform Baselines
 

@@ -21,6 +21,21 @@ class CiTriggerTest(unittest.TestCase):
     def test_plain_hyphenated_token_matches(self) -> None:
         self.assertTrue(contains_token("chore: update build-profile", "build-profile"))
 
+    def test_build_publish_matches_exact_token(self) -> None:
+        self.assertTrue(
+            contains_token(
+                "feat(flatpak): publish repository\n\n[build-publish]",
+                "build-publish",
+            )
+        )
+        self.assertFalse(
+            contains_token("prebuild-publish-test", "build-publish")
+        )
+
+    def test_build_publish_does_not_match_build_release(self) -> None:
+        self.assertFalse(contains_token("[build-publish]", "build-release"))
+        self.assertFalse(contains_token("[build-release]", "build-publish"))
+
     def test_legacy_space_form_does_not_match(self) -> None:
         self.assertFalse(contains_token("build release", "build-release"))
 
