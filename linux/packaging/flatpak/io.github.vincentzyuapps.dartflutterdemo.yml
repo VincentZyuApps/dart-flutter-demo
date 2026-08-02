@@ -1,0 +1,69 @@
+app-id: io.github.vincentzyuapps.dartflutterdemo
+runtime: org.freedesktop.Platform
+runtime-version: '25.08'
+sdk: org.freedesktop.Sdk
+command: dart-flutter-demo
+
+finish-args:
+  - --share=ipc
+  - --share=network
+  - --socket=fallback-x11
+  - --socket=wayland
+  - --device=dri
+
+modules:
+  - name: dart-flutter-demo
+    buildsystem: simple
+    build-commands:
+      - install -d /app/lib/dart-flutter-demo
+      - cp -a bundle/. /app/lib/dart-flutter-demo/
+      - chmod 0755 /app/lib/dart-flutter-demo/dart_flutter_demo
+      - install -Dm755 dart-flutter-demo-wrapper /app/bin/dart-flutter-demo
+      - install -Dm644 io.github.vincentzyuapps.dartflutterdemo.desktop /app/share/applications/io.github.vincentzyuapps.dartflutterdemo.desktop
+      - install -Dm644 io.github.vincentzyuapps.dartflutterdemo.metainfo.xml /app/share/metainfo/io.github.vincentzyuapps.dartflutterdemo.metainfo.xml
+      - install -Dm644 icons/16x16/io.github.vincentzyuapps.dartflutterdemo.png /app/share/icons/hicolor/16x16/apps/io.github.vincentzyuapps.dartflutterdemo.png
+      - install -Dm644 icons/32x32/io.github.vincentzyuapps.dartflutterdemo.png /app/share/icons/hicolor/32x32/apps/io.github.vincentzyuapps.dartflutterdemo.png
+      - install -Dm644 icons/48x48/io.github.vincentzyuapps.dartflutterdemo.png /app/share/icons/hicolor/48x48/apps/io.github.vincentzyuapps.dartflutterdemo.png
+      - install -Dm644 icons/64x64/io.github.vincentzyuapps.dartflutterdemo.png /app/share/icons/hicolor/64x64/apps/io.github.vincentzyuapps.dartflutterdemo.png
+      - install -Dm644 icons/128x128/io.github.vincentzyuapps.dartflutterdemo.png /app/share/icons/hicolor/128x128/apps/io.github.vincentzyuapps.dartflutterdemo.png
+      - install -Dm644 icons/256x256/io.github.vincentzyuapps.dartflutterdemo.png /app/share/icons/hicolor/256x256/apps/io.github.vincentzyuapps.dartflutterdemo.png
+      - install -Dm644 icons/512x512/io.github.vincentzyuapps.dartflutterdemo.png /app/share/icons/hicolor/512x512/apps/io.github.vincentzyuapps.dartflutterdemo.png
+    sources:
+      - type: dir
+        path: ../../../build/linux/x64/release/bundle
+        dest: bundle
+      - type: file
+        path: dart-flutter-demo-wrapper.sh
+        dest-filename: dart-flutter-demo-wrapper
+      - type: file
+        path: io.github.vincentzyuapps.dartflutterdemo.desktop
+      - type: file
+        path: ../../../build/flatpak/metadata/io.github.vincentzyuapps.dartflutterdemo.metainfo.xml
+      - type: file
+        path: ../../../assets/icons/linux/app_icon_16.png
+        dest: icons/16x16
+        dest-filename: io.github.vincentzyuapps.dartflutterdemo.png
+      - type: file
+        path: ../../../assets/icons/linux/app_icon_32.png
+        dest: icons/32x32
+        dest-filename: io.github.vincentzyuapps.dartflutterdemo.png
+      - type: file
+        path: ../../../assets/icons/linux/app_icon_48.png
+        dest: icons/48x48
+        dest-filename: io.github.vincentzyuapps.dartflutterdemo.png
+      - type: file
+        path: ../../../assets/icons/linux/app_icon_64.png
+        dest: icons/64x64
+        dest-filename: io.github.vincentzyuapps.dartflutterdemo.png
+      - type: file
+        path: ../../../assets/icons/linux/app_icon_128.png
+        dest: icons/128x128
+        dest-filename: io.github.vincentzyuapps.dartflutterdemo.png
+      - type: file
+        path: ../../../assets/icons/linux/app_icon_256.png
+        dest: icons/256x256
+        dest-filename: io.github.vincentzyuapps.dartflutterdemo.png
+      - type: file
+        path: ../../../assets/icons/linux/app_icon_512.png
+        dest: icons/512x512
+        dest-filename: io.github.vincentzyuapps.dartflutterdemo.png

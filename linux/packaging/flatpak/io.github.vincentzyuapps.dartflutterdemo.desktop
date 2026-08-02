@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=DartFlutterDemo
+Comment=Explore Flutter controls and cross-platform system information
+Exec=dart-flutter-demo
+Icon=io.github.vincentzyuapps.dartflutterdemo
+Terminal=false
+Categories=Development;
+StartupNotify=true
+StartupWMClass=io.github.vincentzyuapps.dartflutterdemo

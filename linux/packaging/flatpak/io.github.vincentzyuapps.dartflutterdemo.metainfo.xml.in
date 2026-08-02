@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>io.github.vincentzyuapps.dartflutterdemo</id>
+  <name>DartFlutterDemo</name>
+  <summary>Explore Flutter controls and cross-platform system information</summary>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>MIT</project_license>
+  <developer id="io.github.vincentzyuapps">
+    <name>VincentZyuApps</name>
+  </developer>
+  <description>
+    <p>
+      DartFlutterDemo is a Flutter UI showcase and proof-of-concept application
+      for controls, platform behavior, and cross-platform system information.
+    </p>
+    <p>
+      The Flatpak starts with a strict sandbox. Host information that is not
+      safely exposed by Flatpak may be unavailable or describe the sandbox.
+    </p>
+  </description>
+  <launchable type="desktop-id">io.github.vincentzyuapps.dartflutterdemo.desktop</launchable>
+  <url type="homepage">https://github.com/VincentZyuApps/dart-flutter-demo</url>
+  <url type="bugtracker">https://github.com/VincentZyuApps/dart-flutter-demo/issues</url>
+  <provides>
+    <binary>dart-flutter-demo</binary>
+  </provides>
+  <releases>
+    <release version="@VERSION@" date="@DATE@" type="@TYPE@" />
+  </releases>
+  <content_rating type="oars-1.1" />
+</component>

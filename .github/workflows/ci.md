@@ -54,6 +54,27 @@ Manual runs default to `publish=false`. They execute quality checks, all Release
 
 Set `publish=true` only after the dry-run passes. A push containing `build-release` publishes automatically after every required job succeeds.
 
+## 📦 Flatpak Package Check
+
+`flatpak-check.yml` is a manually triggered package-only workflow for an x86_64 `.flatpak`. It does not create a GitHub Release, update a Flatpak repository, use the production GPG key, or publish to Flathub.
+
+The workflow builds the committed Linux application on `ubuntu-22.04`, preserves the complete Flutter bundle, and packages it inside the official Freedesktop `25.08` Flatpak container. The Flatpak branch is always `stable`; the application version and release date continue to come from `pubspec.yaml` independently.
+
+The initial strict sandbox grants only network and IPC sharing, Wayland, fallback X11, and DRI rendering. It does not grant host or home filesystem access, unrestricted devices, or direct system/session bus access. System information that Flatpak does not safely expose may be unavailable or describe the sandbox until a narrower read-only integration is implemented and tested.
+
+Run and download the seven-day package-only Artifact with:
+
+```bash
+gh workflow run flatpak-check.yml --ref main
+RUN_ID="$(gh run list --workflow flatpak-check.yml --limit 1 --json databaseId --jq '.[0].databaseId')"
+gh run watch "$RUN_ID" --exit-status
+gh run download "$RUN_ID" --name "flatpak-package-only-$RUN_ID" --dir "tmp/downloads/ci/flatpak-package-only-$RUN_ID"
+```
+
+The workflow validates the desktop file and AppStream metadata, installs the generated bundle, checks the exact `app/io.github.vincentzyuapps.dartflutterdemo/x86_64/stable` ref and version, rejects broad sandbox permissions, and requires the application to remain running through a 20-second virtual-display smoke test.
+
+The downloaded `.flatpak` is a versioned side-load bundle and does not configure automatic updates. After package-only testing succeeds, it will be added to `build-release.yml`; the separate `VincentZyuApps/flatpak-repo` GitHub Pages repository and its fixed `.flatpakref` will later provide signed automatic updates through `[build-publish]`.
+
 ## 🧰 Profile And Debug Builds
 
 `profile-debug.yml` accepts `build-profile` and `build-debug`. A message containing both tokens creates both sets. A manual run offers `profile`, `debug`, and `both` choices.
@@ -119,11 +140,11 @@ Only the app `publish` job and Performance `publish-report` job receive `content
 
 Android artifacts use ephemeral CI signing. The iOS IPA and macOS packages are unsigned. Self-sign the IPA for AltStore or configure signing in a separate private release process before TestFlight or App Store distribution.
 
-## 🏪 Microsoft Store Onboarding And `build-publish`
+## 🏪 External Publishing And Microsoft Store
 
-> **🚧 Current status:** package-only Windows x64 MSIX builds and the read-only authentication check are implemented. `build-publish` remains reserved and disabled until the first Partner Center submission is live and the Store publishing job has been implemented and tested.
+> **🚧 Current status:** `flatpak-check.yml`, package-only Windows x64 MSIX builds, and the read-only Store authentication check are implemented. `build-publish` remains disabled until the signed `flatpak-repo` path has passed package, deployment, and public `stable` update tests. The Microsoft Store job remains separately disabled until the first Partner Center submission is Live.
 
-The planned `build-publish` path extends `build-release`: it runs the same quality checks, Release builds, permanent Profile builds, GitHub Release publication, and Windows x64 MSIX validation, then waits for approval in the `microsoft-store-production` GitHub Environment before submitting that package to Microsoft Store. A successful workflow means that the submission reached Partner Center; Microsoft certification still runs afterward.
+The planned `build-publish` path extends `build-release`: it runs the same quality checks, Release builds, permanent Profile builds, GitHub Release publication, Flatpak packaging, and Windows x64 MSIX validation. It then publishes the signed Flatpak to the self-hosted repository after `flatpak-production` approval. Once the Store product is Live, a separate `microsoft-store-production` job will submit the same release's MSIX; Microsoft certification still runs afterward.
 
 This project will remain free. Pre-release versions such as `vX.Y.Z-beta.W` will be submitted directly to the production Store listing, not to a Package Flight. Review the version and release notes carefully before approving the Environment deployment.
 
@@ -131,7 +152,7 @@ The existing Windows x64 portable ZIP and Inno Setup EXE remain GitHub Release a
 
 ### 🧾 First Manual Partner Center Submission
 
-Microsoft currently supports GitHub Actions app updates only for free products that are already published and live. Complete these steps before enabling `build-publish`:
+Microsoft currently supports GitHub Actions app updates only for free products that are already published and live. Complete these steps before enabling the Microsoft Store portion of `build-publish`:
 
 1. Register a Windows developer account in [Partner Center](https://storedeveloper.microsoft.com/) and finish the requested identity verification.
 2. From the Partner Center home page, open **Apps and games**, create a new product, select **MSIX or PWA app**, and reserve the app name.
@@ -259,7 +280,7 @@ The second command captures the newest run ID, the third follows it to completio
 
 ### 🚀 Automatic Publication
 
-After onboarding is complete and the workflow is enabled, use:
+After the signed Flatpak repository is initialized and the workflow is enabled, use:
 
 ```text
 release: publish DartFlutterDemo
@@ -267,7 +288,7 @@ release: publish DartFlutterDemo
 [build-publish]
 ```
 
-The workflow will build all normal Release/Profile artifacts, create the GitHub Release, build the Windows x64 Store MSIX, pause for `microsoft-store-production` approval, configure the official Microsoft Store Developer CLI, and submit the MSIX to the production listing. Reject the deployment when the version, changelog, Store identity, or generated package is unexpected.
+The workflow will build all normal Release/Profile artifacts, create the GitHub Release, attach the versioned `.flatpak`, pause for `flatpak-production` approval, and update the signed `stable` repository. After the Store product is Live and its job is enabled, it will also pause independently for `microsoft-store-production` approval and submit the MSIX. Reject either deployment when its version, changelog, identity, or generated package is unexpected.
 
 Rotate `PARTNER_CENTER_CLIENT_SECRET` before it expires and update only the Environment secret value. If certification later fails, inspect Partner Center; do not treat the earlier GitHub job success as proof that the update is live.
 

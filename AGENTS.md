@@ -37,26 +37,28 @@
 - Commit 首行使用 Conventional Commits，例如 `chore(docs): ...`。
 - CI 标记写在 commit message 末尾，推荐使用方括号风格。
 - 已实现 `[build-release]`、`[build-profile]`、`[build-debug]`、`[run-performance]`、`[release-performance]`。
-- `[build-publish]` 为微软商店预留词，首次人工上架和工作流实现完成前不得声称可用。
+- `[build-publish]` 为外部分发预留词，Flatpak 仓库发布验证完成前不得声称可用；微软商店 job 必须等首次人工上架 Live 后再启用。
 - CI 只匹配连字符关键词，方括号只是提交风格规范。
 - `build-release.yml` 负责 Release 构建与 GitHub Release。
 - `profile-debug.yml` 负责保留七天的 Profile 与 Debug 产物。
 - `performance.yml` 的每周计划默认关闭，`run-performance` 保留七天报告，`release-performance` 创建永久 Pre-release。
 - `platform-bootstrap.yml` 只生成待人工审查的平台源码 Artifact，不自动 commit。
+- `flatpak-check.yml` 只生成并验证保留七天的 x86_64 package-only Flatpak，不使用生产签名密钥或更新外部仓库。
 - 手动下载的 GitHub Actions Artifact 统一保存到 `tmp/downloads/ci/<artifact-kind>-<run-id>/`，目录名必须包含 Action Run ID，并保留 Artifact 内部目录结构。
-- 启用后的 `build-publish` 必须复用 `build-release` 的质量检查与产物，并额外执行微软商店发布。
+- 启用后的 `build-publish` 必须复用 `build-release` 的质量检查与产物，并更新签名 Flatpak 仓库；微软商店 job 上线后再并行执行。
 - 只有 `build-release`、`release-performance` 和启用后的 `build-publish` 可以创建 GitHub Release。
 - 性能 Release 必须是独立 Pre-release，不得替代应用的 Latest Release。
 
 ## External Publishing
 
-- 外部商店发布必须与普通构建分阶段，构建成功后才能进入发布 job。
+- 外部仓库或商店发布必须与普通构建分阶段，构建成功后才能进入发布 job。
 - 微软商店 Package Identity、Publisher、Product ID 与认证方式必须来自 Partner Center，不得猜测。
 - 商店凭据只存放在 GitHub Secrets 或受保护的 GitHub Environment 中。
 - 生产发布使用独立 Environment、最小权限和人工审批，不允许在 fork 或 Pull Request 上运行。
 - 微软商店优先发布 MSIX，并使用微软官方 `microsoft-store-apppublisher` 与 `msstore` CLI。
 - MSIX 的公开身份配置可以提交，Tenant ID、Client ID、Client Secret 与 Seller ID 不得提交。
-- 不在日志、Artifact、Release Notes、源码或测试夹具中输出商店凭据和签名材料。
+- Flatpak 仓库 GPG 私钥与口令只存放在 `flatpak-production` Environment Secrets，公开公钥和指纹可以提交。
+- 不在日志、Artifact、Release Notes、源码或测试夹具中输出商店凭据、GPG 私钥或口令。
 - 外部发布 Action 必须核对官方来源并固定到受信任版本，升级时重新审查权限和输入。
 - 没有完整凭据时允许实现 dry-run 和产物验证，但不得伪造成功发布。
 - 任何真实外部发布、覆盖提交或撤回操作都必须在执行前再次得到用户明确授权。

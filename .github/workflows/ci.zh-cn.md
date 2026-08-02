@@ -54,6 +54,27 @@ feat(system-info): migrate collection into a reusable plugin
 
 确认 dry-run 全部通过后再使用 `publish=true`。push 中的 `build-release` 会在所有必要 job 成功后自动发布。
 
+## 📦 Flatpak 包校验
+
+`flatpak-check.yml` 是手动触发的 x86_64 `.flatpak` package-only 工作流。它不会创建 GitHub Release、更新 Flatpak 仓库、使用生产 GPG 密钥或发布到 Flathub。
+
+工作流先在 `ubuntu-22.04` 构建已提交的 Linux 应用并保留完整 Flutter bundle，再放入官方 Freedesktop `25.08` Flatpak 容器封装。Flatpak 分支始终固定为 `stable`；应用版本和发布日期仍然独立来自 `pubspec.yaml`。
+
+初始严格沙箱只开放网络与 IPC 共享、Wayland、回退 X11 和 DRI 渲染，不开放主机或 Home 文件系统、任意设备以及直接的系统/会话总线。Flatpak 未安全暴露的系统信息可能暂时无法取得或描述的是沙箱，后续只有实现并验证更窄的只读集成后才会扩大权限。
+
+运行工作流并下载保留七天的 package-only Artifact：
+
+```bash
+gh workflow run flatpak-check.yml --ref main
+RUN_ID="$(gh run list --workflow flatpak-check.yml --limit 1 --json databaseId --jq '.[0].databaseId')"
+gh run watch "$RUN_ID" --exit-status
+gh run download "$RUN_ID" --name "flatpak-package-only-$RUN_ID" --dir "tmp/downloads/ci/flatpak-package-only-$RUN_ID"
+```
+
+工作流会校验 Desktop 文件与 AppStream 元数据、安装生成的 bundle、核对准确的 `app/io.github.vincentzyuapps.dartflutterdemo/x86_64/stable` ref 与版本、拒绝宽泛沙箱权限，并要求应用在虚拟显示器的 20 秒冒烟测试期间持续运行。
+
+下载的 `.flatpak` 是版本固定的侧载 bundle，不会配置自动更新。package-only 测试成功后，它会接入 `build-release.yml`；独立的 `VincentZyuApps/flatpak-repo` GitHub Pages 仓库及其固定 `.flatpakref` 后续会通过 `[build-publish]` 提供签名自动更新。
+
 ## 🧰 Profile 与 Debug 构建
 
 `profile-debug.yml` 接受 `build-profile` 和 `build-debug`。同一条消息包含两个关键词时会生成两套产物。手动运行可选 `profile`、`debug` 或 `both`。
@@ -119,11 +140,11 @@ GitHub tag 和文件名使用 `pubspec.yaml` 版本中 `+` 之前的部分。例
 
 Android 产物使用 CI 临时签名；iOS IPA 与 macOS 包均未签名。AltStore 侧载前自行签名 IPA；进入 TestFlight 或 App Store 前，应在独立的私有发布流程中配置签名。
 
-## 🏪 Microsoft Store 初始化与 `build-publish`
+## 🏪 外部分发与 Microsoft Store
 
-> **🚧 当前状态：** package-only Windows x64 MSIX 构建与只读认证检查已经实现。`build-publish` 仍是预留关键词，在 Partner Center 首次提交正式上线、商店发布 job 实现并验证之前保持禁用。
+> **🚧 当前状态：** `flatpak-check.yml`、package-only Windows x64 MSIX 构建与商店只读认证检查已经实现。`build-publish` 在签名 `flatpak-repo` 路径通过打包、部署与公开 `stable` 更新测试前保持禁用。Microsoft Store job 独立保持禁用，直到 Partner Center 首次提交变为 Live。
 
-规划中的 `build-publish` 会扩展 `build-release`：先执行完全相同的质量检查、Release 构建、永久 Profile 构建、GitHub Release 发布和 Windows x64 MSIX 校验，再在 `microsoft-store-production` GitHub Environment 等待人工批准，之后才把该包提交 Microsoft Store。工作流成功只表示提交已经送达 Partner Center，微软认证仍会在此后继续运行。
+规划中的 `build-publish` 会扩展 `build-release`：先执行完全相同的质量检查、Release 构建、永久 Profile 构建、GitHub Release 发布、Flatpak 打包和 Windows x64 MSIX 校验，再等待 `flatpak-production` 批准并将签名 Flatpak 发布到自建仓库。商店产品变为 Live 后，独立的 `microsoft-store-production` job 会提交同一 Release 的 MSIX；微软认证仍会在此后继续运行。
 
 本项目保持永久免费。`vX.Y.Z-beta.W` 等预发布版本也会直接提交正式商店页面，不使用 Package Flight，因此批准 Environment 部署前必须仔细检查版本和 Release Notes。
 
@@ -131,7 +152,7 @@ Android 产物使用 CI 临时签名；iOS IPA 与 macOS 包均未签名。AltSt
 
 ### 🧾 首次在 Partner Center 人工上架
 
-微软目前只支持通过 GitHub Actions 自动更新已经发布并处于 Live 状态的免费产品。启用 `build-publish` 前依次完成：
+微软目前只支持通过 GitHub Actions 自动更新已经发布并处于 Live 状态的免费产品。启用 `build-publish` 的 Microsoft Store 部分前依次完成：
 
 1. 在 [Partner Center](https://storedeveloper.microsoft.com/) 注册 Windows 开发者账号，并完成要求的身份验证。
 2. 从 Partner Center 主页进入 **应用和游戏**，创建新产品并选择 **MSIX 或 PWA 应用**，然后保留应用名称。
@@ -259,7 +280,7 @@ gh run view "$RUN_ID" --log-failed
 
 ### 🚀 自动发布
 
-完成账号初始化并启用工作流后，使用：
+完成签名 Flatpak 仓库初始化并启用工作流后，使用：
 
 ```text
 release: publish DartFlutterDemo
@@ -267,7 +288,7 @@ release: publish DartFlutterDemo
 [build-publish]
 ```
 
-工作流会构建全部常规 Release/Profile 产物、创建 GitHub Release、构建 Windows x64 商店 MSIX、等待 `microsoft-store-production` 人工批准、配置微软官方 Microsoft Store Developer CLI，并将 MSIX 提交到正式商店页面。发现版本、更新日志、商店身份或生成包不符合预期时，应拒绝该部署。
+工作流会构建全部常规 Release/Profile 产物、创建 GitHub Release、附加版本化 `.flatpak`、等待 `flatpak-production` 人工批准，并更新签名 `stable` 仓库。商店产品变为 Live 且对应 job 启用后，它还会独立等待 `microsoft-store-production` 批准并提交 MSIX。发现任一部署的版本、更新日志、身份或生成包不符合预期时，应拒绝对应部署。
 
 在 `PARTNER_CENTER_CLIENT_SECRET` 到期前轮换它，并且只更新 Environment Secret 的值。如果后续认证失败，应前往 Partner Center 检查；不能把之前 GitHub job 的成功当作更新已经上线的证明。
 
