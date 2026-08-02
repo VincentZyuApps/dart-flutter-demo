@@ -2,6 +2,7 @@
 
 ⬇️ Download all assets from a GitHub release with a simple interactive CLI.
 🧩 Zero third-party dependencies — uses only Python standard library.
+📦 The selected release summary shows the asset count and combined download size before confirmation.
 
 ## 🚀 Usage
 

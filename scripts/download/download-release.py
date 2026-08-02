@@ -91,6 +91,10 @@ def format_size(size_bytes):
     return f"{size_bytes:.1f} TB"
 
 
+def summarize_assets(assets):
+    return len(assets), sum(asset.get("size", 0) or 0 for asset in assets)
+
+
 def interactive_select(releases):
     if not releases:
         print("No releases found.")
@@ -150,7 +154,13 @@ def print_assets(release):
         name = a["name"]
         size = a.get("size", 0)
         print(f"  {C.BOLD}{name}{C.RESET}  {C.DIM}({format_size(size)}){C.RESET}")
+    asset_count, total_size = summarize_assets(assets)
+    print(
+        f"\n  {C.BOLD}📦 Selected total: {asset_count} files · "
+        f"{format_size(total_size)}{C.RESET}"
+    )
     print(f"{C.CYAN}{'=' * 60}{C.RESET}\n")
+    return asset_count, total_size
 
 
 def verify_sha256(filepath, expected_sha):
@@ -258,7 +268,7 @@ def main():
     releases = fetch_releases(opener)
     selected = interactive_select(releases)
 
-    print_assets(selected)
+    asset_count, total_size = print_assets(selected)
 
     if args.list_only:
         return
@@ -269,7 +279,10 @@ def main():
         ans = input(f"{C.CYAN}📂 Download path [{default}]: {C.RESET}").strip()
         dest_dir = ans if ans else default
 
-    ans = input(f"{C.CYAN}📥 Download all assets? [Y/n]: {C.RESET}").strip().lower()
+    ans = input(
+        f"{C.CYAN}📥 Download all {asset_count} assets "
+        f"({format_size(total_size)})? [Y/n]: {C.RESET}"
+    ).strip().lower()
     if ans in ("", "y", "yes"):
         download_assets(opener, selected, dest_dir)
         print(f"\n{C.GREEN}✅ Done!{C.RESET}")
