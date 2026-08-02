@@ -126,12 +126,19 @@ jobs:
           flatpak info --user "$FLATPAK_APP_ID" > flatpak-info.txt
           flatpak info --user --show-permissions "$FLATPAK_APP_ID" \
             > flatpak-permissions.txt
+          flatpak run --user --command=cat "$FLATPAK_APP_ID" \
+            "/app/share/metainfo/${FLATPAK_APP_ID}.metainfo.xml" \
+            > installed-metainfo.xml
 
           REF="$(flatpak info --user --show-ref "$FLATPAK_APP_ID")"
-          VERSION="$(sed -n 's/^Version:[[:space:]]*//p' flatpak-info.txt)"
-          test -n "$VERSION"
           test "$REF" = "app/${FLATPAK_APP_ID}/x86_64/stable"
-          test "$VERSION" = "$EXPECTED_VERSION"
+
+          if ! grep -Fq "<release version=\"$EXPECTED_VERSION\"" \
+            installed-metainfo.xml; then
+            echo "Expected Flatpak release version was not installed." >&2
+            cat installed-metainfo.xml >&2
+            exit 1
+          fi
 
           if grep -Eq 'filesystems=(host|home)|devices=all|system-bus|session-bus' \
             flatpak-permissions.txt; then
