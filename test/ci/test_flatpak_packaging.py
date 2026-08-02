@@ -94,6 +94,8 @@ class FlatpakConfigurationTests(unittest.TestCase):
             "bf5cafdfd97dcf5a89c7475bbc86a616e1f86acb",
             workflow,
         )
+        self.assertIn("s/^Version:[[:space:]]*//p", workflow)
+        self.assertNotIn("--show-version", workflow)
         self.assertIn("retention-days: 7", workflow)
 
 

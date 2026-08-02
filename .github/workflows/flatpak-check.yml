@@ -128,7 +128,8 @@ jobs:
             > flatpak-permissions.txt
 
           REF="$(flatpak info --user --show-ref "$FLATPAK_APP_ID")"
-          VERSION="$(flatpak info --user --show-version "$FLATPAK_APP_ID")"
+          VERSION="$(sed -n 's/^Version:[[:space:]]*//p' flatpak-info.txt)"
+          test -n "$VERSION"
           test "$REF" = "app/${FLATPAK_APP_ID}/x86_64/stable"
           test "$VERSION" = "$EXPECTED_VERSION"
 
