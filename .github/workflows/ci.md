@@ -248,10 +248,12 @@ After granting the selected Entra application the Partner Center **Manager** rol
 
 ```bash
 gh workflow run microsoft-store-auth-check.yml --ref main
-gh run list --workflow microsoft-store-auth-check.yml --limit 1
+RUN_ID="$(gh run list --workflow microsoft-store-auth-check.yml --limit 1 --json databaseId --jq '.[0].databaseId')"
+gh run watch "$RUN_ID" --exit-status
+gh run view "$RUN_ID" --log-failed
 ```
 
-The workflow enters `microsoft-store-production`, installs the official Microsoft Store App Publisher action pinned to `v1.4` and Microsoft Store Developer CLI `v0.3.9`, authenticates with the four Environment secrets, and runs only `msstore apps list`. It never creates a submission, uploads a package, edits metadata, or publishes an app. A successful run confirms that Microsoft accepts the credentials and permits read access; inspect its app list for Store ID `9PP2SRN17C4F` before the first manual submission.
+The second command captures the newest run ID, the third follows it to completion and returns a nonzero exit code on failure, and the fourth prints failed-step logs when troubleshooting. The workflow enters `microsoft-store-production`, installs the official Microsoft Store App Publisher action pinned to `v1.4` and Microsoft Store Developer CLI `v0.3.9`, authenticates with the four Environment secrets, and runs only `msstore apps list`. It never creates a submission, uploads a package, edits metadata, or publishes an app. A successful run confirms that Microsoft accepts the credentials and permits read access; inspect its app list for Store ID `9PP2SRN17C4F` before the first manual submission.
 
 `GITHUB_TOKEN` is supplied automatically and does not need to be created. A Store-only MSIX does not require a PFX secret because Microsoft signs the package after certification. Never put the client secret, tenant credentials, certificates, or their encoded forms in source files, logs, artifacts, or Release notes.
 

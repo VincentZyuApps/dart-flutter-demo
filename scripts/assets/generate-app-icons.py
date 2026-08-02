@@ -1,6 +1,12 @@
+# /// script
+# requires-python = ">=3.10"
+# dependencies = ["Pillow==11.3.0"]
+# ///
+
 from __future__ import annotations
 
 import argparse
+import json
 import shutil
 from pathlib import Path
 
@@ -8,13 +14,15 @@ try:
     from PIL import Image
 except ImportError as exc:  # pragma: no cover
     raise SystemExit(
-        "Pillow is required. Install it with: python -m pip install Pillow"
+        "Pillow is required. Run this script with: "
+        "uv run scripts/assets/generate-app-icons.py"
     ) from exc
 
 
 ROOT = Path(__file__).resolve().parents[2]
 SOURCE_ICON = ROOT / "assets" / "images" / "logo-icon-favicon.png"
-OUTPUT_ROOT = ROOT / "assets" / "generated-icons"
+# assets/icons 是生成产物目录，不应手工修改；请修改源图或本脚本后重新生成。
+OUTPUT_ROOT = ROOT / "assets" / "icons"
 
 
 ANDROID_SIZES = {
@@ -43,6 +51,27 @@ IOS_SIZES = {
     "Icon-App-1024x1024@1x.png": 1024,
 }
 
+IOS_CONTENTS = [
+    ("20x20", "iphone", "Icon-App-20x20@2x.png", "2x"),
+    ("20x20", "iphone", "Icon-App-20x20@3x.png", "3x"),
+    ("29x29", "iphone", "Icon-App-29x29@2x.png", "2x"),
+    ("29x29", "iphone", "Icon-App-29x29@3x.png", "3x"),
+    ("40x40", "iphone", "Icon-App-40x40@2x.png", "2x"),
+    ("40x40", "iphone", "Icon-App-40x40@3x.png", "3x"),
+    ("60x60", "iphone", "Icon-App-60x60@2x.png", "2x"),
+    ("60x60", "iphone", "Icon-App-60x60@3x.png", "3x"),
+    ("20x20", "ipad", "Icon-App-20x20@1x.png", "1x"),
+    ("20x20", "ipad", "Icon-App-20x20@2x.png", "2x"),
+    ("29x29", "ipad", "Icon-App-29x29@1x.png", "1x"),
+    ("29x29", "ipad", "Icon-App-29x29@2x.png", "2x"),
+    ("40x40", "ipad", "Icon-App-40x40@1x.png", "1x"),
+    ("40x40", "ipad", "Icon-App-40x40@2x.png", "2x"),
+    ("76x76", "ipad", "Icon-App-76x76@1x.png", "1x"),
+    ("76x76", "ipad", "Icon-App-76x76@2x.png", "2x"),
+    ("83.5x83.5", "ipad", "Icon-App-83.5x83.5@2x.png", "2x"),
+    ("1024x1024", "ios-marketing", "Icon-App-1024x1024@1x.png", "1x"),
+]
+
 MACOS_SIZES = {
     "icon_16x16.png": 16,
     "icon_16x16@2x.png": 32,
@@ -56,8 +85,28 @@ MACOS_SIZES = {
     "icon_512x512@2x.png": 1024,
 }
 
+MACOS_CONTENTS = [
+    ("16x16", "mac", "icon_16x16.png", "1x"),
+    ("16x16", "mac", "icon_16x16@2x.png", "2x"),
+    ("32x32", "mac", "icon_32x32.png", "1x"),
+    ("32x32", "mac", "icon_32x32@2x.png", "2x"),
+    ("128x128", "mac", "icon_128x128.png", "1x"),
+    ("128x128", "mac", "icon_128x128@2x.png", "2x"),
+    ("256x256", "mac", "icon_256x256.png", "1x"),
+    ("256x256", "mac", "icon_256x256@2x.png", "2x"),
+    ("512x512", "mac", "icon_512x512.png", "1x"),
+    ("512x512", "mac", "icon_512x512@2x.png", "2x"),
+]
+
 WINDOWS_SIZES = [16, 24, 32, 48, 64, 128, 256]
 LINUX_SIZES = [16, 32, 48, 64, 128, 256, 512]
+
+MICROSOFT_STORE_POSTER_SIZES = [(720, 1080), (1440, 2160)]
+MICROSOFT_STORE_BOX_ART_SIZES = [(1080, 1080), (2160, 2160)]
+MICROSOFT_STORE_DISPLAY_ICON_SIZES = [(300, 300), (150, 150), (71, 71)]
+MICROSOFT_STORE_BACKGROUND = (15, 23, 42, 255)
+MICROSOFT_STORE_ART_MAX_BYTES = 50_000_000
+MICROSOFT_STORE_ICON_MAX_BYTES = 5_000_000
 
 RESET = "\033[0m"
 BOLD = "\033[1m"
@@ -163,11 +212,31 @@ def generate_android(image: Image.Image, root: Path) -> None:
         resize_square(image, size).save(target_dir / "ic_launcher.png")
 
 
+def write_asset_catalog(
+    target: Path,
+    entries: list[tuple[str, str, str, str]],
+) -> None:
+    contents = {
+        "images": [
+            {
+                "size": size,
+                "idiom": idiom,
+                "filename": filename,
+                "scale": scale,
+            }
+            for size, idiom, filename, scale in entries
+        ],
+        "info": {"version": 1, "author": "xcode"},
+    }
+    target.write_text(json.dumps(contents, indent=2) + "\n", encoding="utf-8")
+
+
 def generate_ios(image: Image.Image, root: Path) -> None:
     ios_root = root / "ios" / "AppIcon.appiconset"
     ios_root.mkdir(parents=True, exist_ok=True)
     for filename, size in IOS_SIZES.items():
         resize_square(image, size).save(ios_root / filename)
+    write_asset_catalog(ios_root / "Contents.json", IOS_CONTENTS)
 
 
 def generate_macos(image: Image.Image, root: Path) -> None:
@@ -175,6 +244,7 @@ def generate_macos(image: Image.Image, root: Path) -> None:
     macos_root.mkdir(parents=True, exist_ok=True)
     for filename, size in MACOS_SIZES.items():
         resize_square(image, size).save(macos_root / filename)
+    write_asset_catalog(macos_root / "Contents.json", MACOS_CONTENTS)
 
 
 def generate_windows(image: Image.Image, root: Path) -> None:
@@ -192,9 +262,87 @@ def generate_linux(image: Image.Image, root: Path) -> None:
     resize_square(image, 512).save(linux_root / "app_icon.png")
 
 
+def compose_store_image(
+    image: Image.Image,
+    size: tuple[int, int],
+    logo_scale: float,
+) -> Image.Image:
+    width, height = size
+    max_logo_size = (
+        max(1, int(round(width * logo_scale))),
+        max(1, int(round(height * logo_scale))),
+    )
+    resize_ratio = min(
+        max_logo_size[0] / image.width,
+        max_logo_size[1] / image.height,
+    )
+    logo_size = (
+        max(1, int(round(image.width * resize_ratio))),
+        max(1, int(round(image.height * resize_ratio))),
+    )
+    logo = image.resize(logo_size, Image.Resampling.LANCZOS)
+
+    canvas = Image.new("RGBA", size, MICROSOFT_STORE_BACKGROUND)
+    position = ((width - logo.width) // 2, (height - logo.height) // 2)
+    canvas.alpha_composite(logo, position)
+    return canvas
+
+
+def save_store_png(
+    image: Image.Image,
+    target: Path,
+    expected_size: tuple[int, int],
+    max_bytes: int,
+) -> None:
+    image.save(target, format="PNG", optimize=True)
+    with Image.open(target) as generated:
+        if generated.format != "PNG" or generated.size != expected_size:
+            raise RuntimeError(f"Microsoft Store 图片校验失败: {target}")
+        if generated.getchannel("A").getextrema() != (255, 255):
+            raise RuntimeError(f"Microsoft Store 图片包含透明像素: {target}")
+    if target.stat().st_size >= max_bytes:
+        limit_mb = max_bytes // 1_000_000
+        raise RuntimeError(f"Microsoft Store 图片超过 {limit_mb} MB: {target}")
+
+
+def generate_microsoft_store(image: Image.Image, root: Path) -> None:
+    store_root = root / "windows" / "MicrosoftStore"
+    ensure_clean_dir(store_root)
+
+    for width, height in MICROSOFT_STORE_POSTER_SIZES:
+        filename = f"store-poster-{width}x{height}.png"
+        artwork = compose_store_image(image, (width, height), logo_scale=0.82)
+        save_store_png(
+            artwork,
+            store_root / filename,
+            (width, height),
+            MICROSOFT_STORE_ART_MAX_BYTES,
+        )
+
+    for width, height in MICROSOFT_STORE_BOX_ART_SIZES:
+        filename = f"store-box-art-{width}x{height}.png"
+        artwork = compose_store_image(image, (width, height), logo_scale=0.84)
+        save_store_png(
+            artwork,
+            store_root / filename,
+            (width, height),
+            MICROSOFT_STORE_ART_MAX_BYTES,
+        )
+
+    for width, height in MICROSOFT_STORE_DISPLAY_ICON_SIZES:
+        filename = f"store-display-icon-{width}x{height}.png"
+        artwork = compose_store_image(image, (width, height), logo_scale=0.82)
+        save_store_png(
+            artwork,
+            store_root / filename,
+            (width, height),
+            MICROSOFT_STORE_ICON_MAX_BYTES,
+        )
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="从一个 PNG 源图生成各平台应用图标。"
+        description="从一个 PNG 源图生成 assets/icons 中的各平台应用图标。"
     )
     parser.add_argument(
         "--source",
@@ -207,6 +355,11 @@ def main() -> None:
         type=Path,
         default=OUTPUT_ROOT,
         help="生成图标的输出目录。",
+    )
+    parser.add_argument(
+        "--microsoft-store-only",
+        action="store_true",
+        help="仅重建 windows/MicrosoftStore，不清理其他平台的生成资源。",
     )
     args = parser.parse_args()
 
@@ -241,29 +394,44 @@ def main() -> None:
         ]
     )
 
-    section("清理输出目录")
-    ensure_clean_dir(output)
-    shutil.copy2(source, output / source.name)
-    image.save(output / "logo-icon-favicon.cropped.png")
-    print(color(f"已重置输出目录: {output}", GREEN))
+    if args.microsoft_store_only:
+        section("准备 Microsoft Store 输出目录")
+        output.mkdir(parents=True, exist_ok=True)
+        print(color("只会重建 windows/MicrosoftStore", GREEN))
+    else:
+        section("清理输出目录")
+        ensure_clean_dir(output)
+        shutil.copy2(source, output / source.name)
+        image.save(output / "logo-icon-favicon.cropped.png")
+        print(color(f"已重置输出目录: {output}", GREEN))
 
     section("生成平台资源")
-    generate_android(image, output)
-    generate_ios(image, output)
-    generate_macos(image, output)
-    generate_windows(image, output)
-    generate_linux(image, output)
-
-    box(
-        [
+    if args.microsoft_store_only:
+        generate_microsoft_store(image, output)
+        summary = [
+            color("Microsoft Store 图片生成完成", GREEN),
+            "poster: 2 张",
+            "box art: 2 张",
+            "display icon: 3 张",
+        ]
+    else:
+        generate_android(image, output)
+        generate_ios(image, output)
+        generate_macos(image, output)
+        generate_windows(image, output)
+        generate_linux(image, output)
+        generate_microsoft_store(image, output)
+        summary = [
             color("全部生成完成", GREEN),
             f"android: {len(ANDROID_SIZES)} 张",
             f"ios: {len(IOS_SIZES)} 张",
             f"macos: {len(MACOS_SIZES)} 张",
             "windows: 1 个 ico",
+            "Microsoft Store: 7 张 PNG",
             f"linux: {len(LINUX_SIZES) + 1} 张",
         ]
-    )
+
+    box(summary)
     print(color(f"输出目录: {output}", DIM))
 
 

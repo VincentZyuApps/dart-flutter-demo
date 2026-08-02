@@ -16,6 +16,7 @@
 ## Project Structure
 
 - 应用标识统一为 `io.github.vincentzyuapps.dartflutterdemo`。
+- `assets/icons/` 是 `scripts/assets/generate-app-icons.py` 的生成目录，不要手工修改；图标变更应修改源图或生成器后重新运行脚本。
 - `android/`、`ios/`、`windows/`、`linux/`、`macos/` 必须常驻源码树。
 - 平台目录只允许通过一次性 GitHub Actions bootstrap 生成并审查。
 - 正常构建工作流不得执行 `flutter create` 或用补丁临时生成平台工程。
@@ -42,6 +43,7 @@
 - `profile-debug.yml` 负责保留七天的 Profile 与 Debug 产物。
 - `performance.yml` 的每周计划默认关闭，`run-performance` 保留七天报告，`release-performance` 创建永久 Pre-release。
 - `platform-bootstrap.yml` 只生成待人工审查的平台源码 Artifact，不自动 commit。
+- 手动下载的 GitHub Actions Artifact 统一保存到 `tmp/downloads/ci/<artifact-kind>-<run-id>/`，目录名必须包含 Action Run ID，并保留 Artifact 内部目录结构。
 - 启用后的 `build-publish` 必须复用 `build-release` 的质量检查与产物，并额外执行微软商店发布。
 - 只有 `build-release`、`release-performance` 和启用后的 `build-publish` 可以创建 GitHub Release。
 - 性能 Release 必须是独立 Pre-release，不得替代应用的 Latest Release。

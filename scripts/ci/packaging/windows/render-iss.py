@@ -12,7 +12,7 @@ def main():
 
     version = sys.argv[1]
     build_dir = REPO_ROOT / "build" / "windows" / "x64" / "runner" / "Release"
-    icon_file = REPO_ROOT / "assets" / "generated-icons" / "windows" / "app_icon.ico"
+    icon_file = REPO_ROOT / "assets" / "icons" / "windows" / "app_icon.ico"
     template = REPO_ROOT / "windows" / "packaging" / "exe" / "inno_setup.iss"
     out_dir = REPO_ROOT / "dist"
 

@@ -248,10 +248,12 @@ gh secret list --env microsoft-store-production
 
 ```bash
 gh workflow run microsoft-store-auth-check.yml --ref main
-gh run list --workflow microsoft-store-auth-check.yml --limit 1
+RUN_ID="$(gh run list --workflow microsoft-store-auth-check.yml --limit 1 --json databaseId --jq '.[0].databaseId')"
+gh run watch "$RUN_ID" --exit-status
+gh run view "$RUN_ID" --log-failed
 ```
 
-该工作流进入 `microsoft-store-production`，安装固定为 `v1.4` 的微软官方 Microsoft Store App Publisher Action 与 Microsoft Store Developer CLI `v0.3.9`，使用四项 Environment Secrets 认证，并且只运行 `msstore apps list`。它不会创建提交、上传包、修改元数据或发布应用。成功表示微软接受凭据并允许只读访问；第一次人工提交前，还应在输出的应用列表中确认 Store ID `9PP2SRN17C4F`。
+第二条命令取得最新 Run ID，第三条持续跟踪直到结束并在失败时返回非零退出码，第四条在排查时输出失败步骤日志。该工作流进入 `microsoft-store-production`，安装固定为 `v1.4` 的微软官方 Microsoft Store App Publisher Action 与 Microsoft Store Developer CLI `v0.3.9`，使用四项 Environment Secrets 认证，并且只运行 `msstore apps list`。它不会创建提交、上传包、修改元数据或发布应用。成功表示微软接受凭据并允许只读访问；第一次人工提交前，还应在输出的应用列表中确认 Store ID `9PP2SRN17C4F`。
 
 `GITHUB_TOKEN` 由 GitHub 自动提供，不需要手动创建。只向商店提交的 MSIX 不需要 PFX Secret，因为微软会在认证后为包签名。绝不能把 Client Secret、租户凭据、证书或它们的编码形式写入源码、日志、Artifact 或 Release Notes。
 

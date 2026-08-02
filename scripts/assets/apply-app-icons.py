@@ -3,7 +3,7 @@ import shutil
 import sys
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-GENERATED_ICONS = os.path.join(REPO_ROOT, "assets", "generated-icons")
+ICONS_ROOT = os.path.join(REPO_ROOT, "assets", "icons")
 
 
 def _copy_all(src_dir, dst_dir):
@@ -13,14 +13,14 @@ def _copy_all(src_dir, dst_dir):
 
 
 def apply_windows():
-    src = os.path.join(GENERATED_ICONS, "windows", "app_icon.ico")
+    src = os.path.join(ICONS_ROOT, "windows", "app_icon.ico")
     dst = os.path.join(REPO_ROOT, "windows", "runner", "resources", "app_icon.ico")
     os.makedirs(os.path.dirname(dst), exist_ok=True)
     shutil.copy2(src, dst)
 
 
 def apply_macos():
-    src = os.path.join(GENERATED_ICONS, "macos", "AppIcon.appiconset")
+    src = os.path.join(ICONS_ROOT, "macos", "AppIcon.appiconset")
     dst = os.path.join(
         REPO_ROOT, "macos", "Runner", "Assets.xcassets", "AppIcon.appiconset"
     )
@@ -34,7 +34,7 @@ def apply_linux():
 def apply_android():
     for density in ("mdpi", "hdpi", "xhdpi", "xxhdpi", "xxxhdpi"):
         src = os.path.join(
-            GENERATED_ICONS, "android", f"mipmap-{density}", "ic_launcher.png"
+            ICONS_ROOT, "android", f"mipmap-{density}", "ic_launcher.png"
         )
         dst_dir = os.path.join(
             REPO_ROOT, "android", "app", "src", "main", "res", f"mipmap-{density}"
@@ -74,7 +74,7 @@ def apply_android():
 
 
 def apply_ios():
-    src = os.path.join(GENERATED_ICONS, "ios", "AppIcon.appiconset")
+    src = os.path.join(ICONS_ROOT, "ios", "AppIcon.appiconset")
     dst = os.path.join(
         REPO_ROOT, "ios", "Runner", "Assets.xcassets", "AppIcon.appiconset"
     )

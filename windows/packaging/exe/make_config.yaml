@@ -6,7 +6,7 @@ publisher_url: https://github.com/VincentZyuApps/dart-flutter-demo
 display_name: DartFlutterDemo
 executable_name: dart_flutter_demo.exe
 output_base_file_name: dart-flutter-demo-setup
-setup_icon_file: ..\..\assets\generated-icons\windows\app_icon.ico
+setup_icon_file: ..\..\assets\icons\windows\app_icon.ico
 locales:
   - lang: en
 privileges_required: admin

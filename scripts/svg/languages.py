@@ -148,7 +148,7 @@ LANG_COLORS = {
 }
 
 IGNORE_PREFIXES = (
-    "assets/generated-icons/",
+    "assets/icons/",
     "build/",
     "dist/",
     "doc/images/preview/",

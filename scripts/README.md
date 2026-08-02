@@ -21,7 +21,7 @@ scripts/
 - `scripts/ci/` 只保存由 GitHub Actions 调用或用于验证 CI 行为的脚本。
 - `scripts/ci/packaging/windows/` 同时保存 Inno Setup 渲染器与 Windows x64 Store MSIX 打包校验器。
 - `scripts/ci/validation/` 保存安全 YAML 解析和重复键校验工具。
-- `scripts/assets/` 保存手动生成和应用多平台图标的工具。
+- `scripts/assets/` 保存生成和应用多平台图标的工具，详细约定见 [`assets/README.md`](assets/README.md)。
 - `scripts/download/` 保存手动下载 GitHub Release 的工具。
 - `scripts/svg/` 保存手动生成仓库统计 SVG 的工具。
 - Android 模板在这里使用连字符文件名，Bootstrap 复制到 Android 工程时恢复为符合资源规范的下划线文件名。
@@ -51,3 +51,27 @@ uv run scripts/ci/validation/check-yaml.py /absolute/path/to/config.yaml
 ```
 
 终端颜色默认为自动检测，也可以通过 `--color always` 或 `--color never` 明确控制。
+
+## Microsoft Store 图像
+
+`assets/icons/` 是统一的生成产物目录，不建议直接手工修改其中的文件。需要调整图标时，应修改源图或 `generate-app-icons.py`，再从仓库根目录运行生成命令。
+
+下面的命令只重建 `assets/icons/windows/MicrosoftStore/`，不会清理其他平台已经生成的图标。
+
+```bash
+uv run scripts/assets/generate-app-icons.py --microsoft-store-only
+```
+
+脚本使用 `assets/images/logo-icon-favicon.png` 作为源图，保持原始比例并居中放到不透明背景上，不会把方形图标拉伸成竖图。生成结果对应 Partner Center 的上传位置：
+
+| 文件 | Partner Center 用途 | 尺寸 | 大小上限 |
+|---|---|---:|---:|
+| `store-poster-720x1080.png` | Microsoft Store 徽标 / 招贴画 | 720x1080 | 50 MB |
+| `store-poster-1440x2160.png` | Microsoft Store 徽标 / 招贴画 | 1440x2160 | 50 MB |
+| `store-box-art-1080x1080.png` | Microsoft Store 徽标 / 1:1 封面图 | 1080x1080 | 50 MB |
+| `store-box-art-2160x2160.png` | Microsoft Store 徽标 / 1:1 封面图 | 2160x2160 | 50 MB |
+| `store-display-icon-300x300.png` | Microsoft Store 显示图像 / 应用磁贴图标 | 300x300 | 5 MB |
+| `store-display-icon-150x150.png` | Microsoft Store 显示图像 | 150x150 | 5 MB |
+| `store-display-icon-71x71.png` | Microsoft Store 显示图像 | 71x71 | 5 MB |
+
+Partner Center 把招贴画标记为 9:16，但当前页面列出的实际尺寸是 720x1080 和 1440x2160。脚本以门户要求的精确像素尺寸为准。

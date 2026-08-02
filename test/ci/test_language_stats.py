@@ -37,7 +37,7 @@ class LanguageDetectionTests(unittest.TestCase):
 
     def test_generated_assets_are_ignored_by_prefix(self) -> None:
         for filename in (
-            "assets/generated-icons/windows/app_icon.ico",
+            "assets/icons/windows/app_icon.ico",
             "doc/images/preview/page0.windows11.png",
             "doc/images/svg/lang-line-stats.svg",
         ):

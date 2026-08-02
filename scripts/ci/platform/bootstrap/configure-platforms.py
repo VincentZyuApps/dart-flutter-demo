@@ -91,7 +91,7 @@ def configure_android(repo: Path, generated: Path) -> None:
     ET.indent(tree, space="    ")
     tree.write(manifest_path, encoding="utf-8", xml_declaration=True)
 
-    icons = repo / "assets" / "generated-icons" / "android"
+    icons = repo / "assets" / "icons" / "android"
     for density in ("mdpi", "hdpi", "xhdpi", "xxhdpi", "xxxhdpi"):
         source = icons / f"mipmap-{density}" / "ic_launcher.png"
         target = res / f"mipmap-{density}"
@@ -103,7 +103,7 @@ def configure_android(repo: Path, generated: Path) -> None:
 def configure_ios(repo: Path, generated: Path) -> None:
     ios = generated / "ios"
     copy_directory_contents(
-        repo / "assets" / "generated-icons" / "ios" / "AppIcon.appiconset",
+        repo / "assets" / "icons" / "ios" / "AppIcon.appiconset",
         ios / "Runner" / "Assets.xcassets" / "AppIcon.appiconset",
     )
     info_path = ios / "Runner" / "Info.plist"
@@ -118,7 +118,7 @@ def configure_ios(repo: Path, generated: Path) -> None:
 def configure_macos(repo: Path, generated: Path) -> None:
     macos = generated / "macos"
     copy_directory_contents(
-        repo / "assets" / "generated-icons" / "macos" / "AppIcon.appiconset",
+        repo / "assets" / "icons" / "macos" / "AppIcon.appiconset",
         macos / "Runner" / "Assets.xcassets" / "AppIcon.appiconset",
     )
     config = macos / "Runner" / "Configs" / "AppInfo.xcconfig"
@@ -135,7 +135,7 @@ def configure_windows(repo: Path, generated: Path) -> None:
         windows / "packaging",
     )
     shutil.copy2(
-        repo / "assets" / "generated-icons" / "windows" / "app_icon.ico",
+        repo / "assets" / "icons" / "windows" / "app_icon.ico",
         windows / "runner" / "resources" / "app_icon.ico",
     )
     replace_in_file(windows / "CMakeLists.txt", 'set(BINARY_NAME "dartflutterdemo")',
