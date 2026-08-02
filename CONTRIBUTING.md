@@ -1,8 +1,8 @@
-# Contributing
+# 🤝 Contributing
 
 This repository uses Flutter 3.41.5 and keeps all supported platform projects in source control.
 
-## Change Requirements
+## ✅ Change Requirements
 
 - Keep English and Simplified Chinese documentation synchronized.
 - Preserve `io.github.vincentzyuapps.dartflutterdemo` as the application identity.
@@ -13,7 +13,7 @@ This repository uses Flutter 3.41.5 and keeps all supported platform projects in
 - Never commit signing credentials, certificates, API keys, or developer-team identifiers.
 - Run Flutter checks through GitHub Actions rather than a local Flutter toolchain.
 
-## Commit Format
+## 📝 Commit Format
 
 Use a Conventional Commit summary on the first line, for example:
 
@@ -35,11 +35,11 @@ The brackets are a style convention. CI matches the hyphenated keywords. `run-pe
 
 ---
 
-# 贡献指南
+# 🤝 贡献指南
 
 本仓库使用 Flutter 3.41.5，并将所有受支持平台的工程文件纳入版本控制。
 
-## 修改要求
+## ✅ 修改要求
 
 - 保持英文与简体中文文档同步。
 - 保持 `io.github.vincentzyuapps.dartflutterdemo` 作为应用标识。
@@ -50,7 +50,7 @@ The brackets are a style convention. CI matches the hyphenated keywords. `run-pe
 - 不得提交签名凭据、证书、API Key 或开发团队标识。
 - Flutter 检查统一通过 GitHub Actions 运行，不使用本地 Flutter 工具链。
 
-## Commit 格式
+## 📝 Commit 格式
 
 第一行使用 Conventional Commits 摘要，例如：
 

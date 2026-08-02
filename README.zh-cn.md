@@ -1,6 +1,8 @@
-> **[ English](README.md)**
-> **[ 简体中文(大陆)](README.zh-cn.md)**
-> **隐私政策：** [English](PRIVACY.md) · [简体中文](PRIVACY.zh-cn.md)
+> **[📖 English README doc](README.md)**
+> **[📖 简体中文 README 文档](README.zh-cn.md)**
+>
+> **[🔐 English privacy](PRIVACY.md)**
+> **[🔐 简体中文隐私条款](PRIVACY.zh-cn.md)**
 
 [![GitHub](https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/VincentZyuApps/dart-flutter-demo)
 [![Gitee](https://img.shields.io/badge/Gitee-C71D23?style=for-the-badge&logo=gitee&logoColor=white)](https://gitee.com/vincent-zyu/dart-flutter-demo)
