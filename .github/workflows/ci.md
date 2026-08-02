@@ -1,4 +1,4 @@
-> **[📖 English](ci.md)** | **[📖 Simplified Chinese](ci.zh-cn.md)**
+> **[【📖 English】](ci.md)** | **[【📖 Simplified Chinese】](ci.zh-cn.md)**
 
 # ⚙️ GitHub Actions Workflows
 

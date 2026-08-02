@@ -1,4 +1,4 @@
-> **[📖 English](ci.md)** | **[📖 简体中文](ci.zh-cn.md)**
+> **[【📖 English】](ci.md)** | **[【📖 简体中文】](ci.zh-cn.md)**
 
 # ⚙️ GitHub Actions 工作流
 
