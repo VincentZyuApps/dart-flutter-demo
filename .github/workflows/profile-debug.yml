@@ -23,6 +23,7 @@ env:
 
 jobs:
   prepare:
+    name: check-trigger
     runs-on: ubuntu-latest
     outputs:
       run_profile: ${{ steps.modes.outputs.run_profile }}
