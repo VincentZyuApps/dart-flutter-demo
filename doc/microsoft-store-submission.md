@@ -1,6 +1,6 @@
 # Microsoft Store 首次提交清单
 
-本文用于第一次人工提交 `dart-flutter-demo`，不代表 `build-publish` 已经启用。
+首次人工提交已经完成，`build-publish` 也已启用自动更新；本文保留为重新上架或审计商店资料时的清单。
 
 ## 固定信息
 
@@ -20,7 +20,7 @@
 
 ## 上传程序包
 
-1. 从手动 `publish=false` 的 Build Release 运行中下载 `release-dry-run-v<version>` Artifact。
+1. 从手动 `publish=false` 的 Release & Publish 运行中下载 `release-dry-run-v<version>` Artifact。
 2. 解压并选择 `dart-flutter-demo-windows-x64-store-v<version>.msix`。
 3. 不要上传同目录中的 EXE、ZIP、JSON 或 Profile 包。
 4. 等待 Partner Center 完成包验证，并确认架构为 x64、Package Identity 与产品一致。

@@ -19,8 +19,8 @@ Tokens are exact, case-sensitive, and hyphenated. Brackets are style punctuation
 
 | 🔑 Token | ⚙️ Workflow | 📦 Output | ⏳ Retention | 🚀 Creates Release |
 |---|---|---|---|:---:|
-| `build-release` | `build-release.yml` | Six platform Release targets, x86_64 Flatpak, and three Profile targets | Permanent after publishing | Yes |
-| `build-publish` | `build-release.yml` | Everything in `build-release`, plus a signed Flatpak repository request | Permanent and self-hosted update repository | Yes |
+| `build-release` | `release-publish.yml` | Six platform Release targets, x86_64 Flatpak, and three Profile targets | Permanent after publishing | Yes |
+| `build-publish` | `release-publish.yml` | Everything in `build-release`, plus signed Flatpak and Microsoft Store publication | Permanent and external channel updates | Yes |
 | `build-profile` | `profile-debug.yml` | Windows x64, Linux x64, Android Universal Profile | 7 days | No |
 | `build-debug` | `profile-debug.yml` | Windows x64, Linux x64, Android Universal Debug | 7 days | No |
 | `run-performance` | `performance.yml` | Windows, Linux, and macOS JSON/Markdown/log bundle | 7 days | No |
@@ -28,9 +28,9 @@ Tokens are exact, case-sensitive, and hyphenated. Brackets are style punctuation
 
 Legacy forms such as `build release`, `build action`, or `BUILD-RELEASE` do not match. Multiple valid tokens in one commit may start multiple workflows.
 
-## 🚀 Build Release
+## 🚀 Release And Publish
 
-`build-release.yml` runs on a push containing `build-release` or `build-publish`, or through `workflow_dispatch`. `build-publish` is a strict superset: both tokens create the same tested GitHub Release, while only `build-publish` requests a signed Flatpak repository update.
+`release-publish.yml` runs on a push containing `build-release` or `build-publish`, or through `workflow_dispatch`. `build-publish` is a strict superset: both tokens create the same tested GitHub Release, while only `build-publish` requests a signed Flatpak update and submits the same verified MSIX to Microsoft Store certification.
 
 Every published application version, including versions with `alpha`, `beta`, or `rc` suffixes, is created as a regular non-draft Release and explicitly marked as the repository's Latest Release.
 
@@ -53,11 +53,11 @@ The same run builds permanent Profile assets for Windows x64, Linux x64, and And
 
 Manual runs default to `publish=false`. They execute quality checks, all Release builds, the Flatpak package and smoke test, all permanent Profile builds, MSIX validation, and release-note rendering, but upload a seven-day `release-dry-run-*` artifact instead of creating a tag or GitHub Release.
 
-Set `publish=true` only after the dry-run passes. Set `publish_flatpak_repository=true` as well to reproduce `build-publish`; this option is rejected unless `publish=true`. A push containing either release token publishes automatically after every required job succeeds.
+Set `publish=true` only after the dry-run passes. Set `publish_external_channels=true` as well to reproduce `build-publish` and update both Flatpak and Microsoft Store; this option is rejected unless `publish=true`. A push containing either release token publishes automatically after every required job succeeds.
 
 ## 📦 Flatpak Package Check
 
-`flatpak-check.yml` is a manually triggered package-only workflow for an x86_64 `.flatpak`. It does not create a GitHub Release, update a Flatpak repository, use the production GPG key, or publish to Flathub.
+`check-flatpak-repo.yml` is a manually triggered package-only workflow for an x86_64 `.flatpak`. It does not create a GitHub Release, update a Flatpak repository, use the production GPG key, or publish to Flathub.
 
 The workflow builds the committed Linux application on `ubuntu-22.04`, preserves the complete Flutter bundle, and packages it inside the official Freedesktop `25.08` Flatpak container. The Flatpak branch is always `stable`; the application version and release date continue to come from `pubspec.yaml` independently.
 
@@ -66,15 +66,15 @@ The initial strict sandbox grants only network and IPC sharing, Wayland, fallbac
 Run and download the seven-day package-only Artifact with:
 
 ```bash
-gh workflow run flatpak-check.yml --ref main
-RUN_ID="$(gh run list --workflow flatpak-check.yml --limit 1 --json databaseId --jq '.[0].databaseId')"
+gh workflow run check-flatpak-repo.yml --ref main
+RUN_ID="$(gh run list --workflow check-flatpak-repo.yml --limit 1 --json databaseId --jq '.[0].databaseId')"
 gh run watch "$RUN_ID" --exit-status
 gh run download "$RUN_ID" --name "flatpak-package-only-$RUN_ID" --dir "tmp/downloads/ci/flatpak-package-only-$RUN_ID"
 ```
 
 The workflow validates the desktop file and AppStream metadata, installs the generated bundle, checks the exact `app/io.github.vincentzyuapps.dartflutterdemo/x86_64/stable` ref and version, rejects broad sandbox permissions, and requires the application to remain running through a 20-second virtual-display smoke test.
 
-The downloaded `.flatpak` is a versioned side-load bundle and does not configure automatic updates. `build-release.yml` reuses the same package verifier and attaches a versioned bundle to every application Release. `[build-publish]` additionally attaches `flatpak-publish-request.json`; the separate [`VincentZyuApps/flatpak-repo`](https://github.com/VincentZyuApps/flatpak-repo) workflow discovers that marker and publishes signed `stable` updates through its fixed [`.flatpakref`](https://vincentzyuapps.github.io/flatpak-repo/dart-flutter-demo.flatpakref).
+The downloaded `.flatpak` is a versioned side-load bundle and does not configure automatic updates. `release-publish.yml` reuses the same package verifier and attaches a versioned bundle to every application Release. `[build-publish]` additionally attaches `flatpak-publish-request.json`; the separate [`VincentZyuApps/flatpak-repo`](https://github.com/VincentZyuApps/flatpak-repo) workflow discovers that marker and publishes signed `stable` updates through its fixed [`.flatpakref`](https://vincentzyuapps.github.io/flatpak-repo/dart-flutter-demo.flatpakref).
 
 ## 🧰 Profile And Debug Builds
 
@@ -143,28 +143,28 @@ Android artifacts use ephemeral CI signing. The iOS IPA and macOS packages are u
 
 ## 🏪 External Publishing And Microsoft Store
 
-> **Current status:** `build-publish`, signed self-hosted Flatpak publication, package-only Windows x64 MSIX builds, and the read-only Store authentication check are implemented. The Microsoft Store submission job remains separately disabled until the first Partner Center submission is Live.
+> **Current status:** the product is Live, the CI application has Partner Center **Manager (Windows)** access, and the read-only authentication check successfully lists Store ID `9PP2SRN17C4F`. `build-publish` now enables both signed self-hosted Flatpak publication and automatic Microsoft Store submission.
 
-`build-publish` extends `build-release`: it runs the same quality checks, Release builds, permanent Profile builds, GitHub Release publication, Flatpak packaging, and Windows x64 MSIX validation. It also attaches `flatpak-publish-request.json`. The public `flatpak-repo` workflow discovers that marker every 15 minutes, or can be dispatched immediately with the Release tag, then imports the bundle into its persistent OSTree repository, signs it with the `flatpak-production` Environment key, and deploys GitHub Pages. No personal token or private key crosses repository boundaries. Once the Store product is Live, a separate future `microsoft-store-production` job may submit the same Release's MSIX; Microsoft certification will still run afterward.
+`build-publish` extends `build-release`: it runs the same quality checks, Release builds, permanent Profile builds, GitHub Release publication, Flatpak packaging, and Windows x64 MSIX validation. It attaches `flatpak-publish-request.json` for the public `flatpak-repo` workflow, which imports and signs the bundle before deploying GitHub Pages. After the GitHub Release succeeds, the independent `publish-microsoft-store` job verifies the same Windows Artifact metadata and SHA-256, confirms the target Product ID is visible, and submits the MSIX for certification. A Store failure marks the application workflow failed but does not remove the GitHub Release or retract the Flatpak request.
 
-This project will remain free. Pre-release versions such as `vX.Y.Z-beta.W` will be submitted directly to the production Store listing, not to a Package Flight. Review the version and release notes carefully before approving the Environment deployment.
+This project will remain free. Pre-release versions such as `vX.Y.Z-beta.W` are submitted directly to the production Store listing, not to a Package Flight. Review the version and release notes carefully before pushing a `build-publish` commit because the Store job does not wait for manual approval.
 
 The existing Windows x64 portable ZIP and Inno Setup EXE remain GitHub Release assets. No MSI artifact is planned: MSI would duplicate the traditional installer role already covered by the EXE, require another packaging pipeline, and still require Authenticode signing. MSIX is the Store format; Microsoft re-signs it after certification, so a CA-issued signing certificate is not required for Store-only distribution.
 
 ### 🧾 First Manual Partner Center Submission
 
-Microsoft currently supports GitHub Actions app updates only for free products that are already published and live. Complete these steps before enabling the Microsoft Store portion of `build-publish`:
+Microsoft currently supports GitHub Actions app updates only for free products that are already published and live. The current product has completed these prerequisites; use this checklist when reproducing or auditing the setup:
 
 1. Register a Windows developer account in [Partner Center](https://storedeveloper.microsoft.com/) and finish the requested identity verification.
 2. From the Partner Center home page, open **Apps and games**, create a new product, select **MSIX or PWA app**, and reserve the app name.
 3. Open the new product and select **Product identity** in the left navigation, then record the public Store and MSIX identity values described in the next section.
 4. Associate an existing Microsoft Entra tenant with Partner Center, or create a tenant from Partner Center.
 5. Register a Microsoft Entra application for CI, add it under Partner Center account user management, and assign it the **Manager** role.
-6. Manually run `build-release.yml` with `publish=false`, download the seven-day `release-dry-run-*` artifact, and select the Windows x64 Store `.msix` inside it.
+6. Manually run `release-publish.yml` with `publish=false`, download the seven-day `release-dry-run-*` artifact, and select the Windows x64 Store `.msix` inside it.
 7. Follow the [Microsoft Store first-submission worksheet](../../doc/microsoft-store-submission.md), create the first Partner Center submission manually, upload that MSIX, complete listing, privacy, age-rating, availability, and policy information, and submit it for certification.
 8. Wait until the product is published and shows as **Live** before configuring automatic updates.
 
-The Store package version is separate from `pubspec.yaml` SemVer. It must contain four numeric fields, the first field cannot be zero, each field must be at most 65535, and the fourth field must be zero. The future workflow will generate and validate this value instead of passing `vX.Y.Z-beta.W` directly.
+The Store package version is separate from `pubspec.yaml` SemVer. It contains four numeric fields, the first field cannot be zero, each field is at most 65535, and the fourth field is zero. The workflow generates and validates this value instead of passing `vX.Y.Z-beta.W` directly.
 
 ### 🪪 Product Identity Page
 
@@ -190,14 +190,14 @@ The exact current values are:
 
 In the GitHub repository, open **Settings -> Environments -> New environment**, create `microsoft-store-production`, and configure:
 
-- required reviewers so a commit token alone cannot publish externally;
+- do not configure required reviewers because `build-publish` is intentionally fully automatic;
 - deployment branches limited to `main` and `master`;
 - prevent self-review when the repository plan supports it;
 - the following four Environment secrets and five Repository variables.
 
-The final configuration is **4 Environment secrets + 5 Repository variables**. Public Store/MSIX identities live in repository-level variables; only publishing credentials are protected by approval in the `microsoft-store-production` Environment.
+The final configuration is **4 Environment secrets + 5 Repository variables**. Public Store/MSIX identities live in repository-level variables; publishing credentials are isolated in the `microsoft-store-production` Environment and are available only to its jobs.
 
-Use Environment secrets rather than repository-wide secrets so they are released to the job only after approval:
+Use Environment secrets rather than repository-wide secrets so they are available only inside the Store authentication and publication jobs:
 
 | 🔐 Environment secret | 📍 Source | 🎯 Purpose |
 |---|---|---|
@@ -269,19 +269,19 @@ gh secret list --env microsoft-store-production
 After granting the selected Entra application the Partner Center **Manager** role, manually run the dedicated authentication check from `main`:
 
 ```bash
-gh workflow run microsoft-store-auth-check.yml --ref main
-RUN_ID="$(gh run list --workflow microsoft-store-auth-check.yml --limit 1 --json databaseId --jq '.[0].databaseId')"
+gh workflow run check-microsoft-store.yml --ref main
+RUN_ID="$(gh run list --workflow check-microsoft-store.yml --limit 1 --json databaseId --jq '.[0].databaseId')"
 gh run watch "$RUN_ID" --exit-status
 gh run view "$RUN_ID" --log-failed
 ```
 
-The second command captures the newest run ID, the third follows it to completion and returns a nonzero exit code on failure, and the fourth prints failed-step logs when troubleshooting. The workflow enters `microsoft-store-production`, installs the official Microsoft Store App Publisher action pinned to `v1.4` and Microsoft Store Developer CLI `v0.3.9`, authenticates with the four Environment secrets, and runs only `msstore apps list`. It never creates a submission, uploads a package, edits metadata, or publishes an app. A successful run confirms that Microsoft accepts the credentials and permits read access; inspect its app list for Store ID `9PP2SRN17C4F` before the first manual submission.
+The second command captures the newest run ID, the third follows it to completion and returns a nonzero exit code on failure, and the fourth prints failed-step logs when troubleshooting. The workflow enters `microsoft-store-production`, installs the official Microsoft Store App Publisher action pinned to `v1.4` and Microsoft Store Developer CLI `v0.3.9`, authenticates with the four Environment secrets, and runs only `msstore apps list`. It never creates a submission, uploads a package, edits metadata, or publishes an app. Run `31592179631` completed successfully and listed Product ID `9PP2SRN17C4F`, display name `DartFlutterDemo`, and package ID `VincentZyu.dart-flutter-demo`.
 
 `GITHUB_TOKEN` is supplied automatically and does not need to be created. A Store-only MSIX does not require a PFX secret because Microsoft signs the package after certification. Never put the client secret, tenant credentials, certificates, or their encoded forms in source files, logs, artifacts, or Release notes.
 
 ### 🚀 Automatic Publication
 
-To create a GitHub Release and request a signed Flatpak repository update, use:
+To create a GitHub Release, publish the signed Flatpak update, and submit the Microsoft Store package for certification, use:
 
 ```text
 release: publish DartFlutterDemo
@@ -289,13 +289,13 @@ release: publish DartFlutterDemo
 [build-publish]
 ```
 
-The application workflow builds all normal Release/Profile artifacts, creates the GitHub Release, attaches the verified versioned `.flatpak`, and adds `flatpak-publish-request.json`. The target repository checks for that marker every 15 minutes. To publish immediately after the Release succeeds, run:
+The application workflow builds all normal Release/Profile artifacts, creates the GitHub Release, attaches the verified versioned `.flatpak`, adds `flatpak-publish-request.json`, and submits the verified MSIX to Product ID `9PP2SRN17C4F`. The `flatpak-repo` workflow checks for that marker every 15 minutes. To publish Flatpak immediately after the Release succeeds, run:
 
 ```bash
 gh workflow run publish.yml --repo VincentZyuApps/flatpak-repo --ref main -f release_tag=vX.Y.Z-beta.W
 ```
 
-The target workflow uses its own `flatpak-production` Environment, GPG-signs the OSTree commit and summary, deploys the `stable` repository to GitHub Pages, and verifies the public GPG-enabled remote. The Microsoft Store job is not part of the current path and remains disabled until the product is Live.
+The target workflow uses its own `flatpak-production` Environment, GPG-signs the OSTree commit and summary, deploys the `stable` repository to GitHub Pages, and verifies the public GPG-enabled remote. In parallel, `publish-microsoft-store` directly submits the MSIX for asynchronous certification; workflow success means submission was accepted, not that the update is already Live.
 
 Rotate `PARTNER_CENTER_CLIENT_SECRET` before it expires and update only the Environment secret value. If certification later fails, inspect Partner Center; do not treat the earlier GitHub job success as proof that the update is live.
 

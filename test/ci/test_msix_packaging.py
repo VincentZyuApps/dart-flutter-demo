@@ -1,5 +1,7 @@
 import importlib.util
+import hashlib
 import sys
+import tempfile
 import unittest
 import xml.etree.ElementTree as ET
 from pathlib import Path
@@ -39,6 +41,68 @@ class StoreVersionTests(unittest.TestCase):
             with self.subTest(full_version=full_version):
                 with self.assertRaises(ValueError):
                     MODULE.store_version_from_pubspec(full_version)
+
+
+class ReleaseMetadataTests(unittest.TestCase):
+    def test_validates_release_metadata_and_checksum(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            package = Path(temporary_directory) / "store.msix"
+            package.write_bytes(b"verified-msix")
+            full_version = "0.5.0-beta.14+20260812"
+            metadata = {
+                "application_version": "0.5.0-beta.14",
+                "pubspec_version": full_version,
+                "store_version": "2026.812.20014.0",
+                "architecture": "x64",
+                "identity_name": "VincentZyu.dart-flutter-demo",
+                "publisher": "CN=publisher",
+                "publisher_display_name": "VincentZyu",
+                "display_name": "DartFlutterDemo",
+                "signed": False,
+                "filename": package.name,
+                "size_bytes": package.stat().st_size,
+                "sha256": hashlib.sha256(package.read_bytes()).hexdigest(),
+            }
+
+            MODULE.validate_release_metadata(
+                metadata,
+                package,
+                full_version=full_version,
+                identity_name="VincentZyu.dart-flutter-demo",
+                publisher="CN=publisher",
+                publisher_display_name="VincentZyu",
+                display_name="DartFlutterDemo",
+            )
+
+    def test_rejects_tampered_release_metadata(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            package = Path(temporary_directory) / "store.msix"
+            package.write_bytes(b"verified-msix")
+            metadata = {
+                "application_version": "0.5.0-beta.14",
+                "pubspec_version": "0.5.0-beta.14+20260812",
+                "store_version": "2026.812.20014.0",
+                "architecture": "x64",
+                "identity_name": "wrong.identity",
+                "publisher": "CN=publisher",
+                "publisher_display_name": "VincentZyu",
+                "display_name": "DartFlutterDemo",
+                "signed": False,
+                "filename": package.name,
+                "size_bytes": package.stat().st_size,
+                "sha256": hashlib.sha256(package.read_bytes()).hexdigest(),
+            }
+
+            with self.assertRaisesRegex(ValueError, "identity_name"):
+                MODULE.validate_release_metadata(
+                    metadata,
+                    package,
+                    full_version="0.5.0-beta.14+20260812",
+                    identity_name="VincentZyu.dart-flutter-demo",
+                    publisher="CN=publisher",
+                    publisher_display_name="VincentZyu",
+                    display_name="DartFlutterDemo",
+                )
 
 
 class WindowsSdkTests(unittest.TestCase):

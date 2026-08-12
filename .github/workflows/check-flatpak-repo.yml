@@ -1,4 +1,4 @@
-name: Flatpak Package Check
+name: Check Flatpak Package
 
 on:
   workflow_dispatch:
@@ -7,7 +7,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: flatpak-package-check-${{ github.ref }}
+  group: check-flatpak-repo-${{ github.ref }}
   cancel-in-progress: false
 
 env:

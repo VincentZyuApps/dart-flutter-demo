@@ -1,4 +1,4 @@
-name: Microsoft Store Auth Check
+name: Check Microsoft Store Authentication
 
 on:
   workflow_dispatch:
@@ -7,7 +7,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: microsoft-store-auth-check-${{ github.ref }}
+  group: check-microsoft-store-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:

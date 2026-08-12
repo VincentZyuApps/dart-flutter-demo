@@ -19,8 +19,8 @@ feat(system-info): migrate collection into a reusable plugin
 
 | 🔑 关键词 | ⚙️ 工作流 | 📦 输出 | ⏳ 保留时间 | 🚀 创建 Release |
 |---|---|---|---|:---:|
-| `build-release` | `build-release.yml` | 六个平台 Release 目标、x86_64 Flatpak 和三个 Profile 目标 | 发布后永久保留 | 是 |
-| `build-publish` | `build-release.yml` | `build-release` 的全部内容，加签名 Flatpak 仓库发布请求 | 永久，并更新自建仓库 | 是 |
+| `build-release` | `release-publish.yml` | 六个平台 Release 目标、x86_64 Flatpak 和三个 Profile 目标 | 发布后永久保留 | 是 |
+| `build-publish` | `release-publish.yml` | `build-release` 的全部内容，加签名 Flatpak 与 Microsoft Store 发布 | 永久，并更新外部渠道 | 是 |
 | `build-profile` | `profile-debug.yml` | Windows x64、Linux x64、Android Universal Profile | 7 天 | 否 |
 | `build-debug` | `profile-debug.yml` | Windows x64、Linux x64、Android Universal Debug | 7 天 | 否 |
 | `run-performance` | `performance.yml` | Windows、Linux、macOS 的 JSON/Markdown/日志报告包 | 7 天 | 否 |
@@ -28,9 +28,9 @@ feat(system-info): migrate collection into a reusable plugin
 
 旧形式 `build release`、`build action` 或 `BUILD-RELEASE` 都不会匹配。同一条 commit 可以放多个有效关键词，从而启动多个工作流。
 
-## 🚀 Release 构建
+## 🚀 Release 与发布
 
-`build-release.yml` 在 push 包含 `build-release` 或 `build-publish` 时运行，也可以从 `workflow_dispatch` 手动运行。`build-publish` 是严格超集：两个关键词都会创建完全相同且经过验证的 GitHub Release，只有 `build-publish` 会请求更新签名 Flatpak 仓库。
+`release-publish.yml` 在 push 包含 `build-release` 或 `build-publish` 时运行，也可以从 `workflow_dispatch` 手动运行。`build-publish` 是严格超集：两个关键词都会创建完全相同且经过验证的 GitHub Release，只有 `build-publish` 会请求签名 Flatpak 更新，并把同一份已验证 MSIX 提交到 Microsoft Store 认证。
 
 所有发布的应用版本，包括带有 `alpha`、`beta` 或 `rc` 后缀的版本，都会创建为非草稿的正式 Release，并明确标记为仓库的 Latest Release。
 
@@ -53,11 +53,11 @@ feat(system-info): migrate collection into a reusable plugin
 
 手动运行默认 `publish=false`。它会执行质量检查、全部 Release 构建、Flatpak 打包与冒烟测试、三项永久 Profile 构建、MSIX 校验和 Release Notes 渲染，但只上传保留七天的 `release-dry-run-*` Artifact，不创建 tag 或 GitHub Release。
 
-确认 dry-run 全部通过后再使用 `publish=true`。同时设置 `publish_flatpak_repository=true` 可以复现 `build-publish`；若没有启用 `publish=true`，该选项会被拒绝。push 中包含任一发布关键词时，都会在所有必要 job 成功后自动发布。
+确认 dry-run 全部通过后再使用 `publish=true`。同时设置 `publish_external_channels=true` 可以复现 `build-publish` 并更新 Flatpak 与 Microsoft Store；若没有启用 `publish=true`，该选项会被拒绝。push 中包含任一发布关键词时，都会在所有必要 job 成功后自动发布。
 
 ## 📦 Flatpak 包校验
 
-`flatpak-check.yml` 是手动触发的 x86_64 `.flatpak` package-only 工作流。它不会创建 GitHub Release、更新 Flatpak 仓库、使用生产 GPG 密钥或发布到 Flathub。
+`check-flatpak-repo.yml` 是手动触发的 x86_64 `.flatpak` package-only 工作流。它不会创建 GitHub Release、更新 Flatpak 仓库、使用生产 GPG 密钥或发布到 Flathub。
 
 工作流先在 `ubuntu-22.04` 构建已提交的 Linux 应用并保留完整 Flutter bundle，再放入官方 Freedesktop `25.08` Flatpak 容器封装。Flatpak 分支始终固定为 `stable`；应用版本和发布日期仍然独立来自 `pubspec.yaml`。
 
@@ -66,15 +66,15 @@ feat(system-info): migrate collection into a reusable plugin
 运行工作流并下载保留七天的 package-only Artifact：
 
 ```bash
-gh workflow run flatpak-check.yml --ref main
-RUN_ID="$(gh run list --workflow flatpak-check.yml --limit 1 --json databaseId --jq '.[0].databaseId')"
+gh workflow run check-flatpak-repo.yml --ref main
+RUN_ID="$(gh run list --workflow check-flatpak-repo.yml --limit 1 --json databaseId --jq '.[0].databaseId')"
 gh run watch "$RUN_ID" --exit-status
 gh run download "$RUN_ID" --name "flatpak-package-only-$RUN_ID" --dir "tmp/downloads/ci/flatpak-package-only-$RUN_ID"
 ```
 
 工作流会校验 Desktop 文件与 AppStream 元数据、安装生成的 bundle、核对准确的 `app/io.github.vincentzyuapps.dartflutterdemo/x86_64/stable` ref 与版本、拒绝宽泛沙箱权限，并要求应用在虚拟显示器的 20 秒冒烟测试期间持续运行。
 
-下载的 `.flatpak` 是版本固定的侧载 bundle，不会配置自动更新。`build-release.yml` 复用相同校验脚本，并把版本化 bundle 附加到每次应用 Release。`[build-publish]` 还会附加 `flatpak-publish-request.json`；独立的 [`VincentZyuApps/flatpak-repo`](https://github.com/VincentZyuApps/flatpak-repo) 工作流发现该标记后发布签名 `stable` 更新，并通过固定的 [`.flatpakref`](https://vincentzyuapps.github.io/flatpak-repo/dart-flutter-demo.flatpakref) 提供更新。
+下载的 `.flatpak` 是版本固定的侧载 bundle，不会配置自动更新。`release-publish.yml` 复用相同校验脚本，并把版本化 bundle 附加到每次应用 Release。`[build-publish]` 还会附加 `flatpak-publish-request.json`；独立的 [`VincentZyuApps/flatpak-repo`](https://github.com/VincentZyuApps/flatpak-repo) 工作流发现该标记后发布签名 `stable` 更新，并通过固定的 [`.flatpakref`](https://vincentzyuapps.github.io/flatpak-repo/dart-flutter-demo.flatpakref) 提供更新。
 
 ## 🧰 Profile 与 Debug 构建
 
@@ -143,28 +143,28 @@ Android 产物使用 CI 临时签名；iOS IPA 与 macOS 包均未签名。AltSt
 
 ## 🏪 外部分发与 Microsoft Store
 
-> **当前状态：** `build-publish`、签名自建 Flatpak 发布、package-only Windows x64 MSIX 构建与商店只读认证检查已经实现。Microsoft Store 提交 job 继续独立禁用，直到 Partner Center 首次提交变为 Live。
+> **当前状态：** 产品已经 Live，CI 应用拥有 Partner Center **Manager (Windows)** 权限，只读认证检查也成功列出 Store ID `9PP2SRN17C4F`。`build-publish` 现在同时启用签名自建 Flatpak 发布与 Microsoft Store 自动提交。
 
-`build-publish` 扩展 `build-release`：执行完全相同的质量检查、Release 构建、永久 Profile 构建、GitHub Release 发布、Flatpak 打包和 Windows x64 MSIX 校验，并额外附加 `flatpak-publish-request.json`。公开 `flatpak-repo` 工作流每 15 分钟发现一次该标记，也可用 Release tag 立即手动触发；随后它把 bundle 导入持久 OSTree 仓库，使用 `flatpak-production` Environment 密钥签名并部署 GitHub Pages。个人 Token 和私钥都不会跨仓库传递。商店产品变为 Live 后，未来可增加独立的 `microsoft-store-production` job 来提交同一 Release 的 MSIX；微软认证仍会在此后继续运行。
+`build-publish` 扩展 `build-release`：执行完全相同的质量检查、Release 构建、永久 Profile 构建、GitHub Release 发布、Flatpak 打包和 Windows x64 MSIX 校验。它附加 `flatpak-publish-request.json` 供公开 `flatpak-repo` 工作流使用，由后者导入并签名 bundle 后部署 GitHub Pages。GitHub Release 成功后，独立的 `publish-microsoft-store` job 会校验同一 Windows Artifact 的元数据与 SHA-256，确认目标 Product ID 可见，并把 MSIX 提交认证。Store 失败会把应用工作流标红，但不会删除 GitHub Release 或撤回 Flatpak 请求。
 
-本项目保持永久免费。`vX.Y.Z-beta.W` 等预发布版本也会直接提交正式商店页面，不使用 Package Flight，因此批准 Environment 部署前必须仔细检查版本和 Release Notes。
+本项目保持永久免费。`vX.Y.Z-beta.W` 等预发布版本也会直接提交正式商店页面，不使用 Package Flight。Store job 不等待人工审批，因此推送包含 `build-publish` 的 commit 前必须仔细检查版本和 Release Notes。
 
 现有 Windows x64 便携 ZIP 与 Inno Setup EXE 继续作为 GitHub Release 附件。本项目不规划 MSI：MSI 会重复 EXE 已覆盖的传统安装器职责，增加一套打包流水线，并且仍然需要 Authenticode 签名。MSIX 才是商店发布格式；微软会在认证通过后重新签名，因此只通过商店分发时不需要购买 CA 代码签名证书。
 
 ### 🧾 首次在 Partner Center 人工上架
 
-微软目前只支持通过 GitHub Actions 自动更新已经发布并处于 Live 状态的免费产品。启用 `build-publish` 的 Microsoft Store 部分前依次完成：
+微软目前只支持通过 GitHub Actions 自动更新已经发布并处于 Live 状态的免费产品。当前产品已完成以下前置条件；重新配置或审计时可按此清单检查：
 
 1. 在 [Partner Center](https://storedeveloper.microsoft.com/) 注册 Windows 开发者账号，并完成要求的身份验证。
 2. 从 Partner Center 主页进入 **应用和游戏**，创建新产品并选择 **MSIX 或 PWA 应用**，然后保留应用名称。
 3. 打开新建的产品，从左侧导航进入 **产品标识**，按下一节记录 Store 与 MSIX 的公共身份值。
 4. 将现有 Microsoft Entra 租户关联到 Partner Center，或从 Partner Center 创建租户。
 5. 为 CI 注册 Microsoft Entra 应用，在 Partner Center 的账号用户管理中添加该应用，并授予 **Manager** 角色。
-6. 手动运行 `build-release.yml` 并保持 `publish=false`，下载保留七天的 `release-dry-run-*` Artifact，再选择其中的 Windows x64 Store `.msix`。
+6. 手动运行 `release-publish.yml` 并保持 `publish=false`，下载保留七天的 `release-dry-run-*` Artifact，再选择其中的 Windows x64 Store `.msix`。
 7. 按照 [Microsoft Store 首次提交清单](../../doc/microsoft-store-submission.md)，在 Partner Center 人工创建第一次提交，上传该 MSIX，填写商店介绍、隐私、年龄分级、可用地区和政策信息，然后提交认证。
 8. 等待产品完成发布并显示为 **Live**，之后再配置自动更新。
 
-商店包版本独立于 `pubspec.yaml` SemVer。它必须是四段纯数字，第一段不能为零，每段不超过 65535，第四段必须为零。未来工作流会单独生成并验证商店版本，不会直接传入 `vX.Y.Z-beta.W`。
+商店包版本独立于 `pubspec.yaml` SemVer。它使用四段纯数字，第一段不能为零，每段不超过 65535，第四段为零。工作流会单独生成并验证商店版本，不会直接传入 `vX.Y.Z-beta.W`。
 
 ### 🪪 产品标识页面
 
@@ -190,14 +190,14 @@ Android 产物使用 CI 临时签名；iOS IPA 与 macOS 包均未签名。AltSt
 
 打开 GitHub 仓库的 **Settings -> Environments -> New environment**，创建 `microsoft-store-production`，并配置：
 
-- 设置 required reviewers，确保只有 commit 关键词不能直接对外发布；
+- 不设置 required reviewers，因为 `build-publish` 按设计需要完全自动发布；
 - 将部署分支限制为 `main` 和 `master`；
 - 仓库套餐支持时启用禁止自审；
 - 添加下面列出的四项 Environment Secrets 与五项 Repository Variables。
 
-最终配置是 **4 个 Environment Secrets + 5 个 Repository Variables**。公开的 Store/MSIX 身份放在仓库级 Variables，只有发布凭据受 `microsoft-store-production` Environment 审批保护。
+最终配置是 **4 个 Environment Secrets + 5 个 Repository Variables**。公开的 Store/MSIX 身份放在仓库级 Variables，发布凭据隔离在 `microsoft-store-production` Environment 中，只有对应 job 可以使用。
 
-优先使用 Environment Secrets，不使用仓库全局 Secrets，这样只有人工批准后发布 job 才能得到凭据：
+优先使用 Environment Secrets，不使用仓库全局 Secrets，这样只有 Store 认证和发布 job 可以得到凭据：
 
 | 🔐 Environment Secret | 📍 获取位置 | 🎯 用途 |
 |---|---|---|
@@ -269,19 +269,19 @@ gh secret list --env microsoft-store-production
 为选定的 Entra 应用授予 Partner Center **Manager** 角色后，从 `main` 手动运行专用认证检查：
 
 ```bash
-gh workflow run microsoft-store-auth-check.yml --ref main
-RUN_ID="$(gh run list --workflow microsoft-store-auth-check.yml --limit 1 --json databaseId --jq '.[0].databaseId')"
+gh workflow run check-microsoft-store.yml --ref main
+RUN_ID="$(gh run list --workflow check-microsoft-store.yml --limit 1 --json databaseId --jq '.[0].databaseId')"
 gh run watch "$RUN_ID" --exit-status
 gh run view "$RUN_ID" --log-failed
 ```
 
-第二条命令取得最新 Run ID，第三条持续跟踪直到结束并在失败时返回非零退出码，第四条在排查时输出失败步骤日志。该工作流进入 `microsoft-store-production`，安装固定为 `v1.4` 的微软官方 Microsoft Store App Publisher Action 与 Microsoft Store Developer CLI `v0.3.9`，使用四项 Environment Secrets 认证，并且只运行 `msstore apps list`。它不会创建提交、上传包、修改元数据或发布应用。成功表示微软接受凭据并允许只读访问；第一次人工提交前，还应在输出的应用列表中确认 Store ID `9PP2SRN17C4F`。
+第二条命令取得最新 Run ID，第三条持续跟踪直到结束并在失败时返回非零退出码，第四条在排查时输出失败步骤日志。该工作流进入 `microsoft-store-production`，安装固定为 `v1.4` 的微软官方 Microsoft Store App Publisher Action 与 Microsoft Store Developer CLI `v0.3.9`，使用四项 Environment Secrets 认证，并且只运行 `msstore apps list`。它不会创建提交、上传包、修改元数据或发布应用。Run `31592179631` 已成功完成，并列出 Product ID `9PP2SRN17C4F`、显示名 `DartFlutterDemo` 与包 ID `VincentZyu.dart-flutter-demo`。
 
 `GITHUB_TOKEN` 由 GitHub 自动提供，不需要手动创建。只向商店提交的 MSIX 不需要 PFX Secret，因为微软会在认证后为包签名。绝不能把 Client Secret、租户凭据、证书或它们的编码形式写入源码、日志、Artifact 或 Release Notes。
 
 ### 🚀 自动发布
 
-要创建 GitHub Release 并请求更新签名 Flatpak 仓库，使用：
+要创建 GitHub Release、发布签名 Flatpak 更新并把 Microsoft Store 包提交认证，使用：
 
 ```text
 release: publish DartFlutterDemo
@@ -289,13 +289,13 @@ release: publish DartFlutterDemo
 [build-publish]
 ```
 
-应用工作流会构建全部常规 Release/Profile 产物、创建 GitHub Release、附加验证过的版本化 `.flatpak`，并加入 `flatpak-publish-request.json`。目标仓库每 15 分钟检查一次该标记；要在 Release 成功后立即发布，运行：
+应用工作流会构建全部常规 Release/Profile 产物、创建 GitHub Release、附加验证过的版本化 `.flatpak`、加入 `flatpak-publish-request.json`，并把验证过的 MSIX 提交至 Product ID `9PP2SRN17C4F`。`flatpak-repo` 工作流每 15 分钟检查一次该标记；要在 Release 成功后立即发布 Flatpak，运行：
 
 ```bash
 gh workflow run publish.yml --repo VincentZyuApps/flatpak-repo --ref main -f release_tag=vX.Y.Z-beta.W
 ```
 
-目标工作流使用自己的 `flatpak-production` Environment，对 OSTree commit 与 summary 进行 GPG 签名，将 `stable` 仓库部署到 GitHub Pages，并验证公开的 GPG 仓库。Microsoft Store job 不在当前流程中，产品变为 Live 前继续保持禁用。
+目标工作流使用自己的 `flatpak-production` Environment，对 OSTree commit 与 summary 进行 GPG 签名，将 `stable` 仓库部署到 GitHub Pages，并验证公开的 GPG 仓库。与此同时，`publish-microsoft-store` 会直接提交 MSIX 进行异步认证；工作流成功表示提交已被接受，不表示更新已经 Live。
 
 在 `PARTNER_CENTER_CLIENT_SECRET` 到期前轮换它，并且只更新 Environment Secret 的值。如果后续认证失败，应前往 Partner Center 检查；不能把之前 GitHub job 的成功当作更新已经上线的证明。
 

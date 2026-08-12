@@ -36,16 +36,18 @@
 
 - Commit 首行使用 Conventional Commits，例如 `chore(docs): ...`。
 - CI 标记写在 commit message 末尾，推荐使用方括号风格。
+- 修改任何 `.yml` 或 `.yaml` 文件后，必须运行 `uv run scripts/ci/validation/check-yaml.py`，确认 YAML 可解析且不存在重复键。
 - 已实现 `[build-release]`、`[build-publish]`、`[build-profile]`、`[build-debug]`、`[run-performance]`、`[release-performance]`。
-- `[build-publish]` 创建完整应用 Release 并请求更新签名 Flatpak 仓库；微软商店 job 必须等首次人工上架 Live 后再启用。
+- `[build-publish]` 创建完整应用 Release、请求更新签名 Flatpak 仓库并自动提交 Microsoft Store 认证。
 - CI 只匹配连字符关键词，方括号只是提交风格规范。
-- `build-release.yml` 负责 Release 构建、Flatpak 校验、GitHub Release 和 Flatpak 仓库发布请求。
+- `release-publish.yml` 负责 Release 构建、Flatpak 校验、GitHub Release 和两个外部渠道的发布。
 - `profile-debug.yml` 负责保留七天的 Profile 与 Debug 产物。
 - `performance.yml` 的每周计划默认关闭，`run-performance` 保留七天报告，`release-performance` 创建永久 Pre-release。
 - `platform-bootstrap.yml` 只生成待人工审查的平台源码 Artifact，不自动 commit。
-- `flatpak-check.yml` 只生成并验证保留七天的 x86_64 package-only Flatpak，不使用生产签名密钥或更新外部仓库。
+- `check-flatpak-repo.yml` 只生成并验证保留七天的 x86_64 package-only Flatpak，不使用生产签名密钥或更新外部仓库。
+- `check-microsoft-store.yml` 只验证生产凭据并列出可管理应用，不创建、上传或提交商店更新。
 - 手动下载的 GitHub Actions Artifact 统一保存到 `tmp/downloads/ci/<artifact-kind>-<run-id>/`，目录名必须包含 Action Run ID，并保留 Artifact 内部目录结构。
-- `build-publish` 必须复用 `build-release` 的质量检查与产物，并通过固定发布标记更新签名 Flatpak 仓库；微软商店 job 上线后再并行执行。
+- `build-publish` 必须复用 `build-release` 的质量检查与产物，通过固定标记更新签名 Flatpak 仓库，并复用同一 MSIX 提交 Microsoft Store。
 - 只有 `build-release`、`release-performance` 和 `build-publish` 可以创建 GitHub Release。
 - 性能 Release 必须是独立 Pre-release，不得替代应用的 Latest Release。
 

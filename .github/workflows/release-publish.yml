@@ -1,4 +1,4 @@
-name: Build Release
+name: Release & Publish
 
 on:
   push:
@@ -9,8 +9,8 @@ on:
         description: Create the GitHub Release after all builds pass
         type: boolean
         default: false
-      publish_flatpak_repository:
-        description: Request a signed Flatpak repository update after publishing
+      publish_external_channels:
+        description: Publish signed Flatpak and Microsoft Store updates
         type: boolean
         default: false
 
@@ -18,7 +18,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: build-release-${{ github.ref }}
+  group: release-publish-${{ github.ref }}
   cancel-in-progress: false
 
 env:
@@ -31,7 +31,7 @@ jobs:
     outputs:
       should_build: ${{ steps.trigger.outputs.should_build }}
       should_publish: ${{ steps.trigger.outputs.should_publish }}
-      should_publish_flatpak_repository: ${{ steps.trigger.outputs.should_publish_flatpak_repository }}
+      should_publish_external_channels: ${{ steps.trigger.outputs.should_publish_external_channels }}
       version: ${{ steps.version.outputs.version }}
       commits_log: ${{ steps.commits.outputs.log }}
     steps:
@@ -45,29 +45,33 @@ jobs:
         env:
           COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
           MANUAL_PUBLISH: ${{ inputs.publish || false }}
-          MANUAL_PUBLISH_FLATPAK: ${{ inputs.publish_flatpak_repository || false }}
+          MANUAL_PUBLISH_EXTERNAL: ${{ inputs.publish_external_channels || false }}
         run: |
           set -euo pipefail
           if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-            if [[ "$MANUAL_PUBLISH_FLATPAK" == "true" && "$MANUAL_PUBLISH" != "true" ]]; then
-              echo "A Flatpak repository update requires publish=true." >&2
+            if [[ "$MANUAL_PUBLISH_EXTERNAL" == "true" && "$MANUAL_PUBLISH" != "true" ]]; then
+              echo "External channel publication requires publish=true." >&2
+              exit 1
+            fi
+            if [[ "$MANUAL_PUBLISH_EXTERNAL" == "true" && "${{ github.ref }}" != "refs/heads/main" && "${{ github.ref }}" != "refs/heads/master" ]]; then
+              echo "External channel publication is restricted to main or master." >&2
               exit 1
             fi
             echo "should_build=true" >> "$GITHUB_OUTPUT"
             echo "should_publish=$MANUAL_PUBLISH" >> "$GITHUB_OUTPUT"
-            echo "should_publish_flatpak_repository=$MANUAL_PUBLISH_FLATPAK" >> "$GITHUB_OUTPUT"
+            echo "should_publish_external_channels=$MANUAL_PUBLISH_EXTERNAL" >> "$GITHUB_OUTPUT"
           elif python scripts/ci/common/ci-trigger.py --message "$COMMIT_MESSAGE" --token build-publish; then
             echo "should_build=true" >> "$GITHUB_OUTPUT"
             echo "should_publish=true" >> "$GITHUB_OUTPUT"
-            echo "should_publish_flatpak_repository=true" >> "$GITHUB_OUTPUT"
+            echo "should_publish_external_channels=true" >> "$GITHUB_OUTPUT"
           elif python scripts/ci/common/ci-trigger.py --message "$COMMIT_MESSAGE" --token build-release; then
             echo "should_build=true" >> "$GITHUB_OUTPUT"
             echo "should_publish=true" >> "$GITHUB_OUTPUT"
-            echo "should_publish_flatpak_repository=false" >> "$GITHUB_OUTPUT"
+            echo "should_publish_external_channels=false" >> "$GITHUB_OUTPUT"
           else
             echo "should_build=false" >> "$GITHUB_OUTPUT"
             echo "should_publish=false" >> "$GITHUB_OUTPUT"
-            echo "should_publish_flatpak_repository=false" >> "$GITHUB_OUTPUT"
+            echo "should_publish_external_channels=false" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Extract version
@@ -506,7 +510,7 @@ jobs:
             "release-files/dart-flutter-demo-android-universal-profile-v${VERSION}.apk"
 
       - name: Create Flatpak repository publication request
-        if: needs.prepare.outputs.should_publish_flatpak_repository == 'true'
+        if: needs.prepare.outputs.should_publish_external_channels == 'true'
         shell: bash
         run: |
           set -euo pipefail
@@ -565,3 +569,108 @@ jobs:
           fail_on_unmatched_files: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  publish-microsoft-store:
+    name: Publish Microsoft Store update
+    needs: [prepare, release-builds, publish]
+    if: >-
+      needs.prepare.outputs.should_publish_external_channels == 'true' &&
+      (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+    runs-on: windows-latest
+    timeout-minutes: 20
+    environment: microsoft-store-production
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download verified Windows Release
+        uses: actions/download-artifact@v4
+        with:
+          name: release-windows-x64
+          path: store-input
+
+      - name: Validate Store package metadata and checksum
+        id: package
+        shell: pwsh
+        env:
+          MS_STORE_IDENTITY_NAME: ${{ vars.MS_STORE_IDENTITY_NAME }}
+          MS_STORE_PUBLISHER: ${{ vars.MS_STORE_PUBLISHER }}
+          MS_STORE_PUBLISHER_DISPLAY_NAME: ${{ vars.MS_STORE_PUBLISHER_DISPLAY_NAME }}
+          MS_STORE_DISPLAY_NAME: ${{ vars.MS_STORE_DISPLAY_NAME }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $PSNativeCommandUseErrorActionPreference = $true
+          foreach ($name in @(
+            'MS_STORE_IDENTITY_NAME',
+            'MS_STORE_PUBLISHER',
+            'MS_STORE_PUBLISHER_DISPLAY_NAME',
+            'MS_STORE_DISPLAY_NAME'
+          )) {
+            if ([string]::IsNullOrWhiteSpace([Environment]::GetEnvironmentVariable($name))) {
+              throw "Required repository variable is missing: $name"
+            }
+          }
+          $msix = Get-Item 'store-input/dart-flutter-demo-windows-x64-store.msix'
+          python scripts/ci/packaging/windows/build-msix.py `
+            --output $msix.FullName `
+            --metadata "$($msix.FullName).json" `
+            --identity-name "$env:MS_STORE_IDENTITY_NAME" `
+            --publisher "$env:MS_STORE_PUBLISHER" `
+            --publisher-display-name "$env:MS_STORE_PUBLISHER_DISPLAY_NAME" `
+            --display-name "$env:MS_STORE_DISPLAY_NAME"
+          "msix=$($msix.FullName)" >> $env:GITHUB_OUTPUT
+          Write-Host "Validated $($msix.Name) for Microsoft Store publication."
+
+      - name: Install Microsoft Store Developer CLI
+        uses: microsoft/microsoft-store-apppublisher@cc9910a8d59f2eb55cbb83df0a3800cf3b5300e0 # v1.4
+        with:
+          version: v0.3.9
+
+      - name: Authenticate and verify the Store product
+        shell: pwsh
+        env:
+          PARTNER_CENTER_TENANT_ID: ${{ secrets.PARTNER_CENTER_TENANT_ID }}
+          PARTNER_CENTER_SELLER_ID: ${{ secrets.PARTNER_CENTER_SELLER_ID }}
+          PARTNER_CENTER_CLIENT_ID: ${{ secrets.PARTNER_CENTER_CLIENT_ID }}
+          PARTNER_CENTER_CLIENT_SECRET: ${{ secrets.PARTNER_CENTER_CLIENT_SECRET }}
+          MS_STORE_PRODUCT_ID: ${{ vars.MS_STORE_PRODUCT_ID }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $PSNativeCommandUseErrorActionPreference = $true
+          foreach ($name in @(
+            'PARTNER_CENTER_TENANT_ID',
+            'PARTNER_CENTER_SELLER_ID',
+            'PARTNER_CENTER_CLIENT_ID',
+            'PARTNER_CENTER_CLIENT_SECRET',
+            'MS_STORE_PRODUCT_ID'
+          )) {
+            if ([string]::IsNullOrWhiteSpace([Environment]::GetEnvironmentVariable($name))) {
+              throw "Required Microsoft Store setting is missing: $name"
+            }
+          }
+          msstore reconfigure `
+            --tenantId "$env:PARTNER_CENTER_TENANT_ID" `
+            --sellerId "$env:PARTNER_CENTER_SELLER_ID" `
+            --clientId "$env:PARTNER_CENTER_CLIENT_ID" `
+            --clientSecret "$env:PARTNER_CENTER_CLIENT_SECRET"
+          $apps = msstore apps list | Out-String
+          if ($LASTEXITCODE -ne 0) {
+            throw "Microsoft Store app listing failed with exit code $LASTEXITCODE"
+          }
+          Write-Host $apps
+          if ($apps -notmatch [regex]::Escape($env:MS_STORE_PRODUCT_ID)) {
+            throw "Microsoft Store product is not visible to the CI application: $env:MS_STORE_PRODUCT_ID"
+          }
+
+      - name: Upload package and submit for Microsoft certification
+        shell: pwsh
+        env:
+          MSIX_PATH: ${{ steps.package.outputs.msix }}
+          MS_STORE_PRODUCT_ID: ${{ vars.MS_STORE_PRODUCT_ID }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $PSNativeCommandUseErrorActionPreference = $true
+          msstore publish "$env:MSIX_PATH" `
+            --appId "$env:MS_STORE_PRODUCT_ID"
+          if ($LASTEXITCODE -ne 0) {
+            throw "Microsoft Store submission failed with exit code $LASTEXITCODE"
+          }

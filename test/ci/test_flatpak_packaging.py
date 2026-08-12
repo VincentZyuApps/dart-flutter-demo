@@ -11,8 +11,8 @@ FLATPAK_DIR = ROOT / "linux" / "packaging" / "flatpak"
 MANIFEST = FLATPAK_DIR / f"{APP_ID}.yml"
 METADATA_TEMPLATE = FLATPAK_DIR / f"{APP_ID}.metainfo.xml.in"
 DESKTOP_FILE = FLATPAK_DIR / f"{APP_ID}.desktop"
-WORKFLOW = ROOT / ".github" / "workflows" / "flatpak-check.yml"
-RELEASE_WORKFLOW = ROOT / ".github" / "workflows" / "build-release.yml"
+WORKFLOW = ROOT / ".github" / "workflows" / "check-flatpak-repo.yml"
+RELEASE_WORKFLOW = ROOT / ".github" / "workflows" / "release-publish.yml"
 VERIFY_SCRIPT = (
     ROOT
     / "scripts"
@@ -119,7 +119,7 @@ class FlatpakConfigurationTests(unittest.TestCase):
     def test_release_workflow_packages_flatpak_and_gates_repository_request(self) -> None:
         workflow = RELEASE_WORKFLOW.read_text(encoding="utf-8")
         self.assertIn("--token build-publish", workflow)
-        self.assertIn("should_publish_flatpak_repository", workflow)
+        self.assertIn("should_publish_external_channels", workflow)
         self.assertIn("name: release-flatpak-x64", workflow)
         self.assertIn(
             "dart-flutter-demo-linux-x64-v${{ needs.prepare.outputs.version }}.flatpak",
@@ -133,7 +133,7 @@ class FlatpakConfigurationTests(unittest.TestCase):
         self.assertIn("verify-flatpak-package.sh", workflow)
         self.assertIn("flatpak-publish-request.json", workflow)
         self.assertIn("schema_version: 1", workflow)
-        self.assertNotIn("microsoft-store-apppublisher", workflow)
+        self.assertIn("publish-microsoft-store:", workflow)
 
 
 if __name__ == "__main__":

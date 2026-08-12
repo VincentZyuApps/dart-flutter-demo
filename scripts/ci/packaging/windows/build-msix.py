@@ -74,6 +74,39 @@ def store_version_from_pubspec(full_version: str) -> str:
     return f"{build_date.year}.{month_day}.{stage_and_sequence}.0"
 
 
+def validate_release_metadata(
+    metadata: dict[str, object],
+    package_path: Path,
+    *,
+    full_version: str,
+    identity_name: str,
+    publisher: str,
+    publisher_display_name: str,
+    display_name: str,
+) -> None:
+    expected = {
+        "application_version": full_version.split("+", maxsplit=1)[0],
+        "pubspec_version": full_version,
+        "store_version": store_version_from_pubspec(full_version),
+        "architecture": "x64",
+        "identity_name": identity_name,
+        "publisher": publisher,
+        "publisher_display_name": publisher_display_name,
+        "display_name": display_name,
+        "signed": False,
+        "filename": package_path.name,
+        "size_bytes": package_path.stat().st_size,
+        "sha256": sha256_file(package_path),
+    }
+    for field, expected_value in expected.items():
+        actual_value = metadata.get(field)
+        if actual_value != expected_value:
+            raise ValueError(
+                f"Store package metadata mismatch for {field}: "
+                f"expected {expected_value!r}, got {actual_value!r}"
+            )
+
+
 def render_manifest(
     *,
     store_version: str,
@@ -347,10 +380,15 @@ def build_msix(args: argparse.Namespace) -> dict[str, object]:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Build and validate an unsigned Windows x64 Store MSIX."
+        description="Build or validate an unsigned Windows x64 Store MSIX."
     )
-    parser.add_argument("--bundle", type=Path, required=True)
+    parser.add_argument("--bundle", type=Path)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument(
+        "--metadata",
+        type=Path,
+        help="Validate an existing MSIX against this metadata JSON instead of building.",
+    )
     parser.add_argument("--pubspec", type=Path, default=DEFAULT_PUBSPEC)
     parser.add_argument("--icon", type=Path, default=DEFAULT_ICON)
     parser.add_argument("--identity-name", required=True)
@@ -362,7 +400,22 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> None:
-    metadata = build_msix(parse_args())
+    args = parse_args()
+    if args.metadata is not None:
+        metadata = json.loads(args.metadata.read_text(encoding="utf-8"))
+        validate_release_metadata(
+            metadata,
+            args.output,
+            full_version=read_pubspec_version(args.pubspec),
+            identity_name=args.identity_name,
+            publisher=args.publisher,
+            publisher_display_name=args.publisher_display_name,
+            display_name=args.display_name,
+        )
+    else:
+        if args.bundle is None:
+            raise ValueError("--bundle is required when building an MSIX")
+        metadata = build_msix(args)
     print(json.dumps(metadata, ensure_ascii=True, indent=2))
 
 

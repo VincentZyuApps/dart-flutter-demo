@@ -12,6 +12,8 @@ scripts/
     platform/bootstrap/   手动重新生成 Flutter 平台源码
     release/              应用发行说明和提交范围处理
     validation/           安全解析 YAML 并检查重复键
+  devices/
+    ios/                  在桌面系统诊断 iPhone/iPad 连接
   download/               手动下载 GitHub Release
   svg/                    手动生成仓库统计 SVG
 ```
@@ -23,6 +25,7 @@ scripts/
 - `scripts/ci/packaging/windows/` 同时保存 Inno Setup 渲染器与 Windows x64 Store MSIX 打包校验器。
 - `scripts/ci/validation/` 保存安全 YAML 解析和重复键校验工具。
 - `scripts/assets/` 保存生成和应用多平台图标的工具，详细约定见 [`assets/README.md`](assets/README.md)。
+- `scripts/devices/ios/` 保存运行于桌面系统的 Apple 移动设备诊断工具；文件名应标明工具运行的平台。
 - `scripts/download/` 保存手动下载 GitHub Release 的工具。
 - `scripts/svg/` 保存手动生成仓库统计 SVG 的工具。
 - Android 模板在这里使用连字符文件名，Bootstrap 复制到 Android 工程时恢复为符合资源规范的下划线文件名。

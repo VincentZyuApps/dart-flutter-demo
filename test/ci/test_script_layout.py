@@ -20,6 +20,13 @@ class ScriptLayoutTests(unittest.TestCase):
 
         self.assertEqual(offenders, [])
 
+    def test_apple_mobile_device_tool_uses_the_scripts_layout(self) -> None:
+        expected = SCRIPTS / "devices" / "ios" / "find-ios-device-on-windows.py"
+
+        self.assertTrue(expected.is_file())
+        self.assertFalse((ROOT / "test" / "find_ipad.py").exists())
+        self.assertFalse((ROOT / "test" / "find_ipad.ps1").exists())
+
     def test_workflow_script_references_exist(self) -> None:
         missing = []
         pattern = re.compile(r"scripts/[A-Za-z0-9./_-]+\.(?:py|sh)")

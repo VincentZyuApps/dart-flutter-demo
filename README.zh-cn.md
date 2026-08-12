@@ -15,7 +15,7 @@
 一个跨平台的 Flutter UI 展示 PoC（Proof of Concept）应用，可以跑在 Android、Windows、Linux、macOS 和 iOS 上，使用 GitHub Actions CI 打包工作流构建。
 
 [![Last Commit](https://img.shields.io/github/last-commit/VincentZyuApps/dart-flutter-demo?style=for-the-badge&logo=github&color=181717&logoColor=white)](https://github.com/VincentZyuApps/dart-flutter-demo/commits/main/)
-[![Build Release](https://img.shields.io/github/actions/workflow/status/VincentZyuApps/dart-flutter-demo/build-release.yml?style=for-the-badge&logo=githubactions&logoColor=white&label=Build%20Release)](https://github.com/VincentZyuApps/dart-flutter-demo/actions)
+[![Release & Publish](https://img.shields.io/github/actions/workflow/status/VincentZyuApps/dart-flutter-demo/release-publish.yml?style=for-the-badge&logo=githubactions&logoColor=white&label=Release%20%26%20Publish)](https://github.com/VincentZyuApps/dart-flutter-demo/actions)
 
 <p align="center">
   <img src="assets/images/logo-icon-favicon.png" alt="dart_flutter_demo logo" width="280"/>
@@ -186,7 +186,7 @@
 
 ## ⚙️🚀 CI/CD
 
-GitHub Actions 使用精确且区分大小写的连字符关键词：`[build-release]` 发布包含已验证 x86_64 `.flatpak` 的应用 Release，`[build-publish]` 还会请求通过自建 [Flatpak 仓库](https://vincentzyuapps.github.io/flatpak-repo/) 发布签名 `stable` 更新，`[build-profile]` 与 `[build-debug]` 生成保留七天的开发产物，`[run-performance]` 将性能报告保留七天，`[release-performance]` 创建永久 Performance Pre-release。方括号只是 commit 风格，CI 实际匹配其中的关键词。手动选项与平台 bootstrap 详见 [ci.zh-cn.md](.github/workflows/ci.zh-cn.md)。
+GitHub Actions 使用精确且区分大小写的连字符关键词：`[build-release]` 发布包含已验证 x86_64 `.flatpak` 的应用 Release，`[build-publish]` 还会请求通过自建 [Flatpak 仓库](https://vincentzyuapps.github.io/flatpak-repo/) 发布签名 `stable` 更新，并把 MSIX 提交到 Microsoft Store 认证，`[build-profile]` 与 `[build-debug]` 生成保留七天的开发产物，`[run-performance]` 将性能报告保留七天，`[release-performance]` 创建永久 Performance Pre-release。方括号只是 commit 风格，CI 实际匹配其中的关键词。手动选项与平台 bootstrap 详见 [ci.zh-cn.md](.github/workflows/ci.zh-cn.md)。
 
 ## 平台基线
 
@@ -254,4 +254,4 @@ iOS 基线表示工程配置的理论最低构建版本，不代表所有系统�
 | Version | [![Version](https://img.shields.io/badge/Version-0.4.1--alpha.1-02569B.svg?logo=flutter&labelColor=181717)](https://github.com/VincentZyuApps/dart-flutter-demo/releases) |
 | Stars | [![Stars](https://img.shields.io/github/stars/VincentZyuApps/dart-flutter-demo?style=flat&logo=github&label=stars&labelColor=181717&color=FFD700)](https://github.com/VincentZyuApps/dart-flutter-demo/stargazers) |
 | Last Commit | [![Last Commit](https://img.shields.io/github/last-commit/VincentZyuApps/dart-flutter-demo?logo=github&label=last%20commit&labelColor=181717&color=02569B)](https://github.com/VincentZyuApps/dart-flutter-demo/commits/main/) |
-| Github Action CI/CD | [![release](https://img.shields.io/github/v/release/VincentZyuApps/dart-flutter-demo?logo=github&label=发布&color=02569B&labelColor=181717)](https://github.com/VincentZyuApps/dart-flutter-demo/releases) · [![build](https://img.shields.io/github/actions/workflow/status/VincentZyuApps/dart-flutter-demo/build-release.yml?branch=main&logo=githubactions&label=构建)](https://github.com/VincentZyuApps/dart-flutter-demo/actions) |
+| Github Action CI/CD | [![release](https://img.shields.io/github/v/release/VincentZyuApps/dart-flutter-demo?logo=github&label=发布&color=02569B&labelColor=181717)](https://github.com/VincentZyuApps/dart-flutter-demo/releases) · [![build](https://img.shields.io/github/actions/workflow/status/VincentZyuApps/dart-flutter-demo/release-publish.yml?branch=main&logo=githubactions&label=构建)](https://github.com/VincentZyuApps/dart-flutter-demo/actions) |

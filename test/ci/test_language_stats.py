@@ -16,7 +16,7 @@ SPEC.loader.exec_module(MODULE)
 class LanguageDetectionTests(unittest.TestCase):
     def test_detects_repository_and_workflow_languages(self) -> None:
         cases = {
-            ".github/workflows/build-release.yml": "YAML",
+            ".github/workflows/release-publish.yml": "YAML",
             "README.md": "Markdown",
             "packages/plugin/assets/windows/SystemInfo.ps1": "PowerShell",
             "scripts/ci/packaging/linux/wrapper.sh": "Shell",
@@ -33,7 +33,7 @@ class LanguageDetectionTests(unittest.TestCase):
                 self.assertEqual(MODULE.detect_language(Path(filename)), expected)
 
     def test_github_is_not_mistaken_for_git_metadata(self) -> None:
-        self.assertFalse(MODULE.is_ignored(".github/workflows/build-release.yml"))
+        self.assertFalse(MODULE.is_ignored(".github/workflows/release-publish.yml"))
 
     def test_generated_assets_are_ignored_by_prefix(self) -> None:
         for filename in (

@@ -99,18 +99,18 @@ def print_table(devices):
     )
 
 
-def find_apple_devices():
-    print(f"\n  {C.CYAN}╔══════════════════════════════════════════╗{C.RESET}")
+def find_apple_mobile_devices():
+    print(f"\n  {C.CYAN}╔══════════════════════════════════════════════╗{C.RESET}")
     print(
-        f"  {C.CYAN}║{C.RESET}       Apple iPad 设备检测工具 (Python)   {C.CYAN}║{C.RESET}"
+        f"  {C.CYAN}║{C.RESET}    Apple iPhone/iPad 设备检测工具 (Python)    {C.CYAN}║{C.RESET}"
     )
-    print(f"  {C.CYAN}╚══════════════════════════════════════════╝{C.RESET}")
+    print(f"  {C.CYAN}╚══════════════════════════════════════════════╝{C.RESET}")
 
     print_step(1, 3, "正在扫描 USB 设备...")
 
     ps_command = (
         "Get-PnpDevice -PresentOnly | "
-        'Where-Object { $_.FriendlyName -match "Apple" -or $_.FriendlyName -match "iPad" } | '
+        'Where-Object { $_.FriendlyName -match "Apple|iPhone|iPad" } | '
         "Select-Object FriendlyName, Status, Class, InstanceId | "
         "ConvertTo-Json"
     )
@@ -125,11 +125,11 @@ def find_apple_devices():
         )
 
         if not process.stdout.strip():
-            print_err("未发现已连接的 iPad。")
-            print_info("请检查 USB 线或在 iPad 上点击「信任」。")
+            print_err("未发现已连接的 iPhone 或 iPad。")
+            print_info("请检查 USB 线或在 iPhone/iPad 上点击「信任」。")
             print(f"\n  {C.YELLOW}💡 常见排查：{C.RESET}")
             print(f"    {C.GRAY}• 换一根 USB 数据线（有些线只支持充电）{C.RESET}")
-            print(f"    {C.GRAY}• 在 iPad 上点击「信任这台电脑」{C.RESET}")
+            print(f"    {C.GRAY}• 在 iPhone/iPad 上点击「信任这台电脑」{C.RESET}")
             print(f"    {C.GRAY}• 重新插拔 USB 线{C.RESET}")
             print(f"    {C.GRAY}• 重启 Apple Mobile Device Service 服务{C.RESET}")
             return
@@ -138,7 +138,7 @@ def find_apple_devices():
         if isinstance(devices, dict):
             devices = [devices]
 
-        print_step(2, 3, f"找到 {len(devices)} 个 Apple 设备")
+        print_step(2, 3, f"找到 {len(devices)} 个 Apple 移动设备")
         print_table(devices)
 
         print_step(3, 3, "硬件摘要")
@@ -150,9 +150,9 @@ def find_apple_devices():
             print(f"  {icon}  {C.WHITE}{name}{C.RESET}")
             print(f"      {C.GRAY}└ InstanceId: {inst_id}{C.RESET}")
 
-        print(f"\n  {C.GREEN}✅ Apple 设备检测完成。{C.RESET}")
+        print(f"\n  {C.GREEN}✅ Apple 移动设备检测完成。{C.RESET}")
         print(
-            f"  {C.YELLOW}💡 提示：iPad 不会自动映射为盘符。如需传输文件，建议安装：{C.RESET}"
+            f"  {C.YELLOW}💡 提示：iPhone/iPad 不会自动映射为盘符。如需传输文件，建议安装：{C.RESET}"
         )
 
     except FileNotFoundError:
@@ -166,4 +166,4 @@ def find_apple_devices():
 
 
 if __name__ == "__main__":
-    find_apple_devices()
+    find_apple_mobile_devices()
