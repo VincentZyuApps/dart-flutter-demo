@@ -5,8 +5,8 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[2]
-SCRIPT = ROOT / "scripts" / "svg" / "languages.py"
-SPEC = importlib.util.spec_from_file_location("svg_languages", SCRIPT)
+SCRIPT = ROOT / "scripts" / "svg" / "common.py"
+SPEC = importlib.util.spec_from_file_location("svg_common", SCRIPT)
 assert SPEC is not None and SPEC.loader is not None
 MODULE = importlib.util.module_from_spec(SPEC)
 sys.modules[SPEC.name] = MODULE

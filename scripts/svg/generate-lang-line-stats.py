@@ -11,7 +11,7 @@ from datetime import datetime, timedelta, timezone
 from html import escape
 from pathlib import Path
 
-from languages import LANG_COLORS, detect_language, list_source_files
+from common import LANG_COLORS, detect_language, list_source_files
 
 try:
     import brotli  # noqa: F401

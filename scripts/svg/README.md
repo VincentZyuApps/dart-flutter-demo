@@ -1,34 +1,38 @@
-# 🎨 SVG Generation Scripts
+# 🎨 SVG 生成脚本
 
-✨ Generate animated SVG language statistics cards for README display.
+✨ 生成用于 README 展示的动态 SVG 语言统计卡片。
 
-## 📦 Prerequisites
+## 📦 环境准备
 
 ```bash
-# 🏗️ Create virtual environment (one-time)
+# 🏗️ 创建虚拟环境（只需执行一次）
 uv venv
 
-# ⬇️ Install dependencies
+# ⬇️ 安装依赖
 uv pip install "fonttools[woff2]" brotli
 ```
 
-## 🚀 Usage
+## 🚀 使用方法
 
-▶️ Run from the repository root:
+▶️ 请在仓库根目录运行：
 
 ```bash
-# 📊 Generate language line count card
+# 📈 生成语言行数统计卡片
 uv run python ./scripts/svg/generate-lang-line-stats.py
 
-# 📏 Generate language byte size card
+# 📊 生成语言字节数统计卡片
 uv run python ./scripts/svg/generate-lang-byte-stats.py
 ```
 
-## 🖼️ Output
+## 🖼️ 输出文件
 
-📄 Outputs are written to `doc/images/svg/`:
+📄 生成结果会写入 `doc/images/svg/`：
 
 - 📈 `doc/images/svg/lang-line-stats.svg`
 - 📊 `doc/images/svg/lang-byte-stats.svg`
 
-Language detection is shared by both cards and follows GitHub Linguist-style names and colors for Git-visible repository text files, including tracked files and unignored files waiting to be committed. It includes application code, PowerShell and Shell scripts, Markdown, YAML, JSON, XML, web languages, package configuration, and platform build files while excluding icon assets, screenshots, generated SVG cards, temporary files, and build output.
+## 🧩 统计范围
+
+两个统计卡片共用 `common.py` 中的语言识别、颜色和文件枚举逻辑。统计规则参考 GitHub Linguist 的语言名称与配色，处理 Git 可见的仓库文本文件，包括已跟踪文件和尚未提交但未被忽略的文件。
+
+统计范围包含应用源码、PowerShell 与 Shell 脚本、Markdown、YAML、JSON、XML、网页语言、软件包配置和各平台构建文件；图标资源、截图、生成的 SVG 卡片、临时文件与构建产物不会计入统计。
