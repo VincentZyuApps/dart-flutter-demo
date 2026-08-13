@@ -571,6 +571,75 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+  publish-flatpak-repository:
+    name: Publish signed Flatpak repository
+    needs: [prepare, publish]
+    if: >-
+      needs.prepare.outputs.should_publish == 'true' &&
+      needs.prepare.outputs.should_publish_external_channels == 'true' &&
+      (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    environment: flatpak-dispatch-production
+    steps:
+      - name: Trigger Flatpak repository publication
+        id: dispatch
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.FLATPAK_REPO_ACTIONS_TOKEN }}
+          RELEASE_TAG: v${{ needs.prepare.outputs.version }}
+          SOURCE_RUN_ID: ${{ github.run_id }}
+          SOURCE_RUN_ATTEMPT: ${{ github.run_attempt }}
+          TARGET_REPOSITORY: VincentZyuApps/flatpak-repo
+          TARGET_WORKFLOW: publish.yml
+        run: |
+          set -euo pipefail
+          EXPECTED_TITLE="Publish ${RELEASE_TAG} from dart run ${SOURCE_RUN_ID}.${SOURCE_RUN_ATTEMPT}"
+          gh workflow run "$TARGET_WORKFLOW" \
+            --repo "$TARGET_REPOSITORY" \
+            --ref main \
+            -f release_tag="$RELEASE_TAG" \
+            -f source_run_id="$SOURCE_RUN_ID" \
+            -f source_run_attempt="$SOURCE_RUN_ATTEMPT"
+
+          deadline=$((SECONDS + 120))
+          target_run_id=""
+          while (( SECONDS < deadline )); do
+            target_run_id="$(
+              gh run list \
+                --repo "$TARGET_REPOSITORY" \
+                --workflow "$TARGET_WORKFLOW" \
+                --event workflow_dispatch \
+                --limit 20 \
+                --json databaseId,displayTitle \
+                --jq ".[] | select(.displayTitle == \"${EXPECTED_TITLE}\") | .databaseId" |
+                head -n 1
+            )"
+            if [[ -n "$target_run_id" ]]; then
+              break
+            fi
+            sleep 5
+          done
+          if [[ -z "$target_run_id" ]]; then
+            echo "Timed out locating Flatpak repository workflow run." >&2
+            exit 1
+          fi
+          echo "run_id=$target_run_id" >> "$GITHUB_OUTPUT"
+          echo "Triggered https://github.com/${TARGET_REPOSITORY}/actions/runs/${target_run_id}"
+
+      - name: Wait for Flatpak repository publication
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.FLATPAK_REPO_ACTIONS_TOKEN }}
+          TARGET_REPOSITORY: VincentZyuApps/flatpak-repo
+          TARGET_RUN_ID: ${{ steps.dispatch.outputs.run_id }}
+        run: |
+          set -euo pipefail
+          gh run watch "$TARGET_RUN_ID" \
+            --repo "$TARGET_REPOSITORY" \
+            --exit-status \
+            --interval 10
+
   publish-microsoft-store:
     name: Publish Microsoft Store update
     needs: [prepare, release-builds, publish]

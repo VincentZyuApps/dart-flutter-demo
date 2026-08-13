@@ -145,7 +145,7 @@ Android 产物使用 CI 临时签名；iOS IPA 与 macOS 包均未签名。AltSt
 
 > **当前状态：** 产品已经 Live，CI 应用拥有 Partner Center **Manager (Windows)** 权限，只读认证检查也成功列出 Store ID `9PP2SRN17C4F`。`build-publish` 现在同时启用签名自建 Flatpak 发布与 Microsoft Store 自动提交。
 
-`build-publish` 扩展 `build-release`：执行完全相同的质量检查、Release 构建、永久 Profile 构建、GitHub Release 发布、Flatpak 打包和 Windows x64 MSIX 校验。它附加 `flatpak-publish-request.json` 供公开 `flatpak-repo` 工作流使用，由后者导入并签名 bundle 后部署 GitHub Pages。GitHub Release 成功后，独立的 `publish-microsoft-store` job 会校验同一 Windows Artifact 的元数据与 SHA-256，确认目标 Product ID 可见，并把 MSIX 提交认证。Store 失败会把应用工作流标红，但不会删除 GitHub Release 或撤回 Flatpak 请求。
+`build-publish` 扩展 `build-release`：执行完全相同的质量检查、Release 构建、永久 Profile 构建、GitHub Release 发布、Flatpak 打包和 Windows x64 MSIX 校验。它附加 `flatpak-publish-request.json`，随后 `publish-flatpak-repository` 会立即调用公开的 `flatpak-repo` 工作流，并等待其完成签名与 Pages 部署。与此同时，`publish-microsoft-store` 会校验同一 Windows Artifact 的元数据与 SHA-256，确认目标 Product ID 可见，并把 MSIX 提交认证。任一下游失败都会把应用工作流标红，但不会删除 GitHub Release 或撤销另一个外部渠道。
 
 本项目保持永久免费。`vX.Y.Z-beta.W` 等预发布版本也会直接提交正式商店页面，不使用 Package Flight。Store job 不等待人工审批，因此推送包含 `build-publish` 的 commit 前必须仔细检查版本和 Release Notes。
 
@@ -281,6 +281,8 @@ gh run view "$RUN_ID" --log-failed
 
 ### 🚀 自动发布
 
+跨仓库触发 Flatpak 需要一个 fine-grained personal access token：仓库范围只选择 `VincentZyuApps/flatpak-repo`，仓库权限只授予 **Actions: Read and write**。在应用仓库创建 `flatpak-dispatch-production` Environment，将部署分支限制为 `main` 和 `master`，不要设置 required reviewers，并把 Token 保存为 Environment Secret `FLATPAK_REPO_ACTIONS_TOKEN`。该 Token 只负责启动并读取目标 Action，无法访问 Flatpak GPG 私钥；私钥仍只存在于目标仓库的 `flatpak-production` Environment 中。
+
 要创建 GitHub Release、发布签名 Flatpak 更新并把 Microsoft Store 包提交认证，使用：
 
 ```text
@@ -289,15 +291,51 @@ release: publish DartFlutterDemo
 [build-publish]
 ```
 
-应用工作流会构建全部常规 Release/Profile 产物、创建 GitHub Release、附加验证过的版本化 `.flatpak`、加入 `flatpak-publish-request.json`，并把验证过的 MSIX 提交至 Product ID `9PP2SRN17C4F`。`flatpak-repo` 工作流每 15 分钟检查一次该标记；要在 Release 成功后立即发布 Flatpak，运行：
+应用工作流会构建全部常规 Release/Profile 产物、创建 GitHub Release、附加验证过的版本化 `.flatpak`，并加入 `flatpak-publish-request.json`。随后它会立即携带准确的 Release 标签和来源 Actions Run ID 调用 `flatpak-repo/publish.yml`，最多等待两分钟定位对应运行，再持续等待其完成。应用仓库没有新发布时，不再运行任何定时轮询。
+
+目标工作流使用自己的 `flatpak-production` Environment，验证发布请求，对 OSTree commit 与 summary 进行 GPG 签名，将 `stable` 仓库部署到 GitHub Pages，并验证公开的 GPG 仓库。如果目标发布失败，应用工作流中的 `Publish signed Flatpak repository` job 也会失败。需要手动补发已有 Release 时运行：
 
 ```bash
 gh workflow run publish.yml --repo VincentZyuApps/flatpak-repo --ref main -f release_tag=vX.Y.Z-beta.W
 ```
 
-目标工作流使用自己的 `flatpak-production` Environment，对 OSTree commit 与 summary 进行 GPG 签名，将 `stable` 仓库部署到 GitHub Pages，并验证公开的 GPG 仓库。与此同时，`publish-microsoft-store` 会直接提交 MSIX 进行异步认证；工作流成功表示提交已被接受，不表示更新已经 Live。
+与此同时，`publish-microsoft-store` 会把验证过的 MSIX 提交至 Product ID `9PP2SRN17C4F` 进行异步认证。Store 工作流成功表示提交已被接受，不表示更新已经 Live。
 
 在 `PARTNER_CENTER_CLIENT_SECRET` 到期前轮换它，并且只更新 Environment Secret 的值。如果后续认证失败，应前往 Partner Center 检查；不能把之前 GitHub job 的成功当作更新已经上线的证明。
+
+### ✅ 验证 Microsoft Store 更新
+
+商店发布需要分成四个阶段理解：GitHub 上传并提交认证、微软执行认证、Partner Center 标记为已发布、商店客户端收到更新。绿色的 `Publish Microsoft Store update` job 只证明第一阶段成功。对于 Release Run `31601324783`，日志已经确认版本为 `2026.812.20014.0` 的 MSIX 上传成功、新 Submission 提交成功，并且状态从 `CommitStarted` 进入 `Certification`；这些信息本身不能证明后续认证已经通过，也不能证明所有商店客户端已经能够取得更新。
+
+在已经使用 Partner Center 应用凭据配置 Microsoft Store Developer CLI `v0.3.9` 的设备上，可以用下面的只读命令查询当前 Submission：
+
+```powershell
+msstore submission status 9PP2SRN17C4F
+```
+
+下面的命令会持续轮询，直到微软返回 `PUBLISHED` 或 `FAILED`。它可能运行很久，日常检查更适合使用上面的单次 `status` 命令：
+
+```powershell
+msstore submission poll 9PP2SRN17C4F
+```
+
+这些命令需要受保护的 `microsoft-store-production` Environment 所使用的同一组 Partner Center 凭据。不要为了在本机运行命令而把 `PARTNER_CENTER_CLIENT_SECRET` 复制到仓库、文档、Shell 历史记录、截图或共享日志中。现有 `check-microsoft-store.yml` 只验证身份认证并运行 `msstore apps list`，目前不会查询 Submission 状态。
+
+Partner Center 仍是查看认证结果的权威 GUI。打开 `DartFlutterDemo` 产品及其最新 Submission，检查认证状态、认证报告、包版本和发布时间。`Certification` 表示微软仍在处理，`Published` 表示 Partner Center 已完成发布，`Failed` 则需要打开认证报告排查。公开 Microsoft Store 网页适合确认产品页面可以访问，但通常不会可靠地显示已安装包的精确版本。
+
+Partner Center 显示更新已发布后，在 Windows 中打开 **Microsoft Store -> 库 -> 获取更新**，更新 `DartFlutterDemo`，然后在实际安装应用的 Windows 用户账号中运行：
+
+```powershell
+Get-AppxPackage |
+  Where-Object {
+    $_.Name -like '*dart*' -or
+    $_.Name -like '*VincentZyu*' -or
+    $_.PackageFamilyName -like '*VincentZyu*'
+  } |
+  Format-List Name, PackageFullName, PackageFamilyName, Version, Status, InstallLocation
+```
+
+本次 Release 的 `Version` 应为 `2026.812.20014.0`。这个商店包版本由 `0.5.0-beta.14+20260812` 映射而来，故意不同于应用展示版本。AppX 注册信息按 Windows 用户隔离，因此其他用户的终端或隔离自动化账号即使在 `VincentZyu` 已安装应用时也可能查询不到包。
 
 ### 📚 官方参考资料
 

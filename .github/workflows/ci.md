@@ -145,7 +145,7 @@ Android artifacts use ephemeral CI signing. The iOS IPA and macOS packages are u
 
 > **Current status:** the product is Live, the CI application has Partner Center **Manager (Windows)** access, and the read-only authentication check successfully lists Store ID `9PP2SRN17C4F`. `build-publish` now enables both signed self-hosted Flatpak publication and automatic Microsoft Store submission.
 
-`build-publish` extends `build-release`: it runs the same quality checks, Release builds, permanent Profile builds, GitHub Release publication, Flatpak packaging, and Windows x64 MSIX validation. It attaches `flatpak-publish-request.json` for the public `flatpak-repo` workflow, which imports and signs the bundle before deploying GitHub Pages. After the GitHub Release succeeds, the independent `publish-microsoft-store` job verifies the same Windows Artifact metadata and SHA-256, confirms the target Product ID is visible, and submits the MSIX for certification. A Store failure marks the application workflow failed but does not remove the GitHub Release or retract the Flatpak request.
+`build-publish` extends `build-release`: it runs the same quality checks, Release builds, permanent Profile builds, GitHub Release publication, Flatpak packaging, and Windows x64 MSIX validation. It attaches `flatpak-publish-request.json`, then `publish-flatpak-repository` immediately dispatches the public `flatpak-repo` workflow and waits for its signed Pages deployment. In parallel, `publish-microsoft-store` verifies the same Windows Artifact metadata and SHA-256, confirms the target Product ID is visible, and submits the MSIX for certification. A downstream failure marks the application workflow failed but does not remove the GitHub Release or undo another external channel.
 
 This project will remain free. Pre-release versions such as `vX.Y.Z-beta.W` are submitted directly to the production Store listing, not to a Package Flight. Review the version and release notes carefully before pushing a `build-publish` commit because the Store job does not wait for manual approval.
 
@@ -281,6 +281,8 @@ The second command captures the newest run ID, the third follows it to completio
 
 ### 🚀 Automatic Publication
 
+Cross-repository Flatpak dispatch requires a fine-grained personal access token scoped to only `VincentZyuApps/flatpak-repo`, with repository permission **Actions: Read and write**. Create the `flatpak-dispatch-production` Environment in this application repository, limit it to `main` and `master`, do not add required reviewers, and store the token as the Environment secret `FLATPAK_REPO_ACTIONS_TOKEN`. The token starts and reads the target Actions run; it cannot access the Flatpak GPG private key, which remains exclusively in the target repository's `flatpak-production` Environment.
+
 To create a GitHub Release, publish the signed Flatpak update, and submit the Microsoft Store package for certification, use:
 
 ```text
@@ -289,15 +291,51 @@ release: publish DartFlutterDemo
 [build-publish]
 ```
 
-The application workflow builds all normal Release/Profile artifacts, creates the GitHub Release, attaches the verified versioned `.flatpak`, adds `flatpak-publish-request.json`, and submits the verified MSIX to Product ID `9PP2SRN17C4F`. The `flatpak-repo` workflow checks for that marker every 15 minutes. To publish Flatpak immediately after the Release succeeds, run:
+The application workflow builds all normal Release/Profile artifacts, creates the GitHub Release, attaches the verified versioned `.flatpak`, and adds `flatpak-publish-request.json`. It then immediately dispatches `flatpak-repo/publish.yml` with the exact Release tag and source Actions run ID, waits up to two minutes to locate that run, and follows it to completion. There is no scheduled polling when the application repository has no new publication.
+
+The target workflow uses its own `flatpak-production` Environment, validates the request, GPG-signs the OSTree commit and summary, deploys the `stable` repository to GitHub Pages, and verifies the public GPG-enabled remote. If it fails, the application's `Publish signed Flatpak repository` job also fails. To manually republish an existing Release, run:
 
 ```bash
 gh workflow run publish.yml --repo VincentZyuApps/flatpak-repo --ref main -f release_tag=vX.Y.Z-beta.W
 ```
 
-The target workflow uses its own `flatpak-production` Environment, GPG-signs the OSTree commit and summary, deploys the `stable` repository to GitHub Pages, and verifies the public GPG-enabled remote. In parallel, `publish-microsoft-store` directly submits the MSIX for asynchronous certification; workflow success means submission was accepted, not that the update is already Live.
+In parallel, `publish-microsoft-store` submits the verified MSIX to Product ID `9PP2SRN17C4F` for asynchronous certification. Store workflow success means submission was accepted, not that the update is already Live.
 
 Rotate `PARTNER_CENTER_CLIENT_SECRET` before it expires and update only the Environment secret value. If certification later fails, inspect Partner Center; do not treat the earlier GitHub job success as proof that the update is live.
+
+### ✅ Verify A Microsoft Store Update
+
+Treat Store publication as four separate stages: GitHub uploads and commits the submission, Microsoft certifies it, Partner Center marks it published, and Store clients receive the update. A green `Publish Microsoft Store update` job proves only the first stage. For Release run `31601324783`, the log confirms that the `2026.812.20014.0` MSIX was uploaded, the new submission was committed, and its status advanced from `CommitStarted` to `Certification`; it does not by itself prove that certification later passed or that the package is already available to every Store client.
+
+On a machine where Microsoft Store Developer CLI `v0.3.9` has already been configured with the Partner Center application credentials, query the current submission without changing it:
+
+```powershell
+msstore submission status 9PP2SRN17C4F
+```
+
+To keep polling until Microsoft reports `PUBLISHED` or `FAILED`, use the following command. It may run for a long time, so prefer the one-shot `status` command for routine checks:
+
+```powershell
+msstore submission poll 9PP2SRN17C4F
+```
+
+These commands require the same Partner Center credentials used by the protected `microsoft-store-production` Environment. Do not copy `PARTNER_CENTER_CLIENT_SECRET` into the repository, documentation, shell history, screenshots, or shared logs merely to run them locally. The existing `check-microsoft-store.yml` workflow only validates authentication and runs `msstore apps list`; it does not currently query submission status.
+
+Partner Center remains the authoritative GUI for certification. Open the `DartFlutterDemo` product, select its latest submission, and check the certification status, certification report, package version, and publication time. `Certification` means Microsoft is still processing it; `Published` means Partner Center has completed publication; `Failed` requires opening the certification report. The public Store web page is useful for confirming that the listing is reachable, but it does not reliably expose the exact installed package version.
+
+After Partner Center reports the update as published, open **Microsoft Store -> Library -> Get updates** on Windows, update `DartFlutterDemo`, and run the following command from the Windows user account that installed the app:
+
+```powershell
+Get-AppxPackage |
+  Where-Object {
+    $_.Name -like '*dart*' -or
+    $_.Name -like '*VincentZyu*' -or
+    $_.PackageFamilyName -like '*VincentZyu*'
+  } |
+  Format-List Name, PackageFullName, PackageFamilyName, Version, Status, InstallLocation
+```
+
+For this release, `Version` should be `2026.812.20014.0`. This Store package version is derived from `0.5.0-beta.14+20260812` and is intentionally different from the app's display version. AppX registrations are per user, so a terminal running under another Windows account or an isolated automation account may return no package even when the app is installed for `VincentZyu`.
 
 ### 📚 Official References
 

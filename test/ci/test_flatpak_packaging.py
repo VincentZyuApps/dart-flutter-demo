@@ -133,6 +133,16 @@ class FlatpakConfigurationTests(unittest.TestCase):
         self.assertIn("verify-flatpak-package.sh", workflow)
         self.assertIn("flatpak-publish-request.json", workflow)
         self.assertIn("schema_version: 1", workflow)
+        self.assertIn("publish-flatpak-repository:", workflow)
+        self.assertIn("needs: [prepare, publish]", workflow)
+        self.assertIn("environment: flatpak-dispatch-production", workflow)
+        self.assertIn("secrets.FLATPAK_REPO_ACTIONS_TOKEN", workflow)
+        self.assertIn("--repo \"$TARGET_REPOSITORY\"", workflow)
+        self.assertIn("-f release_tag=\"$RELEASE_TAG\"", workflow)
+        self.assertIn("-f source_run_id=\"$SOURCE_RUN_ID\"", workflow)
+        self.assertIn("-f source_run_attempt=\"$SOURCE_RUN_ATTEMPT\"", workflow)
+        self.assertIn("gh run watch \"$TARGET_RUN_ID\"", workflow)
+        self.assertIn("--exit-status", workflow)
         self.assertIn("publish-microsoft-store:", workflow)
 
 
