@@ -226,7 +226,8 @@ class MprisMediaPlayerObject extends DBusObject {
     if (value == null) {
       return DBusMethodErrorResponse.unknownProperty();
     }
-    return DBusGetPropertyResponse(DBusVariant(value));
+    // DBusGetPropertyResponse already wraps the value in a variant.
+    return DBusGetPropertyResponse(value);
   }
 
   @override
