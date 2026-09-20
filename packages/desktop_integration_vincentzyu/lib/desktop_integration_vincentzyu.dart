@@ -11,4 +11,5 @@ library;
 
 export 'src/activation_client.dart';
 export 'src/mpris/mpris_bridge.dart';
+export 'src/mpris/mpris_media_player_object.dart';
 export 'src/mpris/now_playing_state.dart';

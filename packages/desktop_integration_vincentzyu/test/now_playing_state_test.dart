@@ -1,4 +1,3 @@
-import 'package:dbus/dbus.dart';
 import 'package:desktop_integration_vincentzyu/desktop_integration_vincentzyu.dart';
 import 'package:flutter_test/flutter_test.dart';
 
