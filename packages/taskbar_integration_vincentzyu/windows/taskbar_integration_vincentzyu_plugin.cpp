@@ -8,7 +8,9 @@
 
 #include <appmodel.h>
 #include <propkey.h>
+#include <propsys.h>
 #include <shellapi.h>
+#include <shobjidl.h>
 
 #include <algorithm>
 #include <cstdint>
@@ -527,6 +529,16 @@ LRESULT CALLBACK TaskbarIntegrationVincentzyuPlugin::SinkWindowProc(
     UINT message,
     WPARAM wparam,
     LPARAM lparam) {
+  if (message == WM_NCCREATE) {
+    // The window procedure is reached before the constructor stores the window
+    // handle, so the owner has to be picked up from the creation parameters.
+    const auto* create = reinterpret_cast<const CREATESTRUCTW*>(lparam);
+    SetWindowLongPtrW(window, GWLP_USERDATA,
+                      reinterpret_cast<LONG_PTR>(create == nullptr
+                                                     ? nullptr
+                                                     : create->lpCreateParams));
+    return DefWindowProcW(window, message, wparam, lparam);
+  }
   if (message == WM_COPYDATA) {
     auto* plugin = reinterpret_cast<TaskbarIntegrationVincentzyuPlugin*>(
         GetWindowLongPtrW(window, GWLP_USERDATA));
