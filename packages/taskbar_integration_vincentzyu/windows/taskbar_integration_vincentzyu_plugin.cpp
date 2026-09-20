@@ -1,3 +1,7 @@
+// windows.h defines min and max as macros unless NOMINMAX is set first, and
+// rpcndr.h defines legacy MIDL aliases such as `small` for `char`.
+#define NOMINMAX
+
 #include "include/taskbar_integration_vincentzyu/taskbar_integration_vincentzyu_plugin.h"
 
 #include <flutter/standard_method_codec.h>
@@ -132,8 +136,8 @@ int64_t IntValue(const flutter::EncodableValue* value, int64_t fallback) {
   if (value == nullptr) {
     return fallback;
   }
-  if (const int32_t* small = std::get_if<int32_t>(value)) {
-    return *small;
+  if (const int32_t* narrow = std::get_if<int32_t>(value)) {
+    return *narrow;
   }
   if (const int64_t* large = std::get_if<int64_t>(value)) {
     return *large;
@@ -495,7 +499,7 @@ void TaskbarIntegrationVincentzyuPlugin::SendCommandLineToPrimary(HWND sink) {
   data.cbData = static_cast<DWORD>((arguments.size() + 1u) * sizeof(wchar_t));
   data.lpData = const_cast<wchar_t*>(arguments.c_str());
   SendMessageTimeoutW(sink, WM_COPYDATA,
-                      reinterpret_cast<WPARAM>(GetCurrentProcessId()),
+                      static_cast<WPARAM>(GetCurrentProcessId()),
                       reinterpret_cast<LPARAM>(&data), SMTO_ABORTIFHUNG, 2000,
                       nullptr);
 }
