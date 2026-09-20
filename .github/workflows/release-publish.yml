@@ -238,6 +238,14 @@ jobs:
             --targets deb,appimage --build-target-platform linux-x64
           tar -C build/linux/x64/release/bundle -czf dart-flutter-demo-linux-x64.tar.gz .
 
+      - name: Verify Linux AppImage desktop actions
+        if: matrix.platform == 'linux-x64'
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 scripts/ci/packaging/linux/verify-appimage-desktop.py \
+            "$(find dist -type f -name '*.AppImage' -print -quit)"
+
       - name: Preserve Flatpak package input
         if: matrix.platform == 'linux-x64'
         shell: bash

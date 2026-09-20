@@ -82,7 +82,7 @@
 |---|---|---|
 | 跳转列表 | Windows 10/11 | 右键任务栏按钮时在 `Pages` 分类下列出全部七个入口。 |
 | 缩略图工具栏 | Windows 10/11 | 悬停任务栏按钮时显示最多七个字形按钮；当前页面渲染为禁用态，看起来像按下。 |
-| 桌面 Actions | Linux | `.desktop` 入口为全部七个目标声明 `Actions=`。 |
+| 桌面 Actions | Linux | Flatpak 与 AppImage 的 `.desktop` 入口为全部七个目标声明 `Actions=`。 |
 | MPRIS 播放器 | Linux | 当前页面作为 MPRIS 曲目发布；KDE Plasma 会在任务栏悬停提示里渲染封面、标题和播放控制按钮。 |
 
 第二次启动会把命令行转发给正在运行的窗口：Linux 走 session bus 的 `Activate(as)` 调用，Windows 走 `WM_COPYDATA`，随后自身退出。
@@ -90,7 +90,7 @@
 平台差异：
 
 - GNOME Shell 没有为非原生工具包提供在程序坞图标上添加悬停控件的受支持方式，因此 GNOME 只提供桌面 Actions 与媒体控制。
-- Deb 与 AppImage 使用 `flutter_distributor` 模板，无法表达 `Actions=`，所以七个桌面 Actions 随 Flatpak 包提供。
+- Deb 包使用 `flutter_distributor` 模板，只会写出 `Actions=` 名称而不生成对应的 `[Desktop Action <name>]` 组，所以七个桌面 Actions 随 Flatpak 与 AppImage 包提供。
 - MPRIS 桥接是实验性的，它把页面刻意映射成一条合成曲目。
 
 ## 🧩📱 页面介绍

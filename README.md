@@ -82,7 +82,7 @@ The seven in-app destinations (the five bottom tabs plus About and Guide) are al
 |---|---|---|
 | Jump list | Windows 10/11 | Right-clicking the taskbar button lists all seven destinations under a `Pages` category. |
 | Thumbnail toolbar | Windows 10/11 | Hovering the taskbar button shows up to seven glyph buttons; the current page is drawn disabled so it reads as pressed. |
-| Desktop actions | Linux | The `.desktop` entry declares `Actions=` for all seven destinations. |
+| Desktop actions | Linux | The Flatpak and AppImage `.desktop` entries declare `Actions=` for all seven destinations. |
 | MPRIS player | Linux | The visible page is published as an MPRIS track; KDE Plasma renders cover art, title, and transport buttons inside its taskbar hover tooltip. |
 
 A second launch forwards its command line to the running window, over a session-bus `Activate(as)` call on Linux and over `WM_COPYDATA` on Windows, and then exits.
@@ -90,7 +90,7 @@ A second launch forwards its command line to the running window, over a session-
 Platform caveats:
 
 - GNOME Shell offers no supported way for a non-native toolkit to add hover controls to a dock icon, so GNOME gets the desktop-entry actions and the media controls only.
-- Deb and AppImage packages come from `flutter_distributor` templates that cannot express `Actions=`, so the seven desktop actions ship with the Flatpak package.
+- The DEB package comes from a `flutter_distributor` template that writes `Actions=` names without the matching `[Desktop Action <name>]` groups, so the seven desktop actions ship with the Flatpak and AppImage packages.
 - The MPRIS bridge is experimental and deliberately maps pages onto a synthetic track.
 
 ## 🧩📱 Pages

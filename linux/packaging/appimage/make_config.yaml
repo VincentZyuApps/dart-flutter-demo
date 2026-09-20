@@ -16,4 +16,34 @@ categories:
 startup_notify: true
 app_run_file: AppRun
 
+actions:
+  - label: System
+    name: System Info
+    arguments:
+      - --tab=system
+  - label: Dialog
+    name: Dialog Lab
+    arguments:
+      - --tab=dialog
+  - label: Type
+    name: Typography
+    arguments:
+      - --tab=type
+  - label: Grid
+    name: Adaptive Grid
+    arguments:
+      - --tab=grid
+  - label: Controls
+    name: Controls
+    arguments:
+      - --tab=controls
+  - label: About
+    name: About
+    arguments:
+      - --action=about
+  - label: Guide
+    name: Guide
+    arguments:
+      - --action=guide
+
 include: []

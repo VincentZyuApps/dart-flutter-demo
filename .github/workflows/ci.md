@@ -52,6 +52,8 @@ The pipeline first runs `flutter analyze`, root tests, local-plugin tests, and C
 
 The same run builds permanent Profile assets for Windows x64, Linux x64, and Android Universal. Profile packages carry `-profile-` in their filenames.
 
+The Linux x64 target extracts the packaged `AppImage` and rejects the build unless its desktop entry declares the seven `Actions=` destinations.
+
 ### 🧪 Manual Dry-Run
 
 Manual runs default to `publish=false`. They execute quality checks, all Release builds, the Flatpak package and smoke test, all permanent Profile builds, MSIX validation, and release-note rendering, but upload a seven-day `release-dry-run-*` artifact instead of creating a tag or GitHub Release.
