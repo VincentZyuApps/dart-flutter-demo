@@ -271,45 +271,37 @@ HICON CreateIconFromRgba(int32_t width,
   return icon;
 }
 
-// Adds one entry, or one separator, to the destination collection.
+// Adds one entry to the destination collection.
+//
+// Separator entries are deliberately avoided: Windows 11 rejects a category
+// that contains one with E_INVALIDARG and then drops the whole category, which
+// silently removes the jump list.
 bool AppendJumpListEntry(IObjectCollection* collection,
                          const std::wstring& executable,
                          const std::wstring& title,
-                         const std::wstring& arguments,
-                         bool separator) {
+                         const std::wstring& arguments) {
   ComRef<IShellLinkW> link;
   if (FAILED(CoCreateInstance(CLSID_ShellLink, nullptr, CLSCTX_INPROC_SERVER,
                               IID_IShellLinkW, link.PutVoid()))) {
     return false;
   }
-  if (!separator) {
-    if (FAILED(link->SetPath(executable.c_str()))) {
-      return false;
-    }
-    if (FAILED(link->SetArguments(arguments.c_str()))) {
-      return false;
-    }
-    link->SetIconLocation(executable.c_str(), 0);
+  if (FAILED(link->SetPath(executable.c_str()))) {
+    return false;
   }
+  if (FAILED(link->SetArguments(arguments.c_str()))) {
+    return false;
+  }
+  link->SetIconLocation(executable.c_str(), 0);
 
   ComRef<IPropertyStore> properties;
   if (FAILED(link->QueryInterface(IID_IPropertyStore, properties.PutVoid()))) {
     return false;
   }
   PROPVARIANT property = {};
-  if (separator) {
-    property.vt = VT_BOOL;
-    property.boolVal = VARIANT_TRUE;
-    if (FAILED(properties->SetValue(PKEY_AppUserModel_IsDestListSeparator,
-                                    property))) {
-      return false;
-    }
-  } else {
-    property.vt = VT_LPWSTR;
-    property.pwszVal = const_cast<wchar_t*>(title.c_str());
-    if (FAILED(properties->SetValue(PKEY_Title, property))) {
-      return false;
-    }
+  property.vt = VT_LPWSTR;
+  property.pwszVal = const_cast<wchar_t*>(title.c_str());
+  if (FAILED(properties->SetValue(PKEY_Title, property))) {
+    return false;
   }
   if (FAILED(properties->Commit())) {
     return false;
@@ -580,17 +572,24 @@ HWND TaskbarIntegrationVincentzyuPlugin::FlutterWindowHandle() {
   if (registrar_ == nullptr) {
     return nullptr;
   }
+  HWND view_window = nullptr;
   flutter::FlutterView* view = registrar_->GetView();
   if (view != nullptr) {
-    flutter_window_ = view->GetNativeWindow();
-    return flutter_window_;
+    view_window = view->GetNativeWindow();
   }
-  // The implicit view is always view zero.
-  std::shared_ptr<flutter::FlutterView> fallback = registrar_->GetViewById(0);
-  if (fallback == nullptr) {
+  if (view_window == nullptr) {
+    // The implicit view is always view zero.
+    std::shared_ptr<flutter::FlutterView> fallback = registrar_->GetViewById(0);
+    if (fallback != nullptr) {
+      view_window = fallback->GetNativeWindow();
+    }
+  }
+  if (view_window == nullptr) {
     return nullptr;
   }
-  flutter_window_ = fallback->GetNativeWindow();
+  // A view exposes the child window it renders into, while the taskbar APIs
+  // only accept the top level window that owns the taskbar button.
+  flutter_window_ = GetAncestor(view_window, GA_ROOT);
   return flutter_window_;
 }
 
@@ -631,9 +630,7 @@ bool TaskbarIntegrationVincentzyuPlugin::ApplyJumpList(
         WideFromUtf8(StringValue(MapValue(*entry, "label")));
     const std::wstring arguments =
         WideFromUtf8(StringValue(MapValue(*entry, "arguments")));
-    const bool separator = BoolValue(MapValue(*entry, "separatorBefore"), false);
-    if (!AppendJumpListEntry(collection.Get(), executable, title, arguments,
-                             separator)) {
+    if (!AppendJumpListEntry(collection.Get(), executable, title, arguments)) {
       complete = false;
     }
   }

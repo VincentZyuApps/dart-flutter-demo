@@ -10,25 +10,13 @@ void main() {
         id: 'grid',
         label: 'Adaptive Grid',
         arguments: '--tab=grid',
-        separatorBefore: true,
       );
 
       expect(entry.toMap(), <String, Object?>{
         'id': 'grid',
         'label': 'Adaptive Grid',
         'arguments': '--tab=grid',
-        'separatorBefore': true,
       });
-    });
-
-    test('keeps the separator flag optional', () {
-      const TaskbarEntry entry = TaskbarEntry(
-        id: 'system',
-        label: 'System Info',
-        arguments: '--tab=system',
-      );
-
-      expect(entry.toMap()['separatorBefore'], isFalse);
     });
   });
 

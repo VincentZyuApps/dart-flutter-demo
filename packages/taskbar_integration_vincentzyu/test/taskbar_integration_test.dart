@@ -75,7 +75,6 @@ void main() {
         id: 'about',
         label: 'About',
         arguments: '--action=about',
-        separatorBefore: true,
       ),
     ];
 

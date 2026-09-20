@@ -80,7 +80,7 @@ The seven in-app destinations (the five bottom tabs plus About and Guide) are al
 
 | Surface | Platform | What it does |
 |---|---|---|
-| Jump list | Windows 10/11 | Right-clicking the taskbar button lists all seven destinations under a `Pages` category, with a separator before About. |
+| Jump list | Windows 10/11 | Right-clicking the taskbar button lists all seven destinations under a `Pages` category. |
 | Thumbnail toolbar | Windows 10/11 | Hovering the taskbar button shows up to seven glyph buttons; the current page is drawn disabled so it reads as pressed. |
 | Desktop actions | Linux | The `.desktop` entry declares `Actions=` for all seven destinations. |
 | MPRIS player | Linux | The visible page is published as an MPRIS track; KDE Plasma renders cover art, title, and transport buttons inside its taskbar hover tooltip. |

@@ -33,12 +33,11 @@ void main() {
       }
     });
 
-    test('separates the drawer destinations from the pages', () {
+    test('keeps the drawer destinations after the pages', () {
       final DesktopShortcut about = desktopShortcuts[desktopPageCount];
       final DesktopShortcut guide = desktopShortcuts[desktopPageCount + 1];
       expect(about.kind, DesktopShortcutKind.about);
       expect(about.arguments, '--action=about');
-      expect(about.separatorBefore, isTrue);
       expect(guide.kind, DesktopShortcutKind.guide);
       expect(guide.arguments, '--action=guide');
     });

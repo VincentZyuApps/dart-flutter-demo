@@ -29,7 +29,6 @@ class DesktopShortcut {
     required this.icon,
     required this.kind,
     this.pageIndex,
-    this.separatorBefore = false,
   });
 
   /// Stable identifier reported by the Windows thumbnail toolbar.
@@ -49,9 +48,6 @@ class DesktopShortcut {
 
   /// Bottom navigation index, set for [DesktopShortcutKind.page].
   final int? pageIndex;
-
-  /// Inserts a separator before this entry in the Windows jump list.
-  final bool separatorBefore;
 }
 
 /// Page titles used by hover previews and MPRIS metadata.
@@ -118,7 +114,6 @@ const List<DesktopShortcut> desktopShortcuts = <DesktopShortcut>[
     arguments: '--action=about',
     icon: Icons.info,
     kind: DesktopShortcutKind.about,
-    separatorBefore: true,
   ),
   DesktopShortcut(
     id: 'guide',
@@ -309,7 +304,6 @@ class TaskbarIntegrationService {
             id: shortcut.id,
             label: shortcut.label,
             arguments: shortcut.arguments,
-            separatorBefore: shortcut.separatorBefore,
           ),
         )
         .toList(growable: false);

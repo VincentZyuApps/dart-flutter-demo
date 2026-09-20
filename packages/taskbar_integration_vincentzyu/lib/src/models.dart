@@ -6,7 +6,6 @@ class TaskbarEntry {
     required this.id,
     required this.label,
     required this.arguments,
-    this.separatorBefore = false,
   });
 
   /// Stable identifier, also used by [TaskbarEvent.commandId].
@@ -18,16 +17,12 @@ class TaskbarEntry {
   /// Command line arguments used when the entry starts the executable.
   final String arguments;
 
-  /// Inserts a jump list separator before this entry.
-  final bool separatorBefore;
-
   /// Wire format consumed by the native plugin.
   Map<String, Object?> toMap() {
     return <String, Object?>{
       'id': id,
       'label': label,
       'arguments': arguments,
-      'separatorBefore': separatorBefore,
     };
   }
 }
