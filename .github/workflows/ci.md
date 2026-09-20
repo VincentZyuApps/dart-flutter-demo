@@ -21,6 +21,7 @@ Tokens are exact, case-sensitive, and hyphenated. Brackets are style punctuation
 |---|---|---|---|:---:|
 | `build-release` | `release-publish.yml` | Six platform Release targets, x86_64 Flatpak, and three Profile targets | Permanent after publishing | Yes |
 | `build-publish` | `release-publish.yml` | Everything in `build-release`, plus signed Flatpak and Microsoft Store publication | Permanent and external channel updates | Yes |
+| `build-artifact` | `release-publish.yml` | Everything in `build-release` as seven-day artifacts, without creating a Release | 7 days | No |
 | `build-profile` | `profile-debug.yml` | Windows x64, Linux x64, Android Universal Profile | 7 days | No |
 | `build-debug` | `profile-debug.yml` | Windows x64, Linux x64, Android Universal Debug | 7 days | No |
 | `run-performance` | `performance.yml` | Windows, Linux, and macOS JSON/Markdown/log bundle | 7 days | No |
@@ -30,7 +31,9 @@ Legacy forms such as `build release`, `build action`, or `BUILD-RELEASE` do not 
 
 ## 🚀 Release And Publish
 
-`release-publish.yml` runs on a push containing `build-release` or `build-publish`, or through `workflow_dispatch`. `build-publish` is a strict superset: both tokens create the same tested GitHub Release, while only `build-publish` requests a signed Flatpak update and submits the same verified MSIX to Microsoft Store certification.
+`release-publish.yml` runs on a push containing `build-release`, `build-publish`, or `build-artifact`, or through `workflow_dispatch`. `build-publish` is a strict superset: both release tokens create the same tested GitHub Release, while only `build-publish` requests a signed Flatpak update and submits the same verified MSIX to Microsoft Store certification.
+
+`build-artifact` runs that same pipeline with publishing disabled. It uploads every Release, Profile, and Flatpak artifact with seven-day retention plus the `release-dry-run-*` bundle, and it never creates a tag or a GitHub Release.
 
 Every published application version, including versions with `alpha`, `beta`, or `rc` suffixes, is created as a regular non-draft Release and explicitly marked as the repository's Latest Release.
 

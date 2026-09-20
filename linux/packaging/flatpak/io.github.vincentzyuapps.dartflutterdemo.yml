@@ -10,6 +10,8 @@ finish-args:
   - --socket=fallback-x11
   - --socket=wayland
   - --device=dri
+  - --own-name=org.mpris.MediaPlayer2.dartflutterdemo
+  - --own-name=io.github.vincentzyuapps.dartflutterdemo
 
 modules:
   - name: dart-flutter-demo

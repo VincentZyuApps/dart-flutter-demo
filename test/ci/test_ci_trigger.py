@@ -36,6 +36,21 @@ class CiTriggerTest(unittest.TestCase):
         self.assertFalse(contains_token("[build-publish]", "build-release"))
         self.assertFalse(contains_token("[build-release]", "build-publish"))
 
+    def test_build_artifact_matches_exact_token(self) -> None:
+        self.assertTrue(
+            contains_token(
+                "feat(taskbar): add desktop integration\n\n[build-artifact]",
+                "build-artifact",
+            )
+        )
+        self.assertFalse(contains_token("prebuild-artifact-test", "build-artifact"))
+
+    def test_build_artifact_does_not_match_the_release_tokens(self) -> None:
+        self.assertFalse(contains_token("[build-artifact]", "build-release"))
+        self.assertFalse(contains_token("[build-artifact]", "build-publish"))
+        self.assertFalse(contains_token("[build-release]", "build-artifact"))
+        self.assertFalse(contains_token("[build-publish]", "build-artifact"))
+
     def test_legacy_space_form_does_not_match(self) -> None:
         self.assertFalse(contains_token("build release", "build-release"))
 

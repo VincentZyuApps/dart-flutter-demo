@@ -17,8 +17,12 @@ dependencies:
   flutter_colorpicker: ^1.1.0
   package_info_plus: ^8.0.2
   path_provider: ^2.1.5
+  desktop_integration_vincentzyu:
+    path: packages/desktop_integration_vincentzyu
   system_info_vincentzyu:
     path: packages/system_info_vincentzyu
+  taskbar_integration_vincentzyu:
+    path: packages/taskbar_integration_vincentzyu
   url_launcher: ^6.3.1
 
 dev_dependencies:

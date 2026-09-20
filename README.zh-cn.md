@@ -74,6 +74,25 @@
 一步步指引展示应用的下载渠道、构建选项及推荐的开发环境配置的引导对话框。从 AppBar 菜单中打开。<br>
 ![guide](doc/images/preview/side1.guide.png)
 
+## 🖥️ 任务栏与程序坞集成
+
+应用内的七个入口（五个底部 Tab 加 About 与 Guide）同时暴露给桌面环境：
+
+| 入口 | 平台 | 作用 |
+|---|---|---|
+| 跳转列表 | Windows 10/11 | 右键任务栏按钮时在 `Pages` 分类下列出全部七个入口，About 之前带分隔线。 |
+| 缩略图工具栏 | Windows 10/11 | 悬停任务栏按钮时显示最多七个字形按钮；当前页面渲染为禁用态，看起来像按下。 |
+| 桌面 Actions | Linux | `.desktop` 入口为全部七个目标声明 `Actions=`。 |
+| MPRIS 播放器 | Linux | 当前页面作为 MPRIS 曲目发布；KDE Plasma 会在任务栏悬停提示里渲染封面、标题和播放控制按钮。 |
+
+第二次启动会把命令行转发给正在运行的窗口：Linux 走 session bus 的 `Activate(as)` 调用，Windows 走 `WM_COPYDATA`，随后自身退出。
+
+平台差异：
+
+- GNOME Shell 没有为非原生工具包提供在程序坞图标上添加悬停控件的受支持方式，因此 GNOME 只提供桌面 Actions 与媒体控制。
+- Deb 与 AppImage 使用 `flutter_distributor` 模板，无法表达 `Actions=`，所以七个桌面 Actions 随 Flatpak 包提供。
+- MPRIS 桥接是实验性的，它把页面刻意映射成一条合成曲目。
+
 ## 🧩📱 页面介绍
 
 ### 0. 🖥️ 系统信息实验室
@@ -148,7 +167,7 @@
 
 ## 📁 文件结构
 
-应用将五个平台工程全部纳入版本控制，可复用的系统信息能力位于本地 Flutter 插件中：
+应用将五个平台工程全部纳入版本控制，可复用的系统信息与桌面集成能力位于三个本地包中：
 
 | 文件 | 作用 |
 |---|---|
@@ -165,12 +184,15 @@
 | `lib/services/app_performance.dart` | FPS 和重建次数统计辅助。 |
 | `lib/services/github_repository_service.dart` | GitHub 仓库解析、抓取和数据模型。 |
 | `lib/services/system_info_service.dart` | App 格式化、日志初始化、调试快照与复制/导出适配。 |
+| `lib/services/taskbar_integration_service.dart` | 七个桌面入口、单实例转发，以及缩略图工具栏与 MPRIS 桥接。 |
 | `lib/widgets/animated_page.dart` | 页面切换和层级动画封装。 |
 | `lib/widgets/repository_card.dart` | 网格样式的仓库卡片。 |
 | `lib/widgets/repository_list_tile.dart` | 列表样式的仓库条目。 |
 | `lib/widgets/state_shell.dart` | 通用的空态/加载态/错误态布局。 |
 | `lib/widgets/tag.dart` | 小型标签胶囊组件。 |
+| `packages/desktop_integration_vincentzyu/` | 通过 D-Bus 实现 Linux 单实例激活，并提供 MPRIS 正在播放桥接。 |
 | `packages/system_info_vincentzyu/` | 可供其他 Flutter App 复用的五平台类型化系统信息插件。 |
+| `packages/taskbar_integration_vincentzyu/` | Windows 跳转列表、缩略图工具栏与单实例转发插件。 |
 | `android/`、`ios/`、`windows/`、`linux/`、`macos/` | 常驻源码树的平台工程，正常 CI 不会重新生成。 |
 | `.github/workflows/profile-debug.yml` | 保留七天的 Windows/Linux/Android Profile 与 Debug 产物。 |
 | `.github/workflows/performance.yml` | 保留七天或发布为永久 Pre-release 的桌面 Profile 构建报告。 |
@@ -188,7 +210,7 @@
 
 ## ⚙️🚀 CI/CD
 
-GitHub Actions 使用精确且区分大小写的连字符关键词：`[build-release]` 发布包含已验证 x86_64 `.flatpak` 的应用 Release，`[build-publish]` 还会请求通过自建 [Flatpak 仓库](https://vincentzyuapps.github.io/flatpak-repo/) 发布签名 `stable` 更新，并把 MSIX 提交到 Microsoft Store 认证，`[build-profile]` 与 `[build-debug]` 生成保留七天的开发产物，`[run-performance]` 将性能报告保留七天，`[release-performance]` 创建永久 Performance Pre-release。方括号只是 commit 风格，CI 实际匹配其中的关键词。手动选项与平台 bootstrap 详见 [ci.zh-cn.md](.github/workflows/ci.zh-cn.md)。
+GitHub Actions 使用精确且区分大小写的连字符关键词：`[build-release]` 发布包含已验证 x86_64 `.flatpak` 的应用 Release，`[build-publish]` 还会请求通过自建 [Flatpak 仓库](https://vincentzyuapps.github.io/flatpak-repo/) 发布签名 `stable` 更新，并把 MSIX 提交到 Microsoft Store 认证，`[build-artifact]` 上传同样完整的产物集合并保留七天而不创建 Release，`[build-profile]` 与 `[build-debug]` 生成保留七天的开发产物，`[run-performance]` 将性能报告保留七天，`[release-performance]` 创建永久 Performance Pre-release。方括号只是 commit 风格，CI 实际匹配其中的关键词。手动选项与平台 bootstrap 详见 [ci.zh-cn.md](.github/workflows/ci.zh-cn.md)。
 
 ## 平台基线
 

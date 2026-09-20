@@ -74,6 +74,25 @@ An app information dialog that displays app name, version, build number, publish
 A step-by-step walkthrough dialog showing the app's download channels, build options, and recommended development setup. Accessible from the AppBar menu.<br>
 ![guide](doc/images/preview/side1.guide.png)
 
+## 🖥️ Taskbar & Dock Integration
+
+The seven in-app destinations (the five bottom tabs plus About and Guide) are also exposed to the desktop shell:
+
+| Surface | Platform | What it does |
+|---|---|---|
+| Jump list | Windows 10/11 | Right-clicking the taskbar button lists all seven destinations under a `Pages` category, with a separator before About. |
+| Thumbnail toolbar | Windows 10/11 | Hovering the taskbar button shows up to seven glyph buttons; the current page is drawn disabled so it reads as pressed. |
+| Desktop actions | Linux | The `.desktop` entry declares `Actions=` for all seven destinations. |
+| MPRIS player | Linux | The visible page is published as an MPRIS track; KDE Plasma renders cover art, title, and transport buttons inside its taskbar hover tooltip. |
+
+A second launch forwards its command line to the running window, over a session-bus `Activate(as)` call on Linux and over `WM_COPYDATA` on Windows, and then exits.
+
+Platform caveats:
+
+- GNOME Shell offers no supported way for a non-native toolkit to add hover controls to a dock icon, so GNOME gets the desktop-entry actions and the media controls only.
+- Deb and AppImage packages come from `flutter_distributor` templates that cannot express `Actions=`, so the seven desktop actions ship with the Flatpak package.
+- The MPRIS bridge is experimental and deliberately maps pages onto a synthetic track.
+
 ## 🧩📱 Pages
 
 ### 0. 🖥️ System Info
@@ -148,7 +167,7 @@ Source: [lib/pages/page4_controls_feedback.dart](https://github.com/VincentZyu23
 
 ## 📁 File Structure
 
-The app keeps all five platform projects in source control. Reusable system-information code lives in a local Flutter plugin:
+The app keeps all five platform projects in source control. Reusable system-information and desktop-integration code lives in three local packages:
 
 | File | Purpose |
 |---|---|
@@ -165,12 +184,15 @@ The app keeps all five platform projects in source control. Reusable system-info
 | `lib/services/app_performance.dart` | FPS tracking and rebuild count helpers. |
 | `lib/services/github_repository_service.dart` | GitHub repository parsing, fetching, and data models. |
 | `lib/services/system_info_service.dart` | App formatting, logging setup, debug snapshot, and copy/export adapter. |
+| `lib/services/taskbar_integration_service.dart` | Seven desktop destinations, single-instance handover, and the thumbnail toolbar and MPRIS bridges. |
 | `lib/widgets/animated_page.dart` | Page transitions and staggered animation wrappers. |
 | `lib/widgets/repository_card.dart` | Grid-style repository card widget. |
 | `lib/widgets/repository_list_tile.dart` | List-style repository row widget. |
 | `lib/widgets/state_shell.dart` | Shared empty/loading/error state layout. |
 | `lib/widgets/tag.dart` | Small pill/tag display widget. |
+| `packages/desktop_integration_vincentzyu/` | Linux single-instance activation over D-Bus plus an MPRIS now-playing bridge. |
 | `packages/system_info_vincentzyu/` | Reusable typed system-information plugin for all five platforms. |
+| `packages/taskbar_integration_vincentzyu/` | Windows jump list, thumbnail toolbar, and single-instance forwarding plugin. |
 | `android/`, `ios/`, `windows/`, `linux/`, `macos/` | Committed Flutter platform projects; normal CI never regenerates them. |
 | `.github/workflows/profile-debug.yml` | Seven-day Windows/Linux/Android Profile and Debug artifacts. |
 | `.github/workflows/performance.yml` | Seven-day or permanent Pre-release desktop Profile build reports. |
@@ -188,7 +210,7 @@ The app keeps all five platform projects in source control. Reusable system-info
 
 ## ⚙️🚀 CI/CD
 
-GitHub Actions uses exact, case-sensitive hyphenated tokens: `[build-release]` publishes an app Release with a verified x86_64 `.flatpak`; `[build-publish]` additionally requests a signed `stable` update through the self-hosted [Flatpak repository](https://vincentzyuapps.github.io/flatpak-repo/) and submits the MSIX to Microsoft Store certification; `[build-profile]` and `[build-debug]` create seven-day developer artifacts; `[run-performance]` keeps performance reports for seven days; `[release-performance]` creates a permanent Performance Pre-release. Brackets are commit-style punctuation, while CI matches the token itself. See [ci.md](.github/workflows/ci.md) for manual options and platform bootstrap details.
+GitHub Actions uses exact, case-sensitive hyphenated tokens: `[build-release]` publishes an app Release with a verified x86_64 `.flatpak`; `[build-publish]` additionally requests a signed `stable` update through the self-hosted [Flatpak repository](https://vincentzyuapps.github.io/flatpak-repo/) and submits the MSIX to Microsoft Store certification; `[build-artifact]` uploads that same complete artifact set for seven days without creating a Release; `[build-profile]` and `[build-debug]` create seven-day developer artifacts; `[run-performance]` keeps performance reports for seven days; `[release-performance]` creates a permanent Performance Pre-release. Brackets are commit-style punctuation, while CI matches the token itself. See [ci.md](.github/workflows/ci.md) for manual options and platform bootstrap details.
 
 ## Platform Baselines
 
@@ -257,4 +279,3 @@ The iOS baseline is the configured build minimum, not a claim that every OS/devi
 | Stars | [![Stars](https://img.shields.io/github/stars/VincentZyuApps/dart-flutter-demo?style=flat&logo=github&label=stars&labelColor=181717&color=FFD700)](https://github.com/VincentZyuApps/dart-flutter-demo/stargazers) |
 | Last Commit | [![Last Commit](https://img.shields.io/github/last-commit/VincentZyuApps/dart-flutter-demo?logo=github&label=last%20commit&labelColor=181717&color=02569B)](https://github.com/VincentZyuApps/dart-flutter-demo/commits/main/) |
 | Github Action CI/CD | [![release](https://img.shields.io/github/v/release/VincentZyuApps/dart-flutter-demo?logo=github&label=release&color=02569B&labelColor=181717)](https://github.com/VincentZyuApps/dart-flutter-demo/releases) · [![build](https://img.shields.io/github/actions/workflow/status/VincentZyuApps/dart-flutter-demo/release-publish.yml?branch=main&logo=githubactions&label=build)](https://github.com/VincentZyuApps/dart-flutter-demo/actions/workflows/release-publish.yml) |
-

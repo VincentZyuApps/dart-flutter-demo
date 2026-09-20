@@ -37,7 +37,7 @@
 - Commit 首行使用 Conventional Commits，例如 `chore(docs): ...`。
 - CI 标记写在 commit message 末尾，推荐使用方括号风格。
 - 修改任何 `.yml` 或 `.yaml` 文件后，必须运行 `uv run scripts/ci/validation/check-yaml.py`，确认 YAML 可解析且不存在重复键。
-- 已实现 `[build-release]`、`[build-publish]`、`[build-profile]`、`[build-debug]`、`[run-performance]`、`[release-performance]`。
+- 已实现 `[build-release]`、`[build-publish]`、`[build-artifact]`、`[build-profile]`、`[build-debug]`、`[run-performance]`、`[release-performance]`。
 - `[build-publish]` 创建完整应用 Release、请求更新签名 Flatpak 仓库并自动提交 Microsoft Store 认证。
 - CI 只匹配连字符关键词，方括号只是提交风格规范。
 - `release-publish.yml` 负责 Release 构建、Flatpak 校验、GitHub Release 和两个外部渠道的发布。
@@ -49,6 +49,7 @@
 - 手动下载的 GitHub Actions Artifact 统一保存到 `tmp/downloads/ci/<artifact-kind>-<run-id>/`，目录名必须包含 Action Run ID，并保留 Artifact 内部目录结构。
 - `build-publish` 必须复用 `build-release` 的质量检查与产物，通过固定标记更新签名 Flatpak 仓库，并复用同一 MSIX 提交 Microsoft Store。
 - 只有 `build-release`、`release-performance` 和 `build-publish` 可以创建 GitHub Release。
+- `build-artifact` 复用 Release 流水线但只上传保留七天的 Artifact，不创建 tag 或 Release。
 - 性能 Release 必须是独立 Pre-release，不得替代应用的 Latest Release。
 
 ## External Publishing

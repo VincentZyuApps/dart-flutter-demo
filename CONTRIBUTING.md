@@ -25,6 +25,7 @@ Place CI directives at the end of the commit message when needed:
 
 ```text
 [build-release]
+[build-artifact]
 [build-profile]
 [build-debug]
 [run-performance]
@@ -62,6 +63,7 @@ feat(system-info): add typed diagnostics
 
 ```text
 [build-release]
+[build-artifact]
 [build-profile]
 [build-debug]
 [run-performance]

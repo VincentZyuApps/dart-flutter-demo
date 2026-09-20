@@ -21,6 +21,7 @@ feat(system-info): migrate collection into a reusable plugin
 |---|---|---|---|:---:|
 | `build-release` | `release-publish.yml` | 六个平台 Release 目标、x86_64 Flatpak 和三个 Profile 目标 | 发布后永久保留 | 是 |
 | `build-publish` | `release-publish.yml` | `build-release` 的全部内容，加签名 Flatpak 与 Microsoft Store 发布 | 永久，并更新外部渠道 | 是 |
+| `build-artifact` | `release-publish.yml` | `build-release` 的全部内容，以保留七天的 Artifact 形式上传，不创建 Release | 7 天 | 否 |
 | `build-profile` | `profile-debug.yml` | Windows x64、Linux x64、Android Universal Profile | 7 天 | 否 |
 | `build-debug` | `profile-debug.yml` | Windows x64、Linux x64、Android Universal Debug | 7 天 | 否 |
 | `run-performance` | `performance.yml` | Windows、Linux、macOS 的 JSON/Markdown/日志报告包 | 7 天 | 否 |
@@ -30,7 +31,9 @@ feat(system-info): migrate collection into a reusable plugin
 
 ## 🚀 Release 与发布
 
-`release-publish.yml` 在 push 包含 `build-release` 或 `build-publish` 时运行，也可以从 `workflow_dispatch` 手动运行。`build-publish` 是严格超集：两个关键词都会创建完全相同且经过验证的 GitHub Release，只有 `build-publish` 会请求签名 Flatpak 更新，并把同一份已验证 MSIX 提交到 Microsoft Store 认证。
+`release-publish.yml` 在 push 包含 `build-release`、`build-publish` 或 `build-artifact` 时运行，也可以从 `workflow_dispatch` 手动运行。`build-publish` 是严格超集：两个发布关键词都会创建完全相同且经过验证的 GitHub Release，只有 `build-publish` 会请求签名 Flatpak 更新，并把同一份已验证 MSIX 提交到 Microsoft Store 认证。
+
+`build-artifact` 复用同一条流水线但不发布：它上传全部 Release、Profile 和 Flatpak Artifact（保留七天）以及 `release-dry-run-*` 汇总包，且不会创建 tag 或 GitHub Release。
 
 所有发布的应用版本，包括带有 `alpha`、`beta` 或 `rc` 后缀的版本，都会创建为非草稿的正式 Release，并明确标记为仓库的 Latest Release。
 

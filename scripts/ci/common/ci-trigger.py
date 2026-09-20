@@ -7,6 +7,7 @@ import re
 ALLOWED_TOKENS = {
     "build-publish",
     "build-release",
+    "build-artifact",
     "build-profile",
     "build-debug",
     "run-performance",

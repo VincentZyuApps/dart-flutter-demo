@@ -1,4 +1,5 @@
 import importlib.util
+import re
 import sys
 import unittest
 import xml.etree.ElementTree as ET
@@ -84,14 +85,38 @@ class FlatpakConfigurationTests(unittest.TestCase):
         self.assertNotIn("--socket=session-bus", manifest)
 
     def test_desktop_identity_matches_manifest(self) -> None:
+        text = DESKTOP_FILE.read_text(encoding="utf-8")
+        main_group = text.split("[Desktop Entry]", 1)[1].split("[Desktop Action", 1)[0]
         entries = dict(
-            line.split("=", 1)
-            for line in DESKTOP_FILE.read_text(encoding="utf-8").splitlines()
-            if "=" in line
+            line.split("=", 1) for line in main_group.splitlines() if "=" in line
         )
         self.assertEqual(entries["Icon"], APP_ID)
         self.assertEqual(entries["StartupWMClass"], APP_ID)
         self.assertEqual(entries["Exec"], "dart-flutter-demo")
+
+    def test_desktop_actions_expose_the_seven_destinations(self) -> None:
+        text = DESKTOP_FILE.read_text(encoding="utf-8")
+        declared = re.findall(r"^Actions=(.*)$", text, re.MULTILINE)
+        self.assertEqual(len(declared), 1)
+        names = [name for name in declared[0].split(";") if name]
+        self.assertEqual(
+            names,
+            ["System", "Dialog", "Type", "Grid", "Controls", "About", "Guide"],
+        )
+        for name in names:
+            self.assertIn(f"[Desktop Action {name}]", text)
+        self.assertEqual(
+            re.findall(r"^Exec=dart-flutter-demo (\S+)$", text, re.MULTILINE),
+            [
+                "--tab=system",
+                "--tab=dialog",
+                "--tab=type",
+                "--tab=grid",
+                "--tab=controls",
+                "--action=about",
+                "--action=guide",
+            ],
+        )
 
     def test_package_only_workflow_is_manual_and_pinned(self) -> None:
         workflow = WORKFLOW.read_text(encoding="utf-8")

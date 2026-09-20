@@ -3,6 +3,8 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
+  system_info_vincentzyu
+  taskbar_integration_vincentzyu
 )
 
 list(APPEND FLUTTER_FFI_PLUGIN_LIST

@@ -69,6 +69,10 @@ jobs:
             echo "should_build=true" >> "$GITHUB_OUTPUT"
             echo "should_publish=true" >> "$GITHUB_OUTPUT"
             echo "should_publish_external_channels=false" >> "$GITHUB_OUTPUT"
+          elif python scripts/ci/common/ci-trigger.py --message "$COMMIT_MESSAGE" --token build-artifact; then
+            echo "should_build=true" >> "$GITHUB_OUTPUT"
+            echo "should_publish=false" >> "$GITHUB_OUTPUT"
+            echo "should_publish_external_channels=false" >> "$GITHUB_OUTPUT"
           else
             echo "should_build=false" >> "$GITHUB_OUTPUT"
             echo "should_publish=false" >> "$GITHUB_OUTPUT"
@@ -113,6 +117,8 @@ jobs:
       - run: flutter analyze --fatal-infos
       - run: flutter test
       - run: cd packages/system_info_vincentzyu && flutter test
+      - run: cd packages/desktop_integration_vincentzyu && flutter test
+      - run: cd packages/taskbar_integration_vincentzyu && flutter test
       - run: python -m unittest discover -s test/ci -p 'test_*.py'
 
   release-builds:

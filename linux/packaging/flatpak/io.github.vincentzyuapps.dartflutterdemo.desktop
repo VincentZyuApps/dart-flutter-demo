@@ -8,3 +8,32 @@ Terminal=false
 Categories=Development;
 StartupNotify=true
 StartupWMClass=io.github.vincentzyuapps.dartflutterdemo
+Actions=System;Dialog;Type;Grid;Controls;About;Guide;
+
+[Desktop Action System]
+Name=System Info
+Exec=dart-flutter-demo --tab=system
+
+[Desktop Action Dialog]
+Name=Dialog Lab
+Exec=dart-flutter-demo --tab=dialog
+
+[Desktop Action Type]
+Name=Typography
+Exec=dart-flutter-demo --tab=type
+
+[Desktop Action Grid]
+Name=Adaptive Grid
+Exec=dart-flutter-demo --tab=grid
+
+[Desktop Action Controls]
+Name=Controls
+Exec=dart-flutter-demo --tab=controls
+
+[Desktop Action About]
+Name=About
+Exec=dart-flutter-demo --action=about
+
+[Desktop Action Guide]
+Name=Guide
+Exec=dart-flutter-demo --action=guide

@@ -8,6 +8,7 @@ import 'pages/page2_typography_studio.dart';
 import 'pages/page3_adaptive_grid.dart';
 import 'pages/page4_controls_feedback.dart';
 import 'services/app_performance.dart';
+import 'services/taskbar_integration_service.dart';
 import 'widgets/animated_page.dart';
 
 final themeNotifier = ValueNotifier<ThemeMode>(ThemeMode.system);
@@ -70,7 +71,7 @@ class HomeShell extends StatefulWidget {
   State<HomeShell> createState() => _HomeShellState();
 }
 
-class _HomeShellState extends State<HomeShell> {
+class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
   int _currentIndex = 0;
   Future<PackageInfo>? _packageInfoFuture;
   final FrameFpsTracker _fpsTracker = FrameFpsTracker();
@@ -97,12 +98,25 @@ class _HomeShellState extends State<HomeShell> {
     super.initState();
     _packageInfoFuture = PackageInfo.fromPlatform();
     WidgetsBinding.instance.addTimingsCallback(_fpsTracker.addTimings);
+    WidgetsBinding.instance.addObserver(this);
+    desktopRequestNotifier.addListener(_handleDesktopRequests);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _startDesktopIntegration();
+    });
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeTimingsCallback(_fpsTracker.addTimings);
+    WidgetsBinding.instance.removeObserver(this);
+    desktopRequestNotifier.removeListener(_handleDesktopRequests);
+    TaskbarIntegrationService.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangePlatformBrightness() {
+    TaskbarIntegrationService.refreshToolbar();
   }
 
   @override
@@ -200,7 +214,7 @@ class _HomeShellState extends State<HomeShell> {
           bottomNavigationBar: NavigationBar(
             selectedIndex: _currentIndex,
             onDestinationSelected: (index) {
-              setState(() => _currentIndex = index);
+              _selectPage(index);
             },
             destinations: const [
               NavigationDestination(
@@ -233,6 +247,54 @@ class _HomeShellState extends State<HomeShell> {
         );
       },
     );
+  }
+
+  /// Publishes the desktop surfaces and applies requests that were queued
+  /// before the window existed.
+  Future<void> _startDesktopIntegration() async {
+    await TaskbarIntegrationService.publishShortcuts();
+    await TaskbarIntegrationService.setActivePage(_currentIndex);
+    _handleDesktopRequests();
+  }
+
+  void _handleDesktopRequests() {
+    if (!mounted) {
+      return;
+    }
+    while (true) {
+      final DesktopShortcut? shortcut = takePendingDesktopRequest();
+      if (shortcut == null) {
+        return;
+      }
+      _applyDesktopShortcut(shortcut);
+    }
+  }
+
+  void _applyDesktopShortcut(DesktopShortcut shortcut) {
+    switch (shortcut.kind) {
+      case DesktopShortcutKind.page:
+        _selectPage(shortcut.pageIndex ?? 0);
+        break;
+      case DesktopShortcutKind.about:
+        _showAboutDialog(context);
+        break;
+      case DesktopShortcutKind.guide:
+        _showGuideDialog(context);
+        break;
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('From the desktop shell: ${shortcut.label}'),
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+
+  void _selectPage(int index) {
+    if (index != _currentIndex) {
+      setState(() => _currentIndex = index);
+    }
+    TaskbarIntegrationService.setActivePage(index);
   }
 
   Future<void> _showAboutDialog(BuildContext context) async {
@@ -368,7 +430,7 @@ class _HomeShellState extends State<HomeShell> {
       borderRadius: BorderRadius.circular(10),
       onTap: () {
         Navigator.pop(dialogContext);
-        setState(() => _currentIndex = index);
+        _selectPage(index);
       },
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 4),
