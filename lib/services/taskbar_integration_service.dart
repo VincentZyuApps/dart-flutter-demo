@@ -126,8 +126,55 @@ const List<DesktopShortcut> desktopShortcuts = <DesktopShortcut>[
 
 final List<DesktopShortcut> _pendingDesktopRequests = <DesktopShortcut>[];
 
+/// Name the desktop shell attributes notifications to.
+const String desktopAppName = 'DartFlutterDemo';
+
+/// Desktop entry the Linux notification service attributes notifications to.
+const String desktopEntryName = 'io.github.vincentzyuapps.dartflutterdemo';
+
+/// Where a desktop request came from.
+///
+/// The origin is written to the session log, and it decides whether the request
+/// is worth a system notification: a cold start and the automatic page tour only
+/// need the in-window feedback.
+enum DesktopRequestOrigin {
+  /// The command line this process was started with.
+  processCommandLine('process-command-line'),
+
+  /// A launch the shell forwarded to the running instance.
+  launchArguments('launch-arguments'),
+
+  /// A click on a taskbar hover (thumbnail toolbar) button.
+  taskbarCommand('taskbar-command'),
+
+  /// A desktop entry action, which is what a dock click sends on Linux.
+  dockAction('dock-action'),
+
+  /// A transport button of the MPRIS media player.
+  mpris('mpris'),
+
+  /// The automatic page tour.
+  tour('tour');
+
+  const DesktopRequestOrigin(this.wireName);
+
+  /// Stable identifier written to the log.
+  final String wireName;
+}
+
+/// Origins that report the applied request through a system notification.
+const Set<DesktopRequestOrigin> notifyingOrigins = <DesktopRequestOrigin>{
+  DesktopRequestOrigin.launchArguments,
+  DesktopRequestOrigin.taskbarCommand,
+  DesktopRequestOrigin.dockAction,
+  DesktopRequestOrigin.mpris,
+};
+
 /// Bumped whenever the desktop shell queued a new request.
 final ValueNotifier<int> desktopRequestNotifier = ValueNotifier<int>(0);
+
+/// Receives a line per desktop request, wired to the system information log.
+void Function(String message)? desktopRequestLogger;
 
 /// Removes and returns the next request queued by the desktop shell.
 DesktopShortcut? takePendingDesktopRequest() {
@@ -137,9 +184,25 @@ DesktopShortcut? takePendingDesktopRequest() {
   return _pendingDesktopRequests.removeAt(0);
 }
 
-void _enqueueDesktopRequest(DesktopShortcut shortcut) {
+void _enqueueDesktopRequest(
+  DesktopShortcut shortcut, {
+  DesktopRequestOrigin origin = DesktopRequestOrigin.tour,
+  String? activationToken,
+}) {
   _pendingDesktopRequests.add(shortcut);
   desktopRequestNotifier.value++;
+  desktopRequestLogger?.call(
+    'Desktop request: ${shortcut.id} (${shortcut.arguments}) via '
+    '${origin.wireName}',
+  );
+  if (origin != DesktopRequestOrigin.processCommandLine) {
+    unawaited(TaskbarIntegrationService.raiseWindow(
+      activationToken: activationToken,
+    ));
+  }
+  if (notifyingOrigins.contains(origin)) {
+    unawaited(TaskbarIntegrationService.showShortcutNotification(shortcut));
+  }
 }
 
 /// Bridges the running window to its taskbar, dock and desktop entry.
@@ -158,6 +221,7 @@ class TaskbarIntegrationService {
 
   static DesktopActivationClient? _activationClient;
   static MprisBridge? _mprisBridge;
+  static DesktopNotifier? _notifier;
   static StreamSubscription<TaskbarEvent>? _taskbarEvents;
   static Timer? _tourTimer;
   static String? _artUrl;
@@ -217,7 +281,7 @@ class TaskbarIntegrationService {
       }
       _activationClient = client;
       if (role == DesktopActivationRole.primary) {
-        client.activations.listen(handleLaunchArguments);
+        client.activations.listen(_handleDesktopActivation);
       }
       return true;
     }
@@ -225,11 +289,65 @@ class TaskbarIntegrationService {
   }
 
   /// Applies a command line, either of this process or of a forwarded launch.
-  static void handleLaunchArguments(List<String> arguments) {
+  static void handleLaunchArguments(
+    List<String> arguments, {
+    DesktopRequestOrigin origin = DesktopRequestOrigin.processCommandLine,
+  }) {
     final DesktopShortcut? shortcut = matchShortcut(arguments);
     if (shortcut != null) {
-      _enqueueDesktopRequest(shortcut);
+      _enqueueDesktopRequest(shortcut, origin: origin);
     }
+  }
+
+  /// Applies a request a later launch of the application forwarded.
+  static void _handleDesktopActivation(DesktopActivation activation) {
+    final DesktopShortcut? shortcut = matchShortcut(activation.arguments);
+    if (shortcut == null) {
+      return;
+    }
+    _enqueueDesktopRequest(
+      shortcut,
+      origin: DesktopRequestOrigin.dockAction,
+      activationToken: activation.activationToken,
+    );
+  }
+
+  /// Brings the application window back to the front of the desktop.
+  ///
+  /// Windows raises the window inside the native plugin, right where the shell
+  /// message arrives, so only Linux needs the channel call. Both paths are still
+  /// routed through here so every origin behaves the same.
+  static Future<void> raiseWindow({String? activationToken}) async {
+    if (!Platform.isLinux) {
+      return;
+    }
+    await _activationClient?.activateWindow(activationToken: activationToken);
+  }
+
+  /// Reports an applied desktop request through a system notification.
+  ///
+  /// Best effort on both platforms: Windows draws the shell balloon and Linux
+  /// asks the freedesktop notification service, and a desktop that declines the
+  /// notification still gets the in-window feedback.
+  static Future<bool> showShortcutNotification(DesktopShortcut shortcut) async {
+    final String body = 'Opened ${shortcut.label}';
+    if (Platform.isWindows) {
+      return TaskbarIntegration.showNotification(
+        title: desktopAppName,
+        body: body,
+      );
+    }
+    if (Platform.isLinux) {
+      final DesktopNotifier notifier =
+          _notifier ??= DesktopNotifier(desktopEntry: desktopEntryName);
+      final String? artUrl = _artUrl;
+      return notifier.notify(
+        summary: desktopAppName,
+        body: body,
+        iconPath: artUrl == null ? null : Uri.parse(artUrl).toFilePath(),
+      );
+    }
+    return false;
   }
 
   /// Publishes every shortcut surface of the current desktop environment.
@@ -292,6 +410,9 @@ class TaskbarIntegrationService {
     final MprisBridge? bridge = _mprisBridge;
     _mprisBridge = null;
     await bridge?.close();
+    final DesktopNotifier? notifier = _notifier;
+    _notifier = null;
+    await notifier?.close();
     final DesktopActivationClient? activationClient = _activationClient;
     _activationClient = null;
     await activationClient?.close();
@@ -384,17 +505,26 @@ class TaskbarIntegrationService {
     final MprisMediaPlayerObject? player = bridge.player;
     if (player != null) {
       player.onNext = () async {
-        _enqueueDesktopRequest(_pageShortcut(_currentPage + 1));
+        _enqueueDesktopRequest(
+          _pageShortcut(_currentPage + 1),
+          origin: DesktopRequestOrigin.mpris,
+        );
       };
       player.onPrevious = () async {
-        _enqueueDesktopRequest(_pageShortcut(_currentPage - 1));
+        _enqueueDesktopRequest(
+          _pageShortcut(_currentPage - 1),
+          origin: DesktopRequestOrigin.mpris,
+        );
       };
       player.onPlay = () => setTourRunning(true);
       player.onPause = () => setTourRunning(false);
       player.onPlayPause = () => setTourRunning(!_tourRunning);
       player.onStop = () async {
         await setTourRunning(false);
-        _enqueueDesktopRequest(_pageShortcut(0));
+        _enqueueDesktopRequest(
+          _pageShortcut(0),
+          origin: DesktopRequestOrigin.mpris,
+        );
       };
     }
     _mprisBridge = bridge;
@@ -463,11 +593,17 @@ class TaskbarIntegrationService {
       case TaskbarEventType.command:
         final DesktopShortcut? shortcut = shortcutById(event.commandId);
         if (shortcut != null) {
-          _enqueueDesktopRequest(shortcut);
+          _enqueueDesktopRequest(
+            shortcut,
+            origin: DesktopRequestOrigin.taskbarCommand,
+          );
         }
         break;
       case TaskbarEventType.launch:
-        handleLaunchArguments(event.arguments);
+        handleLaunchArguments(
+          event.arguments,
+          origin: DesktopRequestOrigin.launchArguments,
+        );
         break;
     }
   }

@@ -54,6 +54,8 @@ feat(system-info): migrate collection into a reusable plugin
 
 Linux x64 目标会解包生成的 `AppImage`，并在其 desktop 入口未声明七个 `Actions=` 目标时判定构建失败。
 
+同一目标还会解包生成的 `DEB`，补齐其 desktop 入口缺失的 `Actions=` 分组，再重新打包后上传产物。
+
 ### 🧪 手动 Dry-Run
 
 手动运行默认 `publish=false`。它会执行质量检查、全部 Release 构建、Flatpak 打包与冒烟测试、三项永久 Profile 构建、MSIX 校验和 Release Notes 渲染，但只上传保留七天的 `release-dry-run-*` Artifact，不创建 tag 或 GitHub Release。

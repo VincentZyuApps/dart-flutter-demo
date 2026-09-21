@@ -23,6 +23,12 @@ abstract class TaskbarIntegrationPlatform {
     String? activeId,
   });
 
+  /// Shows the shell notification that reports an applied desktop request.
+  ///
+  /// Returns false when the platform has no notification implementation or
+  /// refused to show one.
+  Future<bool> showNotification({required String title, required String body});
+
   /// Stream of taskbar events.
   Stream<TaskbarEvent> get events;
 }
@@ -88,4 +94,25 @@ class MethodChannelTaskbarIntegration extends TaskbarIntegrationPlatform {
       .handleError((Object _) {
         // Platforms without the event channel simply produce no events.
       });
+
+  @override
+  Future<bool> showNotification({
+    required String title,
+    required String body,
+  }) async {
+    try {
+      final bool? shown =
+          await _methods.invokeMethod<bool>('showNotification', <String, Object?>{
+        'title': title,
+        'body': body,
+      });
+      return shown ?? false;
+    } on MissingPluginException {
+      // No taskbar integration on this platform.
+      return false;
+    } on PlatformException {
+      // A refused notification must never break the application.
+      return false;
+    }
+  }
 }

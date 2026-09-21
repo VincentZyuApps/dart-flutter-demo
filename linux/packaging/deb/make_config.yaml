@@ -22,3 +22,6 @@ categories:
   - Utility
 
 startup_notify: true
+
+# Lets the dock or taskbar match the running GTK window with this entry.
+startup_wm_class: io.github.vincentzyuapps.dartflutterdemo

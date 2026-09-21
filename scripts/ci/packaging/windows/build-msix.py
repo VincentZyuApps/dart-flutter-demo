@@ -29,7 +29,9 @@ ET.register_namespace("rescap", RESCAP_NS)
 
 VERSION_PATTERN = re.compile(
     r"^(?P<base>\d+\.\d+\.\d+)"
-    r"(?:-(?P<stage>alpha|beta|rc)\.(?P<sequence>\d+))?"
+    # The separator dot is optional so both `beta.16` and `beta16` are read as
+    # the same prerelease sequence.
+    r"(?:-(?P<stage>alpha|beta|rc)\.?(?P<sequence>\d+))?"
     r"\+(?P<date>\d{8})$"
 )
 STAGE_BASE = {

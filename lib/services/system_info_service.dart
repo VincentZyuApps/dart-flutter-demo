@@ -68,6 +68,10 @@ SystemInfoService createSystemInfoService() => _systemInfoService;
 SystemInfoDebugSnapshot getSystemInfoDebugSnapshot() =>
     _systemInfoService.debugSnapshot;
 
+/// Records a desktop shell request in the system information session log.
+Future<void> logDesktopShellRequest(String message) =>
+    _systemInfoService.logDesktopRequest(message);
+
 Future<File> exportSystemInfoDebugSnapshot() =>
     _systemInfoService.exportDebugSnapshot();
 
@@ -150,6 +154,22 @@ class _SystemInfoAppService implements SystemInfoService {
     );
     await file.writeAsString(debugSnapshot.toMultilineText(), flush: true);
     return file;
+  }
+
+  /// Records a request that arrived from the desktop shell.
+  ///
+  /// The entry lands in the same session log the System Info page exports, so a
+  /// jump list, dock action or taskbar hover click can be traced from the
+  /// application side as well.
+  Future<void> logDesktopRequest(String message) async {
+    await _ensureInitialized();
+    _logSink?.add(
+      SystemInfoEvent(
+        level: SystemInfoLogLevel.info,
+        message: message,
+        source: SystemInfoSource.desktopShellRequest,
+      ),
+    );
   }
 
   Future<void> _ensureInitialized() {

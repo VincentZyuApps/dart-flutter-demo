@@ -4,11 +4,11 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('ActivationObject', () {
-    test('forwards launch arguments to the callback', () async {
-      final forwarded = <List<String>>[];
+    test('forwards the launch arguments and the activation token', () async {
+      final forwarded = <DesktopActivation>[];
       final object = ActivationObject(
         DBusObjectPath(defaultActivationObjectPath),
-        onArguments: forwarded.add,
+        onActivation: forwarded.add,
       );
 
       final response = await object.handleMethodCall(
@@ -18,20 +18,44 @@ void main() {
           name: 'Activate',
           values: <DBusValue>[
             DBusArray.string(<String>['--tab=grid']),
+            DBusString('token-42'),
           ],
         ),
       );
 
       expect(response, isA<DBusMethodSuccessResponse>());
-      expect(forwarded, <List<String>>[
-        <String>['--tab=grid'],
-      ]);
+      expect(forwarded, hasLength(1));
+      expect(forwarded.single.arguments, <String>['--tab=grid']);
+      expect(forwarded.single.activationToken, 'token-42');
+    });
+
+    test('reports an empty activation token as absent', () async {
+      final forwarded = <DesktopActivation>[];
+      final object = ActivationObject(
+        DBusObjectPath(defaultActivationObjectPath),
+        onActivation: forwarded.add,
+      );
+
+      await object.handleMethodCall(
+        DBusMethodCall(
+          sender: ':1.9',
+          interface: activationInterfaceName,
+          name: 'Activate',
+          values: <DBusValue>[
+            DBusArray.string(<String>['--action=about']),
+            DBusString(''),
+          ],
+        ),
+      );
+
+      expect(forwarded.single.arguments, <String>['--action=about']);
+      expect(forwarded.single.activationToken, isNull);
     });
 
     test('rejects calls on other interfaces and malformed payloads', () async {
       final object = ActivationObject(
         DBusObjectPath(defaultActivationObjectPath),
-        onArguments: (_) {},
+        onActivation: (_) {},
       );
 
       final unknownInterface = await object.handleMethodCall(
@@ -62,13 +86,42 @@ void main() {
     test('introspection describes the Activate method', () {
       final object = ActivationObject(
         DBusObjectPath(defaultActivationObjectPath),
-        onArguments: (_) {},
+        onActivation: (_) {},
       );
 
       final interfaces = object.introspect();
 
       expect(interfaces.single.name, activationInterfaceName);
       expect(interfaces.single.methods.single.name, 'Activate');
+      expect(interfaces.single.methods.single.args, hasLength(2));
+    });
+  });
+
+  group('activationTokenFromEnvironment', () {
+    test('prefers the Wayland token and falls back to the X11 startup id', () {
+      expect(
+        activationTokenFromEnvironment(<String, String>{
+          'XDG_ACTIVATION_TOKEN': 'wayland-token',
+          'DESKTOP_STARTUP_ID': 'demo_TIME1234',
+        }),
+        'wayland-token',
+      );
+      expect(
+        activationTokenFromEnvironment(<String, String>{
+          'DESKTOP_STARTUP_ID': 'demo_TIME1234',
+        }),
+        'demo_TIME1234',
+      );
+    });
+
+    test('reports no token for a plain invocation', () {
+      expect(activationTokenFromEnvironment(<String, String>{}), isNull);
+      expect(
+        activationTokenFromEnvironment(<String, String>{
+          'XDG_ACTIVATION_TOKEN': '',
+        }),
+        isNull,
+      );
     });
   });
 }

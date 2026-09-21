@@ -1,6 +1,8 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:dbus/dbus.dart';
+import 'package:flutter/services.dart';
 
 /// Session bus name owned by the primary instance of the application.
 const String defaultActivationBusName = 'io.github.vincentzyuapps.dartflutterdemo';
@@ -12,6 +14,48 @@ const String defaultActivationObjectPath =
 /// Interface used to forward launch arguments to the primary instance.
 const String activationInterfaceName =
     'io.github.vincentzyuapps.DartFlutterDemo.Activation';
+
+/// Method channel served by the Linux plugin of this package.
+const String desktopIntegrationMethodChannel =
+    'desktop_integration_vincentzyu/methods';
+
+/// Environment variables a desktop shell uses to hand out an activation token.
+///
+/// Wayland launchers export `XDG_ACTIVATION_TOKEN`, while X11 startup
+/// notification keeps the X server timestamp in `DESKTOP_STARTUP_ID`.
+const List<String> activationTokenVariables = <String>[
+  'XDG_ACTIVATION_TOKEN',
+  'DESKTOP_STARTUP_ID',
+];
+
+/// Reads the activation token a desktop shell passed to this launch.
+///
+/// Returns null when the launch carried no token, which is the case for a plain
+/// terminal invocation.
+String? activationTokenFromEnvironment([Map<String, String>? environment]) {
+  final Map<String, String> values = environment ?? Platform.environment;
+  for (final String name in activationTokenVariables) {
+    final String? value = values[name];
+    if (value != null && value.isNotEmpty) {
+      return value;
+    }
+  }
+  return null;
+}
+
+/// One desktop request delivered by a later launch of the application.
+class DesktopActivation {
+  const DesktopActivation({required this.arguments, this.activationToken});
+
+  /// Command line of the launch that asked for this activation.
+  final List<String> arguments;
+
+  /// Token the desktop shell handed to that launch, if it handed out one.
+  ///
+  /// Only the process that owns the window can replay the token, which is why it
+  /// travels over the session bus together with the arguments.
+  final String? activationToken;
+}
 
 /// Outcome of the single instance handshake.
 enum DesktopActivationRole {
@@ -45,15 +89,19 @@ class DesktopActivationClient {
   final String objectPath;
 
   final DBusClient? _injectedClient;
-  final StreamController<List<String>> _activations =
-      StreamController<List<String>>.broadcast();
+  final StreamController<DesktopActivation> _activations =
+      StreamController<DesktopActivation>.broadcast();
+
+  static const MethodChannel _methods = MethodChannel(
+    desktopIntegrationMethodChannel,
+  );
 
   DBusClient? _bus;
   bool _ownsBusName = false;
   bool _closed = false;
 
   /// Arguments forwarded by later launches. Empty for the initial launch.
-  Stream<List<String>> get activations => _activations.stream;
+  Stream<DesktopActivation> get activations => _activations.stream;
 
   /// True when this process owns [busName].
   bool get ownsBusName => _ownsBusName;
@@ -76,7 +124,7 @@ class DesktopActivationClient {
           await bus.registerObject(
             ActivationObject(
               DBusObjectPath(objectPath),
-              onArguments: _activations.add,
+              onActivation: _activations.add,
             ),
           );
           return DesktopActivationRole.primary;
@@ -97,7 +145,10 @@ class DesktopActivationClient {
         path: DBusObjectPath(objectPath),
         interface: activationInterfaceName,
         name: 'Activate',
-        values: <DBusValue>[DBusArray.string(arguments)],
+        values: <DBusValue>[
+          DBusArray.string(arguments),
+          DBusString(activationTokenFromEnvironment() ?? ''),
+        ],
       );
     } catch (_) {
       // The primary instance may be shutting down; exiting is still correct.
@@ -108,6 +159,28 @@ class DesktopActivationClient {
       // Releasing a queued name can fail when the owner already exited.
     }
     await close();
+  }
+
+  /// Asks the desktop environment to raise the window of this process.
+  ///
+  /// [activationToken] is the token of the request that is being applied, which
+  /// lets the window manager verify that the raise answers a user action.
+  /// Returns false when no Linux plugin is registered or the raise was refused.
+  Future<bool> activateWindow({String? activationToken}) async {
+    if (_closed) {
+      return false;
+    }
+    try {
+      final bool? raised = await _methods.invokeMethod<bool>(
+        'activateWindow',
+        <String, Object?>{'startupNotificationId': activationToken},
+      );
+      return raised ?? false;
+    } on MissingPluginException {
+      return false;
+    } on PlatformException {
+      return false;
+    }
   }
 
   /// Releases the bus name and closes the session bus connection.
@@ -128,12 +201,12 @@ class DesktopActivationClient {
   }
 }
 
-/// Serves `Activate(as)` on the session bus.
+/// Serves `Activate(as, s)` on the session bus.
 class ActivationObject extends DBusObject {
-  ActivationObject(super.path, {required this.onArguments});
+  ActivationObject(super.path, {required this.onActivation});
 
-  /// Callback invoked with the arguments of a later launch.
-  final void Function(List<String> arguments) onArguments;
+  /// Callback invoked with the request of a later launch.
+  final void Function(DesktopActivation activation) onActivation;
 
   @override
   List<DBusIntrospectInterface> introspect() {
@@ -148,6 +221,11 @@ class ActivationObject extends DBusObject {
                 DBusSignature('as'),
                 DBusArgumentDirection.in_,
                 name: 'arguments',
+              ),
+              DBusIntrospectArgument(
+                DBusSignature('s'),
+                DBusArgumentDirection.in_,
+                name: 'activationToken',
               ),
             ],
           ),
@@ -164,11 +242,17 @@ class ActivationObject extends DBusObject {
     if (methodCall.name != 'Activate') {
       return DBusMethodErrorResponse.unknownMethod();
     }
-    if (methodCall.values.length != 1) {
-      return DBusMethodErrorResponse.invalidArgs('Expected one argument array.');
+    if (methodCall.values.length != 2) {
+      return DBusMethodErrorResponse.invalidArgs(
+        'Expected an argument array and an activation token.',
+      );
     }
-    onArguments(
-      methodCall.values.single.asStringArray().toList(growable: false),
+    final String token = methodCall.values[1].asString();
+    onActivation(
+      DesktopActivation(
+        arguments: methodCall.values[0].asStringArray().toList(growable: false),
+        activationToken: token.isEmpty ? null : token,
+      ),
     );
     return DBusMethodSuccessResponse();
   }

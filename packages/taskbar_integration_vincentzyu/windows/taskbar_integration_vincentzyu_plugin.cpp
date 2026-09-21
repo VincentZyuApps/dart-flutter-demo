@@ -36,6 +36,9 @@ constexpr wchar_t kSingleInstanceMutex[] =
 // Taskbar identity of unpackaged launches of this application.
 constexpr wchar_t kAppUserModelId[] = L"VincentZyuApps.DartFlutterDemo";
 
+// Tooltip and sender name of the shell notification.
+constexpr wchar_t kAppDisplayName[] = L"Dart + Flutter Demo";
+
 // Jump list category that holds the seven destinations.
 constexpr wchar_t kJumpListCategory[] = L"Pages";
 
@@ -47,6 +50,16 @@ constexpr size_t kThumbnailButtonLimit = 7;
 
 // Button identifiers are one based and map onto the order of the request.
 constexpr UINT kThumbnailButtonIdBase = 1;
+
+// Identifier of the temporary tray icon that owns the notification balloon.
+constexpr UINT kTrayIconId = 1;
+
+// Message the shell posts to the sink window for tray icon events.
+constexpr UINT kTrayCallbackMessage = WM_APP + 41;
+
+// Timer that retires the tray icon once the balloon has been shown.
+constexpr UINT_PTR kTrayTimerId = 1;
+constexpr UINT kTrayLifetimeMs = 15000;
 
 // Keeps a COM interface alive for the duration of a function.
 template <typename T>
@@ -395,6 +408,7 @@ TaskbarIntegrationVincentzyuPlugin::~TaskbarIntegrationVincentzyuPlugin() {
     window_proc_delegate_id_ = 0;
   }
   DestroyIcons(thumbnail_icons_);
+  RemoveTrayIcon();
   if (taskbar_ != nullptr) {
     taskbar_->Release();
     taskbar_ = nullptr;
@@ -459,6 +473,19 @@ void TaskbarIntegrationVincentzyuPlugin::HandleMethodCall(
     return;
   }
 
+  if (method == "showNotification") {
+    const std::wstring title =
+        WideFromUtf8(StringValue(MapValue(*arguments, "title")));
+    const std::wstring body =
+        WideFromUtf8(StringValue(MapValue(*arguments, "body")));
+    if (title.empty() && body.empty()) {
+      result->Error("invalid-arguments", "Expected notification text.");
+      return;
+    }
+    result->Success(flutter::EncodableValue(ShowNotification(title, body)));
+    return;
+  }
+
   result->NotImplemented();
 }
 
@@ -487,6 +514,14 @@ bool TaskbarIntegrationVincentzyuPlugin::TryClaimSingleInstance() {
 }
 
 void TaskbarIntegrationVincentzyuPlugin::SendCommandLineToPrimary(HWND sink) {
+  // Hand the foreground right to the primary instance. Without it Windows
+  // silently drops the raise that the forwarded request triggers, because this
+  // process, not the shell, is the one asking.
+  DWORD primary_process = 0;
+  GetWindowThreadProcessId(sink, &primary_process);
+  if (primary_process != 0) {
+    AllowSetForegroundWindow(primary_process);
+  }
   const std::wstring arguments = CommandLineArguments();
   COPYDATASTRUCT data = {};
   data.dwData = kCopyDataCommandLine;
@@ -540,6 +575,34 @@ LRESULT CALLBACK TaskbarIntegrationVincentzyuPlugin::SinkWindowProc(
     }
     return TRUE;
   }
+  if (message == kTrayCallbackMessage) {
+    auto* plugin = reinterpret_cast<TaskbarIntegrationVincentzyuPlugin*>(
+        GetWindowLongPtrW(window, GWLP_USERDATA));
+    if (plugin != nullptr) {
+      switch (LOWORD(lparam)) {
+        case NIN_BALLOONUSERCLICK:
+          // Clicking the balloon repeats the request that raised it.
+          plugin->ActivateWindow();
+          plugin->RemoveTrayIcon();
+          break;
+        case NIN_BALLOONHIDE:
+        case NIN_BALLOONTIMEOUT:
+          plugin->RemoveTrayIcon();
+          break;
+        default:
+          break;
+      }
+    }
+    return 0;
+  }
+  if (message == WM_TIMER && wparam == kTrayTimerId) {
+    auto* plugin = reinterpret_cast<TaskbarIntegrationVincentzyuPlugin*>(
+        GetWindowLongPtrW(window, GWLP_USERDATA));
+    if (plugin != nullptr) {
+      plugin->RemoveTrayIcon();
+    }
+    return 0;
+  }
   return DefWindowProcW(window, message, wparam, lparam);
 }
 
@@ -555,6 +618,10 @@ void TaskbarIntegrationVincentzyuPlugin::HandleSinkCopyData(
   std::memcpy(buffer.data(), data.lpData, character_count * sizeof(wchar_t));
   const std::wstring payload(buffer.data(), character_count);
   const std::wstring command_line(payload.c_str());
+
+  // A forwarded launch means the user picked a destination in the shell, so the
+  // window has to come back to the front before the request is applied.
+  ActivateWindow();
 
   flutter::EncodableList arguments;
   arguments.emplace_back(flutter::EncodableValue(Utf8FromWide(command_line)));
@@ -591,6 +658,124 @@ HWND TaskbarIntegrationVincentzyuPlugin::FlutterWindowHandle() {
   // only accept the top level window that owns the taskbar button.
   flutter_window_ = GetAncestor(view_window, GA_ROOT);
   return flutter_window_;
+}
+
+void TaskbarIntegrationVincentzyuPlugin::ActivateWindow() {
+  HWND window = FlutterWindowHandle();
+  if (window == nullptr) {
+    return;
+  }
+  if (IsIconic(window)) {
+    ShowWindow(window, SW_RESTORE);
+  } else if (!IsWindowVisible(window)) {
+    ShowWindow(window, SW_SHOW);
+  }
+  BringWindowToTop(window);
+  SetForegroundWindow(window);
+  if (GetForegroundWindow() == window) {
+    return;
+  }
+
+  // Windows drops the focus request when the caller does not own the input
+  // queue of the current foreground window. Sharing that queue lifts the
+  // restriction, so the request is retried once from the owning thread.
+  const DWORD owner = GetWindowThreadProcessId(GetForegroundWindow(), nullptr);
+  const DWORD current = GetCurrentThreadId();
+  if (owner != 0 && owner != current &&
+      AttachThreadInput(current, owner, TRUE)) {
+    BringWindowToTop(window);
+    SetForegroundWindow(window);
+    AttachThreadInput(current, owner, FALSE);
+    if (GetForegroundWindow() == window) {
+      return;
+    }
+  }
+
+  // Windows may still veto the request, for example while another application
+  // runs in full screen mode. Flashing the taskbar button at least shows the
+  // user where the desktop request landed.
+  FLASHWINFO flash = {};
+  flash.cbSize = sizeof(FLASHWINFO);
+  flash.hwnd = window;
+  flash.dwFlags = FLASHW_ALL | FLASHW_TIMERNOFG;
+  FlashWindowEx(&flash);
+}
+
+HICON TaskbarIntegrationVincentzyuPlugin::TrayIcon() {
+  if (tray_icon_ != nullptr) {
+    return tray_icon_;
+  }
+  const std::wstring executable = ExecutablePath();
+  if (!executable.empty()) {
+    HICON large = nullptr;
+    if (ExtractIconExW(executable.c_str(), 0, &large, nullptr, 1) == 1 &&
+        large != nullptr) {
+      tray_icon_ = large;
+      return tray_icon_;
+    }
+  }
+  // The fallback is a shared system icon that the shell owns and that must
+  // never be destroyed by this plugin.
+  tray_icon_ = LoadIconW(nullptr, IDI_APPLICATION);
+  tray_icon_shared_ = true;
+  return tray_icon_;
+}
+
+void TaskbarIntegrationVincentzyuPlugin::RemoveTrayIcon() {
+  if (sink_window_ != nullptr) {
+    KillTimer(sink_window_, kTrayTimerId);
+    if (tray_icon_added_) {
+      NOTIFYICONDATAW data = {};
+      data.cbSize = sizeof(NOTIFYICONDATAW);
+      data.hWnd = sink_window_;
+      data.uID = kTrayIconId;
+      Shell_NotifyIconW(NIM_DELETE, &data);
+    }
+  }
+  tray_icon_added_ = false;
+  if (tray_icon_ != nullptr && !tray_icon_shared_) {
+    DestroyIcon(tray_icon_);
+  }
+  tray_icon_ = nullptr;
+  tray_icon_shared_ = false;
+}
+
+bool TaskbarIntegrationVincentzyuPlugin::ShowNotification(
+    const std::wstring& title, const std::wstring& body) {
+  EnsureSinkWindow();
+  if (sink_window_ == nullptr) {
+    return false;
+  }
+
+  NOTIFYICONDATAW data = {};
+  data.cbSize = sizeof(NOTIFYICONDATAW);
+  data.hWnd = sink_window_;
+  data.uID = kTrayIconId;
+  if (!tray_icon_added_) {
+    data.uFlags = NIF_ICON | NIF_TIP | NIF_MESSAGE;
+    data.uCallbackMessage = kTrayCallbackMessage;
+    data.hIcon = TrayIcon();
+    wcsncpy_s(data.szTip, kAppDisplayName, _TRUNCATE);
+    if (data.hIcon == nullptr || !Shell_NotifyIconW(NIM_ADD, &data)) {
+      RemoveTrayIcon();
+      return false;
+    }
+    tray_icon_added_ = true;
+  }
+
+  // Windows 10 and 11 render this balloon as a notification and keep it in the
+  // notification centre, so an unpackaged build reaches the user exactly like a
+  // packaged one would through the WinRT toast APIs.
+  data.uFlags = NIF_INFO;
+  data.dwInfoFlags = NIIF_INFO;
+  wcsncpy_s(data.szInfoTitle, title.c_str(), _TRUNCATE);
+  wcsncpy_s(data.szInfo, body.c_str(), _TRUNCATE);
+  if (!Shell_NotifyIconW(NIM_MODIFY, &data)) {
+    RemoveTrayIcon();
+    return false;
+  }
+  SetTimer(sink_window_, kTrayTimerId, kTrayLifetimeMs, nullptr);
+  return true;
 }
 
 bool TaskbarIntegrationVincentzyuPlugin::ApplyJumpList(
@@ -740,6 +925,8 @@ std::optional<LRESULT> TaskbarIntegrationVincentzyuPlugin::HandleWindowProc(
   event[flutter::EncodableValue("type")] = flutter::EncodableValue("command");
   event[flutter::EncodableValue("id")] =
       flutter::EncodableValue(thumbnail_button_ids_[index]);
+  // The click came from the taskbar, which does not raise the window itself.
+  ActivateWindow();
   EmitEvent(std::move(event));
   // The shell keeps ownership of the message, so never swallow it.
   return std::nullopt;

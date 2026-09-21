@@ -10,5 +10,6 @@ enum SystemInfoSource {
   linuxDartIo,
   linuxNativeCommand,
   dartIoFallback,
+  desktopShellRequest,
   unavailable,
 }

@@ -15,6 +15,8 @@ class _RecordingTaskbarPlatform extends TaskbarIntegrationPlatform {
   List<TaskbarEntry>? jumpList;
   List<TaskbarToolbarButton>? toolbar;
   String? toolbarActiveId;
+  String? notificationTitle;
+  String? notificationBody;
 
   @override
   Future<bool> acquireSingleInstance() async {
@@ -40,6 +42,17 @@ class _RecordingTaskbarPlatform extends TaskbarIntegrationPlatform {
 
   @override
   Stream<TaskbarEvent> get events => _events.stream;
+
+  @override
+  Future<bool> showNotification({
+    required String title,
+    required String body,
+  }) async {
+    calls.add('showNotification');
+    notificationTitle = title;
+    notificationBody = body;
+    return true;
+  }
 
   void emit(TaskbarEvent event) => _events.add(event);
 
@@ -111,5 +124,17 @@ void main() {
     expect(received, hasLength(1));
     expect(received.single.type, TaskbarEventType.command);
     expect(received.single.commandId, 'type');
+  });
+
+  test('forwards notification text to the platform', () async {
+    expect(
+      await TaskbarIntegration.showNotification(
+        title: 'DartFlutterDemo',
+        body: 'Opened Adaptive Grid',
+      ),
+      isTrue,
+    );
+    expect(platform.notificationTitle, 'DartFlutterDemo');
+    expect(platform.notificationBody, 'Opened Adaptive Grid');
   });
 }

@@ -18,6 +18,9 @@ EXPECTED_ACTIONS = (
     ("Guide", "Guide", "--action=guide"),
 )
 
+# Window class of the GTK window, see linux/runner/my_application.cc.
+APP_ID = "io.github.vincentzyuapps.dartflutterdemo"
+
 
 def parse_groups(text: str) -> dict[str, dict[str, str]]:
     groups: dict[str, dict[str, str]] = {}
@@ -65,6 +68,11 @@ def verify_desktop_entry(text: str) -> None:
     expected = [label for label, _, _ in EXPECTED_ACTIONS]
     if declared != expected:
         raise SystemExit(f"Expected Actions={';'.join(expected)};, found {declared}")
+
+    # The dock matches the running window with the launcher through this key, so
+    # losing it would silently add a second, unnamed dock entry.
+    if main.get("StartupWMClass") != APP_ID:
+        raise SystemExit(f"Expected StartupWMClass={APP_ID}")
 
     for label, name, argument in EXPECTED_ACTIONS:
         action = groups.get(f"Desktop Action {label}")

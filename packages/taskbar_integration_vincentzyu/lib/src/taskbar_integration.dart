@@ -28,6 +28,17 @@ class TaskbarIntegration {
         .setThumbnailToolbar(buttons, activeId: activeId);
   }
 
+  /// Shows the shell notification that reports an applied desktop request.
+  static Future<bool> showNotification({
+    required String title,
+    required String body,
+  }) {
+    return TaskbarIntegrationPlatform.instance.showNotification(
+      title: title,
+      body: body,
+    );
+  }
+
   /// Taskbar events of this instance.
   static Stream<TaskbarEvent> get events =>
       TaskbarIntegrationPlatform.instance.events;

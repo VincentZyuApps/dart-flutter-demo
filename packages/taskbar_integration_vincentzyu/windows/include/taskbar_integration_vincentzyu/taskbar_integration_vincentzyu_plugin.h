@@ -50,6 +50,14 @@ class TaskbarIntegrationVincentzyuPlugin : public flutter::Plugin {
   bool ApplyThumbnailToolbar(const flutter::EncodableList& buttons,
                              const std::string& active_id);
 
+  // Raises the Flutter window for a request that came from the desktop shell.
+  void ActivateWindow();
+
+  // Shows the shell notification that reports an applied desktop request.
+  bool ShowNotification(const std::wstring& title, const std::wstring& body);
+  void RemoveTrayIcon();
+  HICON TrayIcon();
+
   HWND FlutterWindowHandle();
   void EnsureSinkWindow();
   void SendCommandLineToPrimary(HWND sink);
@@ -78,6 +86,10 @@ class TaskbarIntegrationVincentzyuPlugin : public flutter::Plugin {
   HWND flutter_window_ = nullptr;
   int window_proc_delegate_id_ = 0;
   bool thumbnail_buttons_created_ = false;
+  HICON tray_icon_ = nullptr;
+  bool tray_icon_added_ = false;
+  // True while the tray icon is a shared system icon that must not be freed.
+  bool tray_icon_shared_ = false;
 };
 
 }  // namespace taskbar_integration_vincentzyu

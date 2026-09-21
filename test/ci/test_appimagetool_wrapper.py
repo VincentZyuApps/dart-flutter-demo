@@ -16,6 +16,11 @@ class AppImageToolWrapperTests(unittest.TestCase):
             library_dir = app_dir / "usr" / "lib"
             library_dir.mkdir(parents=True)
             (app_dir / "AppRun").write_text("#!/usr/bin/env bash\n", encoding="utf-8")
+            desktop_entry = app_dir / "dart_flutter_demo.desktop"
+            desktop_entry.write_text(
+                "[Desktop Entry]\nName=DartFlutterDemo\nExec=dart_flutter_demo %u\n",
+                encoding="utf-8",
+            )
             for name in ("libstdc++.so.6", "libgcc_s.so.1"):
                 (library_dir / name).write_text("bundled", encoding="utf-8")
 
@@ -48,6 +53,10 @@ class AppImageToolWrapperTests(unittest.TestCase):
 
             self.assertFalse((library_dir / "libstdc++.so.6").exists())
             self.assertFalse((library_dir / "libgcc_s.so.1").exists())
+            self.assertIn(
+                "StartupWMClass=io.github.vincentzyuapps.dartflutterdemo",
+                desktop_entry.read_text(encoding="utf-8"),
+            )
             self.assertEqual(
                 arguments_file.read_text(encoding="utf-8").splitlines(),
                 arguments,

@@ -108,6 +108,21 @@ class AppImageDesktopTests(unittest.TestCase):
         self.assertIn("--appimage-extract", verifier)
         self.assertIn("squashfs-root", verifier)
 
+    def test_verifier_checks_the_window_class(self) -> None:
+        verifier = VERIFIER.read_text(encoding="utf-8")
+        wrapper = (
+            ROOT
+            / "scripts"
+            / "ci"
+            / "packaging"
+            / "linux"
+            / "appimagetool-wrapper.sh"
+        ).read_text(encoding="utf-8")
+
+        self.assertEqual(MODULE.APP_ID, APP_ID)
+        self.assertIn("StartupWMClass", verifier)
+        self.assertIn(f"StartupWMClass={APP_ID}", wrapper)
+
 
 if __name__ == "__main__":
     unittest.main()
