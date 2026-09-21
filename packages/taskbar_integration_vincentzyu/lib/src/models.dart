@@ -6,6 +6,7 @@ class TaskbarEntry {
     required this.id,
     required this.label,
     required this.arguments,
+    this.iconPath,
   });
 
   /// Stable identifier, also used by [TaskbarEvent.commandId].
@@ -17,12 +18,20 @@ class TaskbarEntry {
   /// Command line arguments used when the entry starts the executable.
   final String arguments;
 
+  /// Absolute path of the icon file of this entry, if it has its own icon.
+  ///
+  /// The shell reads the image from this path, so it has to be a real file
+  /// rather than an asset of the bundle. Leaving it unset makes Explorer fall
+  /// back to the icon of the executable.
+  final String? iconPath;
+
   /// Wire format consumed by the native plugin.
   Map<String, Object?> toMap() {
     return <String, Object?>{
       'id': id,
       'label': label,
       'arguments': arguments,
+      if (iconPath != null) 'iconPath': iconPath,
     };
   }
 }

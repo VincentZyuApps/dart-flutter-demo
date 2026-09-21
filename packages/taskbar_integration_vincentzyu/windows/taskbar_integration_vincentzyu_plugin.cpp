@@ -307,7 +307,8 @@ HICON CreateIconFromRgba(int32_t width,
 bool AppendJumpListEntry(IObjectCollection* collection,
                          const std::wstring& executable,
                          const std::wstring& title,
-                         const std::wstring& arguments) {
+                         const std::wstring& arguments,
+                         const std::wstring& icon_path) {
   ComRef<IShellLinkW> link;
   if (FAILED(CoCreateInstance(CLSID_ShellLink, nullptr, CLSCTX_INPROC_SERVER,
                               IID_IShellLinkW, link.PutVoid()))) {
@@ -319,7 +320,15 @@ bool AppendJumpListEntry(IObjectCollection* collection,
   if (FAILED(link->SetArguments(arguments.c_str()))) {
     return false;
   }
-  link->SetIconLocation(executable.c_str(), 0);
+  // The icon has to be a file the shell can open. A packaged build lives in a
+  // directory Explorer cannot reach and the assets of the bundle are not files
+  // at all, so the Dart side renders one icon per entry into the user profile
+  // and hands the path over here.
+  if (icon_path.empty()) {
+    link->SetIconLocation(executable.c_str(), 0);
+  } else {
+    link->SetIconLocation(icon_path.c_str(), 0);
+  }
 
   ComRef<IPropertyStore> properties;
   if (FAILED(link->QueryInterface(IID_IPropertyStore, properties.PutVoid()))) {
@@ -835,7 +844,10 @@ bool TaskbarIntegrationVincentzyuPlugin::ApplyJumpList(
         WideFromUtf8(StringValue(MapValue(*entry, "label")));
     const std::wstring arguments =
         WideFromUtf8(StringValue(MapValue(*entry, "arguments")));
-    if (!AppendJumpListEntry(collection.Get(), executable, title, arguments)) {
+    const std::wstring icon_path =
+        WideFromUtf8(StringValue(MapValue(*entry, "iconPath")));
+    if (!AppendJumpListEntry(collection.Get(), executable, title, arguments,
+                             icon_path)) {
       complete = false;
     }
   }

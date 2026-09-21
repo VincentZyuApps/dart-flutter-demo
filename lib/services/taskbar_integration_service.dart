@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:ui' as ui;
 
+import 'package:dart_flutter_demo/services/ico_encoder.dart';
 import 'package:desktop_integration_vincentzyu/desktop_integration_vincentzyu.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -219,16 +220,57 @@ class TaskbarIntegrationService {
 
   static const Duration _tourTick = Duration(seconds: 1);
 
+  /// Edge length of the square MPRIS cover art.
+  static const double _artSize = 256;
+
+  /// Radius of the disc behind a cover art glyph, relative to `_artSize`.
+  static const double _artDiscRadius = 0.42;
+
+  /// Font size of a cover art glyph, relative to `_artSize`.
+  ///
+  /// The ink of a Material glyph is roughly 0.72 of its font size, so this
+  /// fills a little over half of the disc.
+  static const double _artGlyphScale = 0.6;
+
+  /// Disc drawn behind a cover art glyph.
+  ///
+  /// A cover carries its own background, so unlike the taskbar glyphs it does
+  /// not follow the system theme.
+  static const Color _artBackgroundColour = Color(0xFF1F1F1F);
+
+  /// Edge length of a taskbar thumbnail toolbar button.
+  static const int _toolbarIconSize = 32;
+
+  /// Icon sizes Windows picks between for one jump list entry.
+  static const List<int> _jumpListIconSizes = <int>[32, 16];
+
+  /// Cover art of a page whose own cover could not be rendered.
+  static const String _fallbackArtAsset = 'assets/images/logo-icon-favicon.png';
+
   static DesktopActivationClient? _activationClient;
   static MprisBridge? _mprisBridge;
   static DesktopNotifier? _notifier;
   static StreamSubscription<TaskbarEvent>? _taskbarEvents;
   static Timer? _tourTimer;
-  static String? _artUrl;
+
+  /// Cover art URL of every destination, keyed by shortcut identifier.
+  static final Map<String, String> _artUrls = <String, String>{};
+
+  /// Cover art used by a destination that has no rendered cover.
+  static String? _fallbackArtUrl;
+
+  static bool _artPrepared = false;
   static int _currentPage = 0;
   static bool _tourRunning = false;
   static Duration _tourPosition = Duration.zero;
   static bool _shortcutsPublished = false;
+
+  /// Cover art of the page that is currently visible.
+  ///
+  /// The desktop shells draw their own transport buttons, so the cover is the
+  /// only part of the hover preview this application controls.
+  static String? get _artUrl =>
+      _artUrls[_pageShortcut(_currentPage).id] ?? _fallbackArtUrl;
 
   /// Finds the shortcut addressed by a command line.
   static DesktopShortcut? matchShortcut(List<String> arguments) {
@@ -357,7 +399,7 @@ class TaskbarIntegrationService {
     }
     _shortcutsPublished = true;
     if (Platform.isWindows) {
-      await TaskbarIntegration.setJumpList(_jumpListEntries());
+      await _publishJumpList();
       await _publishThumbnailToolbar();
       return;
     }
@@ -391,11 +433,16 @@ class TaskbarIntegrationService {
     await _publishNowPlaying();
   }
 
-  /// Re-renders the taskbar toolbar for the current system theme.
+  /// Re-renders the Windows surfaces for the current system theme.
+  ///
+  /// Both surfaces switch between a light and a dark glyph, and the jump list
+  /// icons carry the theme in their file name so the shell never keeps showing
+  /// a cached copy of the other theme.
   static Future<void> refreshToolbar() async {
     if (!_shortcutsPublished || !Platform.isWindows) {
       return;
     }
+    await _publishJumpList();
     await _publishThumbnailToolbar();
   }
 
@@ -418,16 +465,87 @@ class TaskbarIntegrationService {
     await activationClient?.close();
   }
 
-  static List<TaskbarEntry> _jumpListEntries() {
+  /// Registers the jump list of the current theme.
+  static Future<void> _publishJumpList() async {
+    await TaskbarIntegration.setJumpList(await _jumpListEntries());
+  }
+
+  static Future<List<TaskbarEntry>> _jumpListEntries() async {
+    final Map<String, String> icons = await _writeJumpListIcons();
     return desktopShortcuts
         .map(
           (DesktopShortcut shortcut) => TaskbarEntry(
             id: shortcut.id,
             label: shortcut.label,
             arguments: shortcut.arguments,
+            iconPath: icons[shortcut.id],
           ),
         )
         .toList(growable: false);
+  }
+
+  /// Renders the jump list icon of every destination.
+  ///
+  /// Returns the path of each icon, keyed by shortcut identifier, and omits the
+  /// destinations whose icon could not be written.
+  ///
+  /// Explorer loads the image from the file, so the icons have to be real files
+  /// outside the installation directory: a packaged build lives in a read-only
+  /// folder behind an access control list Explorer cannot pass, and the assets
+  /// of the bundle are not files either. `%LOCALAPPDATA%` is writable for every
+  /// installation kind, and it keeps the icons after this process exits, which
+  /// matters because the jump list outlives it.
+  static Future<Map<String, String>> _writeJumpListIcons() async {
+    final Map<String, String> paths = <String, String>{};
+    final Directory directory = _jumpListIconDirectory();
+    try {
+      await directory.create(recursive: true);
+    } catch (_) {
+      return paths;
+    }
+    final String theme = _jumpListTheme();
+    for (final DesktopShortcut shortcut in desktopShortcuts) {
+      try {
+        final List<IcoFrame> frames = <IcoFrame>[];
+        for (final int size in _jumpListIconSizes) {
+          frames.add(
+            IcoFrame(
+              size: size,
+              rgba: await _renderGlyph(shortcut.icon, size),
+            ),
+          );
+        }
+        final Uint8List encoded = encodeIco(frames);
+        // The digest in the name keeps a new glyph or a new theme from fighting
+        // the icon cache of the shell, which keys on the path.
+        final File file = File(
+          '${directory.path}/${shortcut.id}-$theme-${_fingerprint(encoded)}.ico',
+        );
+        if (!await file.exists()) {
+          await file.writeAsBytes(encoded, flush: true);
+        }
+        paths[shortcut.id] = file.path;
+      } catch (_) {
+        // This entry keeps the icon of the executable.
+      }
+    }
+    return paths;
+  }
+
+  /// Directory that holds the jump list icons of the current user.
+  static Directory _jumpListIconDirectory() {
+    final String? localAppData = Platform.environment['LOCALAPPDATA'];
+    final String root = localAppData == null || localAppData.isEmpty
+        ? Directory.systemTemp.path
+        : localAppData;
+    return Directory('$root/$desktopAppName/taskbar-icons');
+  }
+
+  /// Theme the jump list icons are rendered for.
+  static String _jumpListTheme() {
+    return ui.PlatformDispatcher.instance.platformBrightness == Brightness.dark
+        ? 'dark'
+        : 'light';
   }
 
   static Future<void> _publishThumbnailToolbar() async {
@@ -438,7 +556,11 @@ class TaskbarIntegrationService {
           id: shortcut.id,
           label: shortcut.label,
           arguments: shortcut.arguments,
-          icon: await _renderToolbarIcon(shortcut.icon),
+          icon: TaskbarIcon(
+            width: _toolbarIconSize,
+            height: _toolbarIconSize,
+            rgba: await _renderGlyph(shortcut.icon, _toolbarIconSize),
+          ),
           enabled: shortcut.pageIndex != _currentPage,
         ),
       );
@@ -450,9 +572,11 @@ class TaskbarIntegrationService {
   }
 
   /// Renders a Material glyph into premultiplied RGBA pixels.
-  static Future<TaskbarIcon> _renderToolbarIcon(
-    IconData icon, {
-    int size = 32,
+  static Future<Uint8List> _renderGlyph(
+    IconData icon,
+    int size, {
+    Color? color,
+    double glyphScale = 0.72,
   }) async {
     final ui.PictureRecorder recorder = ui.PictureRecorder();
     final Canvas canvas = Canvas(
@@ -464,10 +588,10 @@ class TaskbarIntegrationService {
       text: TextSpan(
         text: String.fromCharCode(icon.codePoint),
         style: TextStyle(
-          fontSize: size * 0.72,
+          fontSize: size * glyphScale,
           fontFamily: icon.fontFamily,
           package: icon.fontPackage,
-          color: _toolbarGlyphColor(),
+          color: color ?? _toolbarGlyphColor(),
         ),
       ),
     )..layout();
@@ -480,13 +604,9 @@ class TaskbarIntegrationService {
         await image.toByteData(format: ui.ImageByteFormat.rawRgba);
     image.dispose();
     if (data == null) {
-      return TaskbarIcon(width: 1, height: 1, rgba: Uint8List(4));
+      return Uint8List(size * size * 4);
     }
-    return TaskbarIcon(
-      width: size,
-      height: size,
-      rgba: data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes),
-    );
+    return data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
   }
 
   /// Glyph colour that stays visible on both taskbar themes.
@@ -497,7 +617,7 @@ class TaskbarIntegrationService {
   }
 
   static Future<void> _startMprisBridge() async {
-    _artUrl ??= await _writeNowPlayingArt();
+    await _prepareNowPlayingArt();
     final MprisBridge bridge = MprisBridge();
     if (!await bridge.start(initialState: _nowPlayingState())) {
       return;
@@ -539,8 +659,12 @@ class TaskbarIntegrationService {
   }
 
   static NowPlayingState _nowPlayingState() {
+    final DesktopShortcut page = _pageShortcut(_currentPage);
     return NowPlayingState(
       title: desktopPageLabels[_currentPage],
+      // A page is a track: a new object path makes the shell take the new cover
+      // instead of reusing the one it cached for the previous page.
+      trackId: '${NowPlayingState.trackIdPrefix}/${page.id}',
       artUrl: _artUrl,
       length: pageDuration,
       position: _tourPosition,
@@ -569,23 +693,89 @@ class TaskbarIntegrationService {
     return ((index % desktopPageCount) + desktopPageCount) % desktopPageCount;
   }
 
-  /// Writes the app logo to a temporary file so MPRIS can publish `artUrl`.
-  static Future<String?> _writeNowPlayingArt() async {
+  /// Renders and writes the cover art of every destination.
+  ///
+  /// The desktop shells draw the transport controls of a hover preview
+  /// themselves, so the cover is the only part of that preview this application
+  /// controls. Giving every destination its own file also means the shell never
+  /// has to refresh an image it already cached under a path.
+  static Future<void> _prepareNowPlayingArt() async {
+    if (_artPrepared) {
+      return;
+    }
+    _artPrepared = true;
+    final Directory directory = Directory(
+      '${Directory.systemTemp.path}/dart-flutter-demo/now-playing',
+    );
     try {
-      final ByteData data =
-          await rootBundle.load('assets/images/logo-icon-favicon.png');
-      final Directory directory =
-          Directory('${Directory.systemTemp.path}/dart-flutter-demo');
       await directory.create(recursive: true);
-      final File file = File('${directory.path}/now-playing.png');
+    } catch (_) {
+      return;
+    }
+    for (final DesktopShortcut shortcut in desktopShortcuts) {
+      try {
+        final Uint8List? encoded = await _renderGlyphArt(shortcut.icon);
+        if (encoded == null) {
+          continue;
+        }
+        final File file = File('${directory.path}/${shortcut.id}.png');
+        await file.writeAsBytes(encoded, flush: true);
+        _artUrls[shortcut.id] = Uri.file(file.path).toString();
+      } catch (_) {
+        // This destination keeps the fallback cover.
+      }
+    }
+    try {
+      final ByteData data = await rootBundle.load(_fallbackArtAsset);
+      final File file = File('${directory.path}/app.png');
       await file.writeAsBytes(
         data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes),
         flush: true,
       );
-      return Uri.file(file.path).toString();
+      _fallbackArtUrl = Uri.file(file.path).toString();
     } catch (_) {
+      // Cover art stays empty, which the shells show as a placeholder.
+    }
+  }
+
+  /// Renders the cover art of one destination as a PNG.
+  static Future<Uint8List?> _renderGlyphArt(IconData icon) async {
+    final ui.PictureRecorder recorder = ui.PictureRecorder();
+    final Canvas canvas = Canvas(
+      recorder,
+      const Rect.fromLTWH(0, 0, _artSize, _artSize),
+    );
+    canvas.drawCircle(
+      const Offset(_artSize / 2, _artSize / 2),
+      _artSize * _artDiscRadius,
+      Paint()..color = _artBackgroundColour,
+    );
+    final TextPainter painter = TextPainter(
+      textDirection: TextDirection.ltr,
+      text: TextSpan(
+        text: String.fromCharCode(icon.codePoint),
+        style: TextStyle(
+          fontSize: _artSize * _artGlyphScale,
+          fontFamily: icon.fontFamily,
+          package: icon.fontPackage,
+          color: const Color(0xFFFFFFFF),
+        ),
+      ),
+    )..layout();
+    painter.paint(
+      canvas,
+      Offset((_artSize - painter.width) / 2, (_artSize - painter.height) / 2),
+    );
+    final ui.Image image = await recorder
+        .endRecording()
+        .toImage(_artSize.toInt(), _artSize.toInt());
+    final ByteData? data =
+        await image.toByteData(format: ui.ImageByteFormat.png);
+    image.dispose();
+    if (data == null) {
       return null;
     }
+    return data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
   }
 
   static void _handleTaskbarEvent(TaskbarEvent event) {
@@ -607,4 +797,18 @@ class TaskbarIntegrationService {
         break;
     }
   }
+}
+
+/// Short stable digest that keeps icon file names unique per rendered glyph.
+///
+/// The shell caches an icon by its path, so a glyph change has to produce a new
+/// name, and a name that only depends on the bytes keeps a re-render from
+/// writing the same image again.
+String _fingerprint(Uint8List bytes) {
+  int hash = 0x811c9dc5;
+  for (final int byte in bytes) {
+    hash ^= byte;
+    hash = (hash * 0x01000193) & 0xFFFFFFFF;
+  }
+  return hash.toRadixString(16).padLeft(8, '0');
 }

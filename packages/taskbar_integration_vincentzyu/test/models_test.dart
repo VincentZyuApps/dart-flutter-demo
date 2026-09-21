@@ -18,6 +18,22 @@ void main() {
         'arguments': '--tab=grid',
       });
     });
+
+    test('carries the icon file of an entry', () {
+      const TaskbarEntry entry = TaskbarEntry(
+        id: 'guide',
+        label: 'Guide',
+        arguments: '--action=guide',
+        iconPath: '/icons/guide-dark-01234567.ico',
+      );
+
+      expect(entry.toMap(), <String, Object?>{
+        'id': 'guide',
+        'label': 'Guide',
+        'arguments': '--action=guide',
+        'iconPath': '/icons/guide-dark-01234567.ico',
+      });
+    });
   });
 
   group('TaskbarToolbarButton', () {

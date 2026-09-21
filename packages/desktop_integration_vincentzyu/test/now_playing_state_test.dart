@@ -45,5 +45,22 @@ void main() {
       expect(copy.artist, state.artist);
       expect(copy.album, state.album);
     });
+
+    test('names a track per item so a shell refreshes its cover', () {
+      const state = NowPlayingState(
+        title: 'System Info',
+        trackId: '${NowPlayingState.trackIdPrefix}/system',
+        artUrl: 'file:///tmp/system.png',
+      );
+
+      expect(
+        state.toMetadata()['mpris:trackid']!.asObjectPath().value,
+        '/io/github/vincentzyuapps/DartFlutterDemo/track/system',
+      );
+      expect(
+        NowPlayingState.defaultTrackId,
+        '${NowPlayingState.trackIdPrefix}/current',
+      );
+    });
   });
 }

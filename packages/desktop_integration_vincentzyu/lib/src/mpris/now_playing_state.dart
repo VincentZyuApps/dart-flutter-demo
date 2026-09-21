@@ -13,9 +13,15 @@ class NowPlayingState {
     this.trackId = defaultTrackId,
   });
 
-  /// Stable MPRIS track object path used by this application.
-  static const String defaultTrackId =
-      '/io/github/vincentzyuapps/DartFlutterDemo/track/current';
+  /// Object path prefix of every track this application publishes.
+  ///
+  /// Desktops cache the cover art of a track object, so an application that
+  /// swaps the artwork has to name the new item with a new path.
+  static const String trackIdPrefix =
+      '/io/github/vincentzyuapps/DartFlutterDemo/track';
+
+  /// Stable MPRIS track object path used when the item never changes.
+  static const String defaultTrackId = '$trackIdPrefix/current';
 
   /// Track title, mapped from the current page name.
   final String title;
