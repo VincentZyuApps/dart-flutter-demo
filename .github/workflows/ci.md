@@ -19,9 +19,9 @@ Tokens are exact, case-sensitive, and hyphenated. Brackets are style punctuation
 
 | 🔑 Token | ⚙️ Workflow | 📦 Output | ⏳ Retention | 🚀 Creates Release |
 |---|---|---|---|:---:|
+| `build-artifact` | `release-publish.yml` | Everything in `build-release` as seven-day artifacts, without creating a Release | 7 days | No |
 | `build-release` | `release-publish.yml` | Six platform Release targets, x86_64 Flatpak, and three Profile targets | Permanent after publishing | Yes |
 | `build-publish` | `release-publish.yml` | Everything in `build-release`, plus signed Flatpak and Microsoft Store publication | Permanent and external channel updates | Yes |
-| `build-artifact` | `release-publish.yml` | Everything in `build-release` as seven-day artifacts, without creating a Release | 7 days | No |
 | `build-profile` | `profile-debug.yml` | Windows x64, Linux x64, Android Universal Profile | 7 days | No |
 | `build-debug` | `profile-debug.yml` | Windows x64, Linux x64, Android Universal Debug | 7 days | No |
 | `run-performance` | `performance.yml` | Windows, Linux, and macOS JSON/Markdown/log bundle | 7 days | No |

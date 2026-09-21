@@ -19,9 +19,9 @@ feat(system-info): migrate collection into a reusable plugin
 
 | 🔑 关键词 | ⚙️ 工作流 | 📦 输出 | ⏳ 保留时间 | 🚀 创建 Release |
 |---|---|---|---|:---:|
+| `build-artifact` | `release-publish.yml` | `build-release` 的全部内容，以保留七天的 Artifact 形式上传，不创建 Release | 7 天 | 否 |
 | `build-release` | `release-publish.yml` | 六个平台 Release 目标、x86_64 Flatpak 和三个 Profile 目标 | 发布后永久保留 | 是 |
 | `build-publish` | `release-publish.yml` | `build-release` 的全部内容，加签名 Flatpak 与 Microsoft Store 发布 | 永久，并更新外部渠道 | 是 |
-| `build-artifact` | `release-publish.yml` | `build-release` 的全部内容，以保留七天的 Artifact 形式上传，不创建 Release | 7 天 | 否 |
 | `build-profile` | `profile-debug.yml` | Windows x64、Linux x64、Android Universal Profile | 7 天 | 否 |
 | `build-debug` | `profile-debug.yml` | Windows x64、Linux x64、Android Universal Debug | 7 天 | 否 |
 | `run-performance` | `performance.yml` | Windows、Linux、macOS 的 JSON/Markdown/日志报告包 | 7 天 | 否 |
