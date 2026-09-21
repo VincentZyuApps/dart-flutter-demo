@@ -221,6 +221,21 @@ void DestroyIcons(std::vector<HICON>& icons) {
   icons.clear();
 }
 
+// Lets a lower integrity process reach a window of this instance.
+//
+// The taskbar sends a hover button click, and Explorer starts the copy that
+// forwards a jump list command. Both senders run at the medium integrity level
+// of the logged on user, while an administrator instance sits above them, and
+// User Interface Privilege Isolation silently drops the messages of a lower
+// integrity sender. Without this call the seven hover buttons and the seven
+// jump list entries stay visible but every click is lost.
+void AllowMessageFromLowerIntegrity(HWND window, UINT message) {
+  if (window == nullptr) {
+    return;
+  }
+  ChangeWindowMessageFilterEx(window, message, MSGFLT_ALLOW, nullptr);
+}
+
 // Turns premultiplied RGBA pixels into a 32bpp icon.
 HICON CreateIconFromRgba(int32_t width,
                          int32_t height,
@@ -549,6 +564,9 @@ void TaskbarIntegrationVincentzyuPlugin::EnsureSinkWindow() {
   sink_window_ = CreateWindowExW(0, kSinkWindowClass, kSinkWindowClass, WS_POPUP,
                                  0, 0, 0, 0, nullptr, nullptr,
                                  window_class.hInstance, this);
+  // The copy that forwards a jump list command is a plain process of the
+  // interactive user, so it never runs with the rights of this instance.
+  AllowMessageFromLowerIntegrity(sink_window_, WM_COPYDATA);
 }
 
 LRESULT CALLBACK TaskbarIntegrationVincentzyuPlugin::SinkWindowProc(
@@ -657,6 +675,8 @@ HWND TaskbarIntegrationVincentzyuPlugin::FlutterWindowHandle() {
   // A view exposes the child window it renders into, while the taskbar APIs
   // only accept the top level window that owns the taskbar button.
   flutter_window_ = GetAncestor(view_window, GA_ROOT);
+  // The taskbar delivers a hover button click as a WM_COMMAND to this window.
+  AllowMessageFromLowerIntegrity(flutter_window_, WM_COMMAND);
   return flutter_window_;
 }
 
