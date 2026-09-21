@@ -52,7 +52,7 @@ The pipeline first runs `flutter analyze`, root tests, local-plugin tests, and C
 
 The same run builds permanent Profile assets for Windows x64, Linux x64, and Android Universal. Profile packages carry `-profile-` in their filenames.
 
-The Linux x64 target extracts the packaged `AppImage` and rejects the build unless its desktop entry declares the seven `Actions=` destinations.
+The Linux x64 target extracts the packaged `AppImage` and rejects the build unless its desktop entry declares the seven `Actions=` destinations and the `StartupWMClass` of the window.
 
 The same target unpacks the packaged `DEB`, completes the missing `Actions=` groups of its desktop entry, and packs it again before the artifacts are uploaded.
 

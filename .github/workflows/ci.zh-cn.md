@@ -52,7 +52,7 @@ feat(system-info): migrate collection into a reusable plugin
 
 同一次运行还会构建永久附加到 Release 的 Windows x64、Linux x64 和 Android Universal Profile 包，文件名含 `-profile-`。
 
-Linux x64 目标会解包生成的 `AppImage`，并在其 desktop 入口未声明七个 `Actions=` 目标时判定构建失败。
+Linux x64 目标会解包生成的 `AppImage`，并在其 desktop 入口未声明七个 `Actions=` 目标或缺少窗口的 `StartupWMClass` 时判定构建失败。
 
 同一目标还会解包生成的 `DEB`，补齐其 desktop 入口缺失的 `Actions=` 分组，再重新打包后上传产物。
 
