@@ -90,8 +90,11 @@ class AppImageToolWrapperTests(unittest.TestCase):
 
         self.assertFalse((library_dir / "libstdc++.so.6").exists())
         self.assertFalse((library_dir / "libgcc_s.so.1").exists())
+        canonical_file = app_dir / f"{APP_ID}.desktop"
+        self.assertTrue(canonical_file.exists())
+        self.assertFalse(desktop_file.exists())
         return (
-            desktop_file.read_text(encoding="utf-8"),
+            canonical_file.read_text(encoding="utf-8"),
             arguments_file.read_text(encoding="utf-8").splitlines(),
             arguments,
         )

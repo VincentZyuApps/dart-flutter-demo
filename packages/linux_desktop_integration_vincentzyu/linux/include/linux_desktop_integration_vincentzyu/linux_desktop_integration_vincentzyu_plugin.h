@@ -1,0 +1,28 @@
+#ifndef FLUTTER_PLUGIN_LINUX_DESKTOP_INTEGRATION_VINCENTZYU_PLUGIN_H_
+#define FLUTTER_PLUGIN_LINUX_DESKTOP_INTEGRATION_VINCENTZYU_PLUGIN_H_
+
+#include <flutter_linux/flutter_linux.h>
+
+G_BEGIN_DECLS
+
+#ifdef FLUTTER_PLUGIN_IMPL
+#define FLUTTER_PLUGIN_EXPORT __attribute__((visibility("default")))
+#else
+#define FLUTTER_PLUGIN_EXPORT
+#endif
+
+typedef struct _LinuxDesktopIntegrationVincentzyuPlugin
+    LinuxDesktopIntegrationVincentzyuPlugin;
+typedef struct {
+  GObjectClass parent_class;
+} LinuxDesktopIntegrationVincentzyuPluginClass;
+
+FLUTTER_PLUGIN_EXPORT GType linux_desktop_integration_vincentzyu_plugin_get_type();
+
+FLUTTER_PLUGIN_EXPORT void
+linux_desktop_integration_vincentzyu_plugin_register_with_registrar(
+    FlPluginRegistrar* registrar);
+
+G_END_DECLS
+
+#endif  // FLUTTER_PLUGIN_LINUX_DESKTOP_INTEGRATION_VINCENTZYU_PLUGIN_H_

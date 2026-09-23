@@ -30,6 +30,7 @@ DESKTOP_ACTIONS = (
 
 # Window class of the GTK window, see linux/runner/my_application.cc.
 APP_ID = "io.github.vincentzyuapps.dartflutterdemo"
+DESKTOP_FILENAME = f"{APP_ID}.desktop"
 
 DESKTOP_GLOB = "usr/share/applications/*.desktop"
 
@@ -132,10 +133,13 @@ def patch_deb(deb: Path) -> None:
                 f"Expected exactly one desktop entry in {deb.name}, found {len(entries)}"
             )
         entry = entries[0]
+        canonical_entry = entry.with_name(DESKTOP_FILENAME)
         entry.write_text(
             patch_desktop_entry(entry.read_text(encoding="utf-8")),
             encoding="utf-8",
         )
+        if entry != canonical_entry:
+            entry.rename(canonical_entry)
 
         patched = Path(workdir) / deb.name
         subprocess.run(
@@ -152,6 +156,10 @@ def patch_deb(deb: Path) -> None:
         entries = sorted(root.glob(DESKTOP_GLOB))
         if len(entries) != 1:
             raise SystemExit(f"Expected one desktop entry in {deb.name} after patching.")
+        if entries[0].name != DESKTOP_FILENAME:
+            raise SystemExit(
+                f"Expected desktop entry {DESKTOP_FILENAME}, found {entries[0].name}"
+            )
         verify_desktop_entry(entries[0].read_text(encoding="utf-8"))
 
 

@@ -37,6 +37,7 @@ class DebDesktopActionTests(unittest.TestCase):
         patched = MODULE.patch_desktop_entry(UNPATCHED_ENTRY)
 
         MODULE.verify_desktop_entry(patched)
+        self.assertEqual(MODULE.DESKTOP_FILENAME, f"{APP_ID}.desktop")
         self.assertIn(
             "Actions=System;Dialog;Type;Grid;Controls;About;Guide;", patched
         )
@@ -82,6 +83,12 @@ class DebConfigurationTests(unittest.TestCase):
             "python3 scripts/ci/packaging/linux/patch-deb-desktop.py", workflow
         )
         self.assertIn("-name '*.deb'", workflow)
+
+    def test_packager_renames_the_entry_to_the_gtk_application_id(self) -> None:
+        source = SCRIPT.read_text(encoding="utf-8")
+
+        self.assertIn("entry.rename(canonical_entry)", source)
+        self.assertIn("entries[0].name != DESKTOP_FILENAME", source)
 
 
 if __name__ == "__main__":

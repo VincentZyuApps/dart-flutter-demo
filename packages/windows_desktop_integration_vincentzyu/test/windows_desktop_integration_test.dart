@@ -1,0 +1,143 @@
+import 'dart:async';
+import 'dart:typed_data';
+
+import 'package:flutter_test/flutter_test.dart';
+import 'package:windows_desktop_integration_vincentzyu/windows_desktop_integration_vincentzyu.dart';
+
+class _RecordingTaskbarPlatform extends WindowsDesktopIntegrationPlatform {
+  _RecordingTaskbarPlatform();
+
+  bool primary = true;
+  final List<String> calls = <String>[];
+  final StreamController<TaskbarEvent> _events =
+      StreamController<TaskbarEvent>.broadcast();
+
+  List<TaskbarEntry>? jumpList;
+  List<TaskbarToolbarButton>? toolbar;
+  String? toolbarActiveId;
+  String? notificationTitle;
+  String? notificationBody;
+
+  @override
+  Future<bool> acquireSingleInstance() async {
+    calls.add('acquireSingleInstance');
+    return primary;
+  }
+
+  @override
+  Future<void> setJumpList(List<TaskbarEntry> entries) async {
+    calls.add('setJumpList');
+    jumpList = entries;
+  }
+
+  @override
+  Future<void> setThumbnailToolbar(
+    List<TaskbarToolbarButton> buttons, {
+    String? activeId,
+  }) async {
+    calls.add('setThumbnailToolbar');
+    toolbar = buttons;
+    toolbarActiveId = activeId;
+  }
+
+  @override
+  Stream<TaskbarEvent> get events => _events.stream;
+
+  @override
+  Future<bool> showNotification({
+    required String title,
+    required String body,
+  }) async {
+    calls.add('showNotification');
+    notificationTitle = title;
+    notificationBody = body;
+    return true;
+  }
+
+  void emit(TaskbarEvent event) => _events.add(event);
+
+  Future<void> close() => _events.close();
+}
+
+void main() {
+  late _RecordingTaskbarPlatform platform;
+  late WindowsDesktopIntegrationPlatform original;
+
+  setUp(() {
+    original = WindowsDesktopIntegrationPlatform.instance;
+    platform = _RecordingTaskbarPlatform();
+    WindowsDesktopIntegrationPlatform.instance = platform;
+  });
+
+  tearDown(() async {
+    WindowsDesktopIntegrationPlatform.instance = original;
+    await platform.close();
+  });
+
+  test('reports the single instance result of the platform', () async {
+    expect(await WindowsDesktopIntegration.acquireSingleInstance(), isTrue);
+    platform.primary = false;
+    expect(await WindowsDesktopIntegration.acquireSingleInstance(), isFalse);
+    expect(platform.calls,
+        <String>['acquireSingleInstance', 'acquireSingleInstance']);
+  });
+
+  test('forwards jump list entries in order', () async {
+    const List<TaskbarEntry> entries = <TaskbarEntry>[
+      TaskbarEntry(
+          id: 'system', label: 'System Info', arguments: '--tab=system'),
+      TaskbarEntry(
+        id: 'about',
+        label: 'About',
+        arguments: '--action=about',
+      ),
+    ];
+
+    await WindowsDesktopIntegration.setJumpList(entries);
+
+    expect(platform.jumpList, same(entries));
+  });
+
+  test('forwards toolbar buttons and the active page hint', () async {
+    final List<TaskbarToolbarButton> buttons = <TaskbarToolbarButton>[
+      TaskbarToolbarButton(
+        id: 'grid',
+        label: 'Adaptive Grid',
+        arguments: '--tab=grid',
+        icon: TaskbarIcon(width: 1, height: 1, rgba: Uint8List(4)),
+        enabled: false,
+      ),
+    ];
+
+    await WindowsDesktopIntegration.setThumbnailToolbar(buttons,
+        activeId: 'grid');
+
+    expect(platform.toolbar, same(buttons));
+    expect(platform.toolbarActiveId, 'grid');
+  });
+
+  test('exposes platform events', () async {
+    final List<TaskbarEvent> received = <TaskbarEvent>[];
+    final StreamSubscription<TaskbarEvent> subscription =
+        WindowsDesktopIntegration.events.listen(received.add);
+    platform.emit(const TaskbarEvent.command('type'));
+    await pumpEventQueue();
+    await subscription.cancel();
+
+    expect(received, hasLength(1));
+    expect(received.single.type, TaskbarEventType.command);
+    expect(received.single.commandId, 'type');
+  });
+
+  test('forwards notification text to the platform', () async {
+    expect(
+      await WindowsDesktopIntegration.showNotification(
+        title: 'DartFlutterDemo',
+        body: 'Opened Adaptive Grid',
+      ),
+      isTrue,
+    );
+    expect(platform.notificationTitle, 'DartFlutterDemo');
+    expect(platform.notificationBody, 'Opened Adaptive Grid');
+  });
+}

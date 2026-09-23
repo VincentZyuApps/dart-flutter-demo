@@ -20,6 +20,7 @@ EXPECTED_ACTIONS = (
 
 # Window class of the GTK window, see linux/runner/my_application.cc.
 APP_ID = "io.github.vincentzyuapps.dartflutterdemo"
+DESKTOP_FILENAME = f"{APP_ID}.desktop"
 
 
 def parse_groups(text: str) -> dict[str, dict[str, str]]:
@@ -54,6 +55,10 @@ def extract_desktop_entry(appimage: Path) -> str:
         if len(entries) != 1:
             raise SystemExit(
                 f"Expected exactly one desktop entry in {appdir}, found {len(entries)}"
+            )
+        if entries[0].name != DESKTOP_FILENAME:
+            raise SystemExit(
+                f"Expected desktop entry {DESKTOP_FILENAME}, found {entries[0].name}"
             )
         return entries[0].read_text(encoding="utf-8")
 

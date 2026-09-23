@@ -3,11 +3,14 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
+  file_selector_windows
   system_info_vincentzyu
-  taskbar_integration_vincentzyu
+  url_launcher_windows
+  windows_desktop_integration_vincentzyu
 )
 
 list(APPEND FLUTTER_FFI_PLUGIN_LIST
+  jni
 )
 
 set(PLUGIN_BUNDLED_LIBRARIES)

@@ -83,15 +83,15 @@ The seven in-app destinations (the five bottom tabs plus About and Guide) are al
 | Jump list | Windows 10/11 | Right-clicking the taskbar button lists all seven destinations under a `Pages` category, each with its own glyph icon. |
 | Thumbnail toolbar | Windows 10/11 | Hovering the taskbar button shows up to seven glyph buttons; the current page is drawn disabled so it reads as pressed. |
 | Desktop actions | Linux | The Flatpak, AppImage, and DEB `.desktop` entries declare `Actions=` for all seven destinations. |
-| MPRIS player | Linux | The visible page is published as an MPRIS track with its own cover art, title, and track object path; KDE Plasma renders the cover and the transport buttons inside its taskbar hover tooltip. |
+| MPRIS player | Linux | The visible page is published as an MPRIS item with its own cover art, title, and track object path; supported KDE/GNOME media controls can expose the transport actions. |
 | Notifications | Windows, Linux | Applying a desktop request raises the window and reports `Opened <label>`, through a shell balloon on Windows and a freedesktop notification on Linux. |
 
 A second launch forwards its command line to the running window, over a session-bus `Activate(as, s)` call on Linux and over `WM_COPYDATA` on Windows, and then exits.
 
 Platform caveats:
 
-- GNOME Shell offers no supported way for a non-native toolkit to add hover controls to a dock icon, so GNOME gets the desktop-entry actions and the media controls only.
-- The desktop shells draw the transport buttons of a hover preview themselves, so the cover art of the current page is the only part of that preview this application controls.
+- GNOME Shell offers no supported way for a non-native toolkit to add hover controls to a dock icon; MPRIS media controls remain available only where the shell chooses to expose them.
+- Desktop shells draw any MPRIS transport controls themselves, so the cover art of the current page is the only preview content this application controls.
 - The jump list reuses the Material glyphs of the thumbnail toolbar and writes them to `%LOCALAPPDATA%\DartFlutterDemo\taskbar-icons` at run time, because Explorer loads an icon from a real file path and neither a packaged installation directory nor a bundled asset provides one.
 - The DEB template writes `Actions=` names without the matching `[Desktop Action <name>]` groups, so the Linux release job unpacks the built DEB, adds the groups, and packs it again.
 - Wayland refuses to move the focus on behalf of a background application, so the raise falls back to an urgency hint on the dock entry there.
@@ -188,15 +188,15 @@ The app keeps all five platform projects in source control. Reusable system-info
 | `lib/services/app_performance.dart` | FPS tracking and rebuild count helpers. |
 | `lib/services/github_repository_service.dart` | GitHub repository parsing, fetching, and data models. |
 | `lib/services/system_info_service.dart` | App formatting, logging setup, debug snapshot, and copy/export adapter. |
-| `lib/services/taskbar_integration_service.dart` | Seven desktop destinations, single-instance handover, and the jump list, thumbnail toolbar, MPRIS, and notification bridges. |
+| `lib/services/desktop_integration_service.dart` | Seven desktop destinations, single-instance handover, and the jump list, thumbnail toolbar, MPRIS, and notification bridges. |
 | `lib/widgets/animated_page.dart` | Page transitions and staggered animation wrappers. |
 | `lib/widgets/repository_card.dart` | Grid-style repository card widget. |
 | `lib/widgets/repository_list_tile.dart` | List-style repository row widget. |
 | `lib/widgets/state_shell.dart` | Shared empty/loading/error state layout. |
 | `lib/widgets/tag.dart` | Small pill/tag display widget. |
-| `packages/desktop_integration_vincentzyu/` | Linux single-instance activation over D-Bus, an MPRIS now-playing bridge, freedesktop notifications, and a GTK window-activation plugin. |
+| `packages/linux_desktop_integration_vincentzyu/` | Linux single-instance activation over D-Bus, an MPRIS now-playing bridge, freedesktop notifications, and a GTK window-activation plugin. |
 | `packages/system_info_vincentzyu/` | Reusable typed system-information plugin for all five platforms. |
-| `packages/taskbar_integration_vincentzyu/` | Windows jump list, thumbnail toolbar, and single-instance forwarding plugin. |
+| `packages/windows_desktop_integration_vincentzyu/` | Windows jump list, thumbnail toolbar, and single-instance forwarding plugin. |
 | `android/`, `ios/`, `windows/`, `linux/`, `macos/` | Committed Flutter platform projects; normal CI never regenerates them. |
 | `.github/workflows/profile-debug.yml` | Seven-day Windows/Linux/Android Profile and Debug artifacts. |
 | `.github/workflows/performance.yml` | Seven-day or permanent Pre-release desktop Profile build reports. |

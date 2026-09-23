@@ -8,7 +8,7 @@ import 'pages/page2_typography_studio.dart';
 import 'pages/page3_adaptive_grid.dart';
 import 'pages/page4_controls_feedback.dart';
 import 'services/app_performance.dart';
-import 'services/taskbar_integration_service.dart';
+import 'services/desktop_integration_service.dart';
 import 'widgets/animated_page.dart';
 
 final themeNotifier = ValueNotifier<ThemeMode>(ThemeMode.system);
@@ -101,7 +101,7 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
     desktopRequestNotifier.addListener(_handleDesktopRequests);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _startDesktopIntegration();
+      _startLinuxDesktopIntegration();
     });
   }
 
@@ -110,13 +110,13 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
     WidgetsBinding.instance.removeTimingsCallback(_fpsTracker.addTimings);
     WidgetsBinding.instance.removeObserver(this);
     desktopRequestNotifier.removeListener(_handleDesktopRequests);
-    TaskbarIntegrationService.dispose();
+    DesktopIntegrationService.dispose();
     super.dispose();
   }
 
   @override
   void didChangePlatformBrightness() {
-    TaskbarIntegrationService.refreshToolbar();
+    DesktopIntegrationService.refreshToolbar();
   }
 
   @override
@@ -179,7 +179,8 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
                       currentAccountPicture: const ClipRRect(
                         borderRadius: BorderRadius.all(Radius.circular(16)),
                         child: Image(
-                          image: AssetImage('assets/images/logo-icon-favicon.png'),
+                          image:
+                              AssetImage('assets/images/logo-icon-favicon.png'),
                           fit: BoxFit.cover,
                         ),
                       ),
@@ -251,9 +252,9 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
 
   /// Publishes the desktop surfaces and applies requests that were queued
   /// before the window existed.
-  Future<void> _startDesktopIntegration() async {
-    await TaskbarIntegrationService.publishShortcuts();
-    await TaskbarIntegrationService.setActivePage(_currentIndex);
+  Future<void> _startLinuxDesktopIntegration() async {
+    await DesktopIntegrationService.publishShortcuts();
+    await DesktopIntegrationService.setActivePage(_currentIndex);
     _handleDesktopRequests();
   }
 
@@ -294,7 +295,7 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
     if (index != _currentIndex) {
       setState(() => _currentIndex = index);
     }
-    TaskbarIntegrationService.setActivePage(index);
+    DesktopIntegrationService.setActivePage(index);
   }
 
   Future<void> _showAboutDialog(BuildContext context) async {
@@ -322,18 +323,21 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
           children: [
             CircleAvatar(
               radius: 16,
-              backgroundImage: AssetImage('assets/images/mahiro-pfp-VincentZyu-square.png'),
+              backgroundImage:
+                  AssetImage('assets/images/mahiro-pfp-VincentZyu-square.png'),
             ),
             SizedBox(width: 8),
             CircleAvatar(
               radius: 16,
-              backgroundImage: AssetImage('assets/images/mahiro-pfp-VincentZyuApps-square.png'),
+              backgroundImage: AssetImage(
+                  'assets/images/mahiro-pfp-VincentZyuApps-square.png'),
             ),
           ],
         ),
         const SizedBox(height: 8),
         InkWell(
-          onTap: () => launchUrl(Uri.parse('https://github.com/VincentZyu233/dart-flutter-demo')),
+          onTap: () => launchUrl(
+              Uri.parse('https://github.com/VincentZyu233/dart-flutter-demo')),
           child: Text(
             'https://github.com/VincentZyu233/dart-flutter-demo',
             style: TextStyle(
@@ -363,35 +367,40 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
                   dialogContext: context,
                   index: 0,
                   title: '0. System Info',
-                  description: 'Native and fallback system information with debug trace and export tools.',
+                  description:
+                      'Native and fallback system information with debug trace and export tools.',
                 ),
                 const SizedBox(height: 8),
                 _buildGuideEntry(
                   dialogContext: context,
                   index: 1,
                   title: '1. Dialog Lab',
-                  description: 'Modern Flutter dialog and classic Win32-style dialog comparison.',
+                  description:
+                      'Modern Flutter dialog and classic Win32-style dialog comparison.',
                 ),
                 const SizedBox(height: 8),
                 _buildGuideEntry(
                   dialogContext: context,
                   index: 2,
                   title: '2. Typography Studio',
-                  description: 'Font, spacing, color, local font file, and live text preview testing.',
+                  description:
+                      'Font, spacing, color, local font file, and live text preview testing.',
                 ),
                 const SizedBox(height: 8),
                 _buildGuideEntry(
                   dialogContext: context,
                   index: 3,
                   title: '3. Adaptive Grid',
-                  description: 'GitHub repository fetching, filter/sort, and Grid / Masonry / List layout experiments.',
+                  description:
+                      'GitHub repository fetching, filter/sort, and Grid / Masonry / List layout experiments.',
                 ),
                 const SizedBox(height: 8),
                 _buildGuideEntry(
                   dialogContext: context,
                   index: 4,
                   title: '4. Controls & Feedback',
-                  description: 'Switches, radios, checkboxes, progress, snack bars, and bottom sheets.',
+                  description:
+                      'Switches, radios, checkboxes, progress, snack bars, and bottom sheets.',
                 ),
                 const SizedBox(height: 12),
                 const Text('Want more detailed notes? See the README here:'),
@@ -446,7 +455,8 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
+                  Text(title,
+                      style: const TextStyle(fontWeight: FontWeight.w600)),
                   const SizedBox(height: 2),
                   Text(description),
                 ],
@@ -478,7 +488,8 @@ class _PerfChip extends StatelessWidget {
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
           decoration: BoxDecoration(
-            color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.55),
+            color: theme.colorScheme.surfaceContainerHighest
+                .withValues(alpha: 0.55),
             borderRadius: BorderRadius.circular(999),
             border: Border.all(
               color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),

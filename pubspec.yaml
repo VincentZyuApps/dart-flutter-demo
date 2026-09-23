@@ -1,7 +1,7 @@
 name: dart_flutter_demo
 description: A Flutter UI showcase PoC app.
 publish_to: 'none'
-version: 0.5.1-beta.17+20260921
+version: 0.5.2-beta.18+20260924
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -17,12 +17,12 @@ dependencies:
   flutter_colorpicker: ^1.1.0
   package_info_plus: ^8.0.2
   path_provider: ^2.1.5
-  desktop_integration_vincentzyu:
-    path: packages/desktop_integration_vincentzyu
+  linux_desktop_integration_vincentzyu:
+    path: packages/linux_desktop_integration_vincentzyu
   system_info_vincentzyu:
     path: packages/system_info_vincentzyu
-  taskbar_integration_vincentzyu:
-    path: packages/taskbar_integration_vincentzyu
+  windows_desktop_integration_vincentzyu:
+    path: packages/windows_desktop_integration_vincentzyu
   url_launcher: ^6.3.1
 
 dev_dependencies:

@@ -120,8 +120,11 @@ class AppImageDesktopTests(unittest.TestCase):
         ).read_text(encoding="utf-8")
 
         self.assertEqual(MODULE.APP_ID, APP_ID)
+        self.assertEqual(MODULE.DESKTOP_FILENAME, f"{APP_ID}.desktop")
         self.assertIn("StartupWMClass", verifier)
+        self.assertIn("DESKTOP_FILENAME", verifier)
         self.assertIn(f"StartupWMClass={APP_ID}", wrapper)
+        self.assertIn(f"DESKTOP_FILENAME='{APP_ID}.desktop'", wrapper)
 
 
 if __name__ == "__main__":
