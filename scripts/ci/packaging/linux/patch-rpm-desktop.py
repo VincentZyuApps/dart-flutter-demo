@@ -23,6 +23,8 @@ sys.modules[SPEC.name] = PATCHER
 SPEC.loader.exec_module(PATCHER)
 
 DESKTOP_GLOB = "usr/share/applications/*.desktop"
+LAUNCHER_PATH = Path("usr/bin/dart_flutter_demo")
+PAYLOAD_EXECUTABLE_PATH = Path("opt/dart_flutter_demo/dart_flutter_demo")
 
 
 PACKAGE_NAME = "dart-flutter-demo-showcase"
@@ -55,6 +57,40 @@ def _desktop_entry(root: Path, package: Path) -> Path:
     if entry != canonical:
         entry.rename(canonical)
     return canonical
+
+
+def _install_launcher(root: Path) -> Path:
+    """Adds the command used by the RPM desktop entry and its actions.
+
+    flutter_app_packager places the Linux bundle in ``/opt/dart_flutter_demo``.
+    Its generated desktop entry invokes ``dart_flutter_demo`` by name, but the
+    rebuilt RPM has no PATH-visible executable unless we add one ourselves.
+    Keep the desktop entry portable and provide the conventional /usr/bin
+    launcher instead of embedding an RPM-specific absolute path in every
+    action.
+    """
+    payload = root / PAYLOAD_EXECUTABLE_PATH
+    if not payload.is_file():
+        raise SystemExit(f"RPM payload has no executable at {payload}")
+
+    launcher = root / LAUNCHER_PATH
+    launcher.parent.mkdir(parents=True, exist_ok=True)
+    launcher.write_text(
+        "#!/bin/sh\nexec /opt/dart_flutter_demo/dart_flutter_demo \"$@\"\n",
+        encoding="utf-8",
+        newline="\n",
+    )
+    launcher.chmod(0o755)
+    return launcher
+
+
+def _verify_launcher(root: Path, package: Path) -> None:
+    launcher = root / LAUNCHER_PATH
+    if not launcher.is_file() or not launcher.stat().st_mode & 0o111:
+        raise SystemExit(f"{package.name} has no executable {LAUNCHER_PATH}")
+    expected = "exec /opt/dart_flutter_demo/dart_flutter_demo \"$@\""
+    if expected not in launcher.read_text(encoding="utf-8"):
+        raise SystemExit(f"{package.name} launcher does not start the bundled executable")
 
 
 def rpm_fields(full_version: str) -> tuple[str, str]:
@@ -130,6 +166,7 @@ def build_rpm(deb: Path, full_version: str) -> Path:
         root = work / "package"
         subprocess.run(["dpkg-deb", "-x", str(deb), str(root)], check=True)
         _desktop_entry(root, deb)
+        _install_launcher(root)
         topdir = work / "rpmbuild"
         spec = _rpm_spec(root, topdir, rpm_version, rpm_release, "x86_64")
         subprocess.run(
@@ -151,6 +188,7 @@ def build_rpm(deb: Path, full_version: str) -> Path:
         if len(entries) != 1 or entries[0].name != PATCHER.DESKTOP_FILENAME:
             raise SystemExit(f"{package.name} has no canonical desktop entry after rebuilding")
         PATCHER.verify_desktop_entry(entries[0].read_text(encoding="utf-8"))
+        _verify_launcher(root, package)
     return package
 
 

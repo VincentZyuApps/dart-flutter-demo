@@ -1,5 +1,6 @@
 import importlib.util
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -30,6 +31,23 @@ class RpmPackagingTests(unittest.TestCase):
         self.assertIn("rpm2cpio", SCRIPT.read_text(encoding="utf-8"))
         self.assertIn("rpmbuild", SCRIPT.read_text(encoding="utf-8"))
 
+    def test_launcher_exposes_the_opt_payload_on_path(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            payload = root / MODULE.PAYLOAD_EXECUTABLE_PATH
+            payload.parent.mkdir(parents=True)
+            payload.write_text("binary", encoding="utf-8")
+            payload.chmod(0o755)
+
+            launcher = MODULE._install_launcher(root)
+
+            self.assertEqual(launcher, root / "usr/bin/dart_flutter_demo")
+            self.assertIn(
+                'exec /opt/dart_flutter_demo/dart_flutter_demo "$@"',
+                launcher.read_text(encoding="utf-8"),
+            )
+        self.assertIn("launcher.chmod(0o755)", SCRIPT.read_text(encoding="utf-8"))
+
     def test_maps_prerelease_to_rpm_version_and_release(self) -> None:
         self.assertEqual(
             MODULE.rpm_fields("0.5.3-beta.19+20260924"),
@@ -45,6 +63,8 @@ class RpmPackagingTests(unittest.TestCase):
         self.assertIn("--targets deb,appimage", workflow)
         self.assertIn("patch-rpm-desktop.py", workflow)
         self.assertIn("--version", workflow)
+        self.assertIn("Verify Linux command line", workflow)
+        self.assertIn('bundle/dart_flutter_demo', workflow)
 
 
 if __name__ == "__main__":

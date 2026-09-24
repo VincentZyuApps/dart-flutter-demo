@@ -90,6 +90,27 @@ void main() {
     });
   });
 
+  group('KdeWaylandFocusPolicy', () {
+    test('defaults to safe and accepts only the explicit policies', () {
+      expect(
+        KdeWaylandFocusPolicy.fromArguments(const <String>[]),
+        KdeWaylandFocusPolicy.safe,
+      );
+      expect(
+        KdeWaylandFocusPolicy.fromArguments(
+          const <String>['--kde-wayland-focus=mpris'],
+        ),
+        KdeWaylandFocusPolicy.mpris,
+      );
+      expect(
+        KdeWaylandFocusPolicy.fromArguments(
+          const <String>['--kde-wayland-focus=all'],
+        ),
+        KdeWaylandFocusPolicy.all,
+      );
+    });
+  });
+
   group('pending requests', () {
     tearDown(() {
       drainPendingRequests();

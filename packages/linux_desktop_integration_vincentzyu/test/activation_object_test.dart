@@ -160,4 +160,29 @@ void main() {
       );
     });
   });
+
+  group('isKdeWaylandSession', () {
+    test('requires both a KDE desktop and Wayland', () {
+      expect(
+        isKdeWaylandSession(<String, String>{
+          'XDG_CURRENT_DESKTOP': 'KDE',
+          'WAYLAND_DISPLAY': 'wayland-0',
+        }),
+        isTrue,
+      );
+      expect(
+        isKdeWaylandSession(<String, String>{
+          'XDG_CURRENT_DESKTOP': 'GNOME',
+          'WAYLAND_DISPLAY': 'wayland-0',
+        }),
+        isFalse,
+      );
+      expect(
+        isKdeWaylandSession(<String, String>{
+          'XDG_CURRENT_DESKTOP': 'KDE',
+        }),
+        isFalse,
+      );
+    });
+  });
 }

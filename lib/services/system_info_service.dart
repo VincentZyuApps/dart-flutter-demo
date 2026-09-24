@@ -86,6 +86,41 @@ Future<int> copySystemInfoDebugSnapshotToClipboard({
   return clipped.length;
 }
 
+/// Returns the application-owned session-log directory without creating it.
+///
+/// Command-line inspection commands use this instead of initializing a new
+/// [SystemInfoSessionLogSink], so reading or listing logs is side-effect free.
+Future<Directory> getSystemInfoLogDirectory() async {
+  Directory root;
+  try {
+    root = await getApplicationSupportDirectory();
+  } catch (_) {
+    root = Directory.systemTemp;
+  }
+  return Directory(
+    '${root.path}${Platform.pathSeparator}DartFlutterDemo'
+    '${Platform.pathSeparator}logs',
+  );
+}
+
+/// Lists existing session logs without creating the log directory or a file.
+Future<List<File>> listSystemInfoLogFiles() async {
+  final Directory directory = await getSystemInfoLogDirectory();
+  if (!await directory.exists()) {
+    return const <File>[];
+  }
+  final List<File> files = await directory
+      .list()
+      .where((FileSystemEntity entity) =>
+          entity is File &&
+          entity.path.endsWith('.log') &&
+          entity.uri.pathSegments.last.startsWith('dart_flutter_demo_system_info_'))
+      .cast<File>()
+      .toList();
+  files.sort((File a, File b) => b.path.compareTo(a.path));
+  return files;
+}
+
 class _SystemInfoAppService implements SystemInfoService {
   SystemInfoClient? _client;
   SystemInfoSessionLogSink? _logSink;
@@ -177,17 +212,8 @@ class _SystemInfoAppService implements SystemInfoService {
   }
 
   Future<void> _initialize() async {
-    Directory root;
-    try {
-      root = await getApplicationSupportDirectory();
-    } catch (_) {
-      root = Directory.systemTemp;
-    }
     final sink = SystemInfoSessionLogSink(
-      directory: Directory(
-        '${root.path}${Platform.pathSeparator}DartFlutterDemo'
-        '${Platform.pathSeparator}logs',
-      ),
+      directory: await getSystemInfoLogDirectory(),
       filePrefix: 'dart_flutter_demo_system_info',
     );
     await sink.open();

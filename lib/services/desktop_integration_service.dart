@@ -163,6 +163,28 @@ enum DesktopRequestOrigin {
   final String wireName;
 }
 
+/// Controls the optional KDE Wayland focus fallback for tokenless requests.
+///
+/// `safe` is the default and never attempts to bypass compositor focus policy.
+/// The other choices are intentionally command-line opt-ins for a local user.
+enum KdeWaylandFocusPolicy {
+  safe,
+  mpris,
+  all;
+
+  static KdeWaylandFocusPolicy fromArguments(List<String> arguments) {
+    for (final String argument in arguments) {
+      if (argument == '--kde-wayland-focus=mpris') {
+        return KdeWaylandFocusPolicy.mpris;
+      }
+      if (argument == '--kde-wayland-focus=all') {
+        return KdeWaylandFocusPolicy.all;
+      }
+    }
+    return KdeWaylandFocusPolicy.safe;
+  }
+}
+
 /// Origins that report the applied request through a system notification.
 const Set<DesktopRequestOrigin> notifyingOrigins = <DesktopRequestOrigin>{
   DesktopRequestOrigin.launchArguments,
@@ -199,6 +221,7 @@ void _enqueueDesktopRequest(
   if (origin != DesktopRequestOrigin.processCommandLine) {
     unawaited(DesktopIntegrationService.raiseWindow(
       activationToken: activationToken,
+      origin: origin,
     ));
   }
   if (notifyingOrigins.contains(origin)) {
@@ -254,6 +277,8 @@ class DesktopIntegrationService {
   static String? _fallbackArtUrl;
 
   static bool _artPrepared = false;
+  static KdeWaylandFocusPolicy _kdeWaylandFocusPolicy =
+      KdeWaylandFocusPolicy.safe;
   static int _currentPage = 0;
   // MPRIS uses Playing and Paused for a presentation request: Playing means
   // the app asked to be restored, Paused means it asked to be minimized.
@@ -294,6 +319,12 @@ class DesktopIntegrationService {
       }
     }
     return null;
+  }
+
+  /// Configures the process-local KDE Wayland focus fallback before desktop
+  /// activation is claimed. The policy is never inherited by later launches.
+  static void configureKdeWaylandFocus(List<String> arguments) {
+    _kdeWaylandFocusPolicy = KdeWaylandFocusPolicy.fromArguments(arguments);
   }
 
   /// Claims the single instance slot and wires the event sources.
@@ -354,13 +385,36 @@ class DesktopIntegrationService {
   /// Windows raises the window inside the native plugin, right where the shell
   /// message arrives, so only Linux needs the channel call. Both paths are still
   /// routed through here so every origin behaves the same.
-  static Future<void> raiseWindow({String? activationToken}) async {
+  static Future<void> raiseWindow({
+    String? activationToken,
+    DesktopRequestOrigin origin = DesktopRequestOrigin.processCommandLine,
+  }) async {
     if (!Platform.isLinux) {
       return;
     }
     _windowPresented = true;
     await _activationClient?.activateWindow(activationToken: activationToken);
+    if (_shouldUseKdeFocusFallback(
+      origin: origin,
+      activationToken: activationToken,
+    )) {
+      await _activationClient?.focusWindowWithKWin();
+    }
     await _publishNowPlaying();
+  }
+
+  static bool _shouldUseKdeFocusFallback({
+    required DesktopRequestOrigin origin,
+    required String? activationToken,
+  }) {
+    if (activationToken != null && activationToken.isNotEmpty) {
+      return false;
+    }
+    return switch (_kdeWaylandFocusPolicy) {
+      KdeWaylandFocusPolicy.safe => false,
+      KdeWaylandFocusPolicy.mpris => origin == DesktopRequestOrigin.mpris,
+      KdeWaylandFocusPolicy.all => true,
+    };
   }
 
   /// Asks Linux to minimize the application window.
@@ -632,11 +686,13 @@ class DesktopIntegrationService {
           origin: DesktopRequestOrigin.mpris,
         );
       };
-      player.onRaise = raiseWindow;
-      player.onPlay = raiseWindow;
+      player.onRaise = () => raiseWindow(origin: DesktopRequestOrigin.mpris);
+      player.onPlay = () => raiseWindow(origin: DesktopRequestOrigin.mpris);
       player.onPause = minimizeWindow;
       player.onPlayPause = () =>
-          _windowPresented ? minimizeWindow() : raiseWindow();
+          _windowPresented
+              ? minimizeWindow()
+              : raiseWindow(origin: DesktopRequestOrigin.mpris);
       player.onStop = minimizeWindow;
     }
     _mprisBridge = bridge;

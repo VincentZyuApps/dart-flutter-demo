@@ -20,6 +20,12 @@ const String activationInterfaceName =
 const String desktopIntegrationMethodChannel =
     'linux_desktop_integration_vincentzyu/methods';
 
+const String _kWinBusName = 'org.kde.KWin';
+const String _kWinScriptingPath = '/Scripting';
+const String _kWinScriptingInterface = 'org.kde.kwin.Scripting';
+const String _desktopApplicationId =
+    'io.github.vincentzyuapps.dartflutterdemo';
+
 /// Environment variables a desktop shell uses to hand out an activation token.
 ///
 /// Wayland launchers export `XDG_ACTIVATION_TOKEN`, while X11 startup
@@ -42,6 +48,17 @@ String? activationTokenFromEnvironment([Map<String, String>? environment]) {
     }
   }
   return null;
+}
+
+/// Whether [environment] describes a KDE Plasma Wayland session.
+///
+/// This deliberately requires both parts: an X11 session and GNOME's Wayland
+/// session must keep using their native activation behaviour.
+bool isKdeWaylandSession([Map<String, String>? environment]) {
+  final Map<String, String> values = environment ?? Platform.environment;
+  final String desktop = (values['XDG_CURRENT_DESKTOP'] ?? '').toLowerCase();
+  return values['WAYLAND_DISPLAY']?.isNotEmpty == true &&
+      (desktop.contains('kde') || desktop.contains('plasma'));
 }
 
 /// One desktop request delivered by a later launch of the application.
@@ -204,6 +221,87 @@ class DesktopActivationClient {
     }
   }
 
+  /// Uses a short-lived KWin script to activate this application's window.
+  ///
+  /// KWin normally rejects focus requests without an activation token. This is
+  /// therefore not called by default: the app layer exposes it only behind an
+  /// explicit `--kde-wayland-focus` opt-in. It is unavailable outside KDE
+  /// Wayland and safely returns false when KWin Scripting is disabled.
+  Future<bool> focusWindowWithKWin() async {
+    if (_closed || !isKdeWaylandSession() || _bus == null) {
+      return false;
+    }
+    final String? runtimeRoot = Platform.environment['XDG_RUNTIME_DIR'];
+    if (runtimeRoot == null || runtimeRoot.isEmpty) {
+      return false;
+    }
+    final Directory scriptDirectory = Directory(
+      '$runtimeRoot${Platform.pathSeparator}dart_flutter_demo',
+    );
+    final String suffix = DateTime.now().microsecondsSinceEpoch.toString();
+    final String scriptName = 'dart_flutter_demo_focus_$suffix';
+    final File script = File(
+      '${scriptDirectory.path}${Platform.pathSeparator}$scriptName.js',
+    );
+    var scriptLoaded = false;
+    try {
+      await scriptDirectory.create(recursive: true);
+      await script.writeAsString(_kWinFocusScript, flush: true);
+      final ProcessResult permission = await Process.run(
+        'chmod',
+        <String>['600', script.path],
+      );
+      if (permission.exitCode != 0) {
+        return false;
+      }
+      final DBusMethodSuccessResponse loaded = await _bus!.callMethod(
+        destination: _kWinBusName,
+        path: DBusObjectPath(_kWinScriptingPath),
+        interface: _kWinScriptingInterface,
+        name: 'loadScript',
+        values: <DBusValue>[DBusString(script.path), DBusString(scriptName)],
+      );
+      if (loaded.returnValues.length != 1) {
+        return false;
+      }
+      final DBusValue value = loaded.returnValues.single;
+      if (value is! DBusInt32 || value.value < 0) {
+        return false;
+      }
+      scriptLoaded = true;
+      await _bus!.callMethod(
+        destination: _kWinBusName,
+        path: DBusObjectPath(_kWinScriptingPath),
+        interface: _kWinScriptingInterface,
+        name: 'start',
+        values: const <DBusValue>[],
+      );
+      return true;
+    } catch (_) {
+      return false;
+    } finally {
+      if (scriptLoaded) {
+        try {
+          await _bus!.callMethod(
+            destination: _kWinBusName,
+            path: DBusObjectPath(_kWinScriptingPath),
+            interface: _kWinScriptingInterface,
+            name: 'unloadScript',
+            values: <DBusValue>[DBusString(scriptName)],
+          );
+        } catch (_) {
+          // The one-shot script may already be gone when KWin disconnects.
+        }
+      }
+      try {
+        await script.delete();
+      } on FileSystemException {
+        // A failed cleanup must not turn an optional focus request into an app
+        // failure. The runtime directory is removed at logout in any case.
+      }
+    }
+  }
+
   /// Releases the bus name and closes the session bus connection.
   Future<void> close() async {
     if (_closed) {
@@ -221,6 +319,20 @@ class DesktopActivationClient {
     }
   }
 }
+
+const String _kWinFocusScript = '''
+const targetIds = [
+  'io.github.vincentzyuapps.dartflutterdemo',
+  'dart_flutter_demo',
+  'dart-flutter-demo',
+];
+const target = workspace.windowList().find((window) =>
+  targetIds.includes(window.resourceClass) || targetIds.includes(window.resourceName)
+);
+if (target) {
+  workspace.activeWindow = target;
+}
+''';
 
 /// Serves `Activate(as, s)` on the session bus.
 class ActivationObject extends DBusObject {

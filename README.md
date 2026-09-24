@@ -97,6 +97,28 @@ Platform caveats:
 - Wayland refuses to move the focus on behalf of a background application, so the raise falls back to an urgency hint on the dock entry there.
 - The MPRIS bridge is experimental and deliberately maps pages onto a synthetic track.
 
+## 💻 Command Line
+
+All command-line modes exit before creating an application window or joining the single-instance handover. System information omits the hostname and local IP by default. Log inspection never creates a new session log; export and deletion ask for confirmation unless `--yes` is supplied.
+
+| Parameter | Behavior |
+|---|---|
+| `-h`, `--help` | Print the complete command reference and exit. |
+| `-V`, `--version` | Print the full app version and exit. |
+| `--system-info` | Print typed system information as readable text, without hostname or local IP. |
+| `--system-info=json` | Print the same information plus raw values as machine-readable JSON. |
+| `--include-sensitive` | Include hostname and local IP; valid only with `--system-info`. |
+| `--log-dir` | Print the application session-log directory without creating it. |
+| `--list-logs` | List existing session log paths without creating a file. |
+| `--export-logs <target.zip>` | Export existing logs and a privacy manifest to a new ZIP; refuses to overwrite files. |
+| `--clear-logs` | Delete existing session logs, never user document exports. |
+| `--yes` | Skip the terminal confirmation required by log export or deletion. |
+| `--kde-wayland-focus=safe` | Default GUI policy: respect KWin focus-stealing protection and use taskbar urgency when needed. |
+| `--kde-wayland-focus=mpris` | GUI opt-in: only MPRIS Play/Raise may use a temporary KWin script to focus the window. |
+| `--kde-wayland-focus=all` | GUI opt-in: every tokenless restore may use that KWin fallback; use only on a trusted local desktop. |
+
+`mpris` and `all` apply only to KDE Plasma Wayland with KWin Scripting available. They are deliberately opt-in because they bypass the compositor's normal focus-stealing protection. X11, GNOME, unavailable D-Bus, or a failed KWin script keep the safe urgency fallback.
+
 ## 🧩📱 Pages
 
 ### 0. 🖥️ System Info

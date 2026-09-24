@@ -69,6 +69,7 @@
 ## Documentation
 
 - 英文和中文 README、工作流文档必须同步更新。
+- 两份 README 修改后必须保持语义、Markdown 结构和总行数完全一致。
 - 平台、构建模式、产物名称和支持范围必须与实际 CI 一致。
 - 修改工作流时同步更新 `.github/workflows/ci.md` 和 `ci.zh-cn.md`。
 - 修改工作流文件名时同步更新 README Badge、校验脚本和全仓引用。
