@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Complete and verify the desktop entry inside a generated RPM package."""
+"""Build and verify an RPM from an already validated Debian payload."""
 
 from __future__ import annotations
 
@@ -10,6 +10,7 @@ import subprocess
 import sys
 import tarfile
 import tempfile
+import re
 from pathlib import Path
 
 
@@ -24,13 +25,16 @@ SPEC.loader.exec_module(PATCHER)
 DESKTOP_GLOB = "usr/share/applications/*.desktop"
 
 
-def _rpm_query(package: Path, query: str) -> str:
-    return subprocess.check_output(
-        ["rpm", "-qp", "--qf", query, str(package)], text=True
-    ).strip()
+PACKAGE_NAME = "dart-flutter-demo-showcase"
+SUMMARY = "Explore Flutter controls and cross-platform system information"
+LICENSE = "MIT"
+VERSION_PATTERN = re.compile(
+    r"(?P<version>\d+\.\d+\.\d+)(?:-(?P<stage>alpha|beta|rc)\.(?P<sequence>[1-9]\d*))?"
+    r"\+(?P<date>\d{8})$"
+)
 
 
-def _unpack(package: Path, root: Path) -> None:
+def _unpack_rpm(package: Path, root: Path) -> None:
     root.mkdir(parents=True, exist_ok=True)
     command = f'rpm2cpio "{package}" | cpio -idm --quiet -D "{root}"'
     subprocess.run(["bash", "-c", command], check=True)
@@ -53,18 +57,22 @@ def _desktop_entry(root: Path, package: Path) -> Path:
     return canonical
 
 
-def _rpm_spec(root: Path, package: Path, topdir: Path) -> Path:
-    metadata = {
-        "name": _rpm_query(package, "%{NAME}"),
-        "version": _rpm_query(package, "%{VERSION}"),
-        "release": _rpm_query(package, "%{RELEASE}"),
-        "arch": _rpm_query(package, "%{ARCH}"),
-        "summary": _rpm_query(package, "%{SUMMARY}"),
-        "license": _rpm_query(package, "%{LICENSE}"),
-    }
-    for key, value in metadata.items():
-        if not value or "\n" in value or "%" in value:
-            raise SystemExit(f"RPM metadata {key} is not safe to rebuild: {value!r}")
+def rpm_fields(full_version: str) -> tuple[str, str]:
+    match = VERSION_PATTERN.fullmatch(full_version)
+    if match is None:
+        raise ValueError(
+            "RPM package metadata requires X.Y.Z[-alpha.N|-beta.N|-rc.N]+YYYYMMDD"
+        )
+    stage = match.group("stage")
+    if stage is None:
+        return match.group("version"), f"1.{match.group('date')}"
+    return (
+        match.group("version"),
+        f"0.{stage}.{match.group('sequence')}.{match.group('date')}",
+    )
+
+
+def _rpm_spec(root: Path, topdir: Path, version: str, release: str, arch: str) -> Path:
 
     source = topdir / "SOURCES" / "payload.tar.gz"
     source.parent.mkdir(parents=True)
@@ -82,16 +90,16 @@ def _rpm_spec(root: Path, package: Path, topdir: Path) -> Path:
         "\n".join(
             [
                 "%global debug_package %{nil}",
-                f"Name: {metadata['name']}",
-                f"Version: {metadata['version']}",
-                f"Release: {metadata['release']}",
-                f"Summary: {metadata['summary']}",
-                f"License: {metadata['license']}",
-                f"BuildArch: {metadata['arch']}",
+                f"Name: {PACKAGE_NAME}",
+                f"Version: {version}",
+                f"Release: {release}",
+                f"Summary: {SUMMARY}",
+                f"License: {LICENSE}",
+                f"BuildArch: {arch}",
                 "Source0: payload.tar.gz",
                 "",
                 "%description",
-                metadata["summary"],
+                SUMMARY,
                 "",
                 "%prep",
                 "%setup -q -c -T",
@@ -114,43 +122,49 @@ def _rpm_spec(root: Path, package: Path, topdir: Path) -> Path:
     return spec
 
 
-def patch_rpm(package: Path) -> None:
+def build_rpm(deb: Path, full_version: str) -> Path:
+    rpm_version, rpm_release = rpm_fields(full_version)
     with tempfile.TemporaryDirectory() as workdir:
         work = Path(workdir)
         root = work / "package"
-        _unpack(package, root)
-        _desktop_entry(root, package)
+        subprocess.run(["dpkg-deb", "-x", str(deb), str(root)], check=True)
+        _desktop_entry(root, deb)
         topdir = work / "rpmbuild"
-        spec = _rpm_spec(root, package, topdir)
+        spec = _rpm_spec(root, topdir, rpm_version, rpm_release, "x86_64")
         subprocess.run(
             ["rpmbuild", "--define", f"_topdir {topdir}", "-bb", str(spec)],
             check=True,
         )
         rebuilt = next((topdir / "RPMS").rglob("*.rpm"), None)
         if rebuilt is None:
-            raise SystemExit(f"rpmbuild did not produce an RPM for {package.name}")
+            raise SystemExit(f"rpmbuild did not produce an RPM for {deb.name}")
+        package = deb.with_name(
+            f"{PACKAGE_NAME}-{rpm_version}-{rpm_release}.x86_64.rpm"
+        )
         shutil.move(str(rebuilt), str(package))
 
     with tempfile.TemporaryDirectory() as workdir:
         root = Path(workdir) / "verify"
-        _unpack(package, root)
+        _unpack_rpm(package, root)
         entries = sorted(root.glob(DESKTOP_GLOB))
         if len(entries) != 1 or entries[0].name != PATCHER.DESKTOP_FILENAME:
             raise SystemExit(f"{package.name} has no canonical desktop entry after rebuilding")
         PATCHER.verify_desktop_entry(entries[0].read_text(encoding="utf-8"))
+    return package
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(
-        description="Expose the seven destinations as desktop entry actions of RPMs."
+        description="Build RPMs with the seven desktop actions from validated Debian payloads."
     )
-    parser.add_argument("rpms", nargs="+", type=Path)
+    parser.add_argument("--version", required=True)
+    parser.add_argument("debs", nargs="+", type=Path)
     args = parser.parse_args()
-    for rpm in args.rpms:
-        if not rpm.is_file():
-            raise SystemExit(f"Missing RPM: {rpm}")
-        patch_rpm(rpm.resolve())
-        print(f"{rpm.name} declares the seven desktop actions")
+    for deb in args.debs:
+        if not deb.is_file():
+            raise SystemExit(f"Missing Debian package: {deb}")
+        package = build_rpm(deb.resolve(), args.version)
+        print(f"{package.name} declares the seven desktop actions")
     return 0
 
 

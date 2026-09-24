@@ -26,14 +26,21 @@ class RpmPackagingTests(unittest.TestCase):
         self.assertEqual(MODULE.PATCHER.DESKTOP_FILENAME,
                          "io.github.vincentzyuapps.dartflutterdemo.desktop")
         self.assertEqual(len(MODULE.PATCHER.DESKTOP_ACTIONS), 7)
+        self.assertIn("dpkg-deb", SCRIPT.read_text(encoding="utf-8"))
         self.assertIn("rpm2cpio", SCRIPT.read_text(encoding="utf-8"))
         self.assertIn("rpmbuild", SCRIPT.read_text(encoding="utf-8"))
 
+    def test_maps_prerelease_to_rpm_version_and_release(self) -> None:
+        self.assertEqual(
+            MODULE.rpm_fields("0.5.3-beta.19+20260924"),
+            ("0.5.3", "0.beta.19.20260924"),
+        )
+
     def test_release_workflow_packages_patches_and_verifies_rpm(self) -> None:
         workflow = WORKFLOW.read_text(encoding="utf-8")
-        self.assertIn("--targets deb,appimage,rpm", workflow)
+        self.assertIn("--targets deb,appimage", workflow)
         self.assertIn("patch-rpm-desktop.py", workflow)
-        self.assertIn("-name '*.rpm'", workflow)
+        self.assertIn("--version", workflow)
 
 
 if __name__ == "__main__":
