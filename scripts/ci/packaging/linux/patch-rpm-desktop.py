@@ -30,7 +30,7 @@ SUMMARY = "Explore Flutter controls and cross-platform system information"
 LICENSE = "MIT"
 VERSION_PATTERN = re.compile(
     r"(?P<version>\d+\.\d+\.\d+)(?:-(?P<stage>alpha|beta|rc)\.(?P<sequence>[1-9]\d*))?"
-    r"\+(?P<date>\d{8})$"
+    r"(?:\+(?P<date>\d{8}))?$"
 )
 
 
@@ -61,14 +61,15 @@ def rpm_fields(full_version: str) -> tuple[str, str]:
     match = VERSION_PATTERN.fullmatch(full_version)
     if match is None:
         raise ValueError(
-            "RPM package metadata requires X.Y.Z[-alpha.N|-beta.N|-rc.N]+YYYYMMDD"
+            "RPM package metadata requires X.Y.Z[-alpha.N|-beta.N|-rc.N][+YYYYMMDD]"
         )
+    date_suffix = f".{match.group('date')}" if match.group("date") else ""
     stage = match.group("stage")
     if stage is None:
-        return match.group("version"), f"1.{match.group('date')}"
+        return match.group("version"), f"1{date_suffix}"
     return (
         match.group("version"),
-        f"0.{stage}.{match.group('sequence')}.{match.group('date')}",
+        f"0.{stage}.{match.group('sequence')}{date_suffix}",
     )
 
 

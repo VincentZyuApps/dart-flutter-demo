@@ -35,6 +35,10 @@ class RpmPackagingTests(unittest.TestCase):
             MODULE.rpm_fields("0.5.3-beta.19+20260924"),
             ("0.5.3", "0.beta.19.20260924"),
         )
+        self.assertEqual(
+            MODULE.rpm_fields("0.5.3-beta.19"),
+            ("0.5.3", "0.beta.19"),
+        )
 
     def test_release_workflow_packages_patches_and_verifies_rpm(self) -> None:
         workflow = WORKFLOW.read_text(encoding="utf-8")
