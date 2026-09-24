@@ -2,8 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:package_info_plus/package_info_plus.dart';
-
+import '../application_version.dart';
 import 'system_info_service.dart';
 
 enum CommandLineMode {
@@ -173,8 +172,7 @@ Options:
         stdout.write(usage);
         return 0;
       case CommandLineMode.version:
-        final PackageInfo package = await PackageInfo.fromPlatform();
-        stdout.writeln(package.version);
+        stdout.writeln(applicationVersion);
         return 0;
       case CommandLineMode.systemInfoText:
       case CommandLineMode.systemInfoJson:
@@ -273,12 +271,11 @@ Options:
       names.add(name);
       archive.addFile('logs/$name', await file.readAsBytes(), await file.lastModified());
     }
-    final PackageInfo package = await PackageInfo.fromPlatform();
     archive.addFile(
       'manifest.json',
       utf8.encode(const JsonEncoder.withIndent('  ').convert(<String, Object?>{
         'application': 'DartFlutterDemo',
-        'version': package.version,
+        'version': applicationVersion,
         'generatedAtUtc': DateTime.now().toUtc().toIso8601String(),
         'privacy': 'Logs may contain hostname and local IP. They are never uploaded automatically.',
         'files': names,
