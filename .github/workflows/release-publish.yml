@@ -167,7 +167,7 @@ jobs:
         if: matrix.platform == 'linux-x64'
         run: |
           sudo apt-get update
-          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev patchelf libfuse2 rpm cpio
+          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev patchelf libfuse2 rpm cpio xvfb
 
       - uses: subosito/flutter-action@v2
         with:
@@ -258,8 +258,8 @@ jobs:
         run: |
           set -euo pipefail
           binary=build/linux/x64/release/bundle/dart_flutter_demo
-          "$binary" --help | grep -F 'DartFlutterDemo command line'
-          test -n "$("$binary" --version)"
+          xvfb-run -a "$binary" --help | grep -F 'DartFlutterDemo command line'
+          test -n "$(xvfb-run -a "$binary" --version)"
 
       - name: Verify Linux AppImage desktop actions
         if: matrix.platform == 'linux-x64'

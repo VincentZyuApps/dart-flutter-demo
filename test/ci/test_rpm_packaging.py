@@ -65,6 +65,7 @@ class RpmPackagingTests(unittest.TestCase):
         self.assertIn("--version", workflow)
         self.assertIn("Verify Linux command line", workflow)
         self.assertIn('bundle/dart_flutter_demo', workflow)
+        self.assertIn("xvfb-run -a", workflow)
 
 
 if __name__ == "__main__":
