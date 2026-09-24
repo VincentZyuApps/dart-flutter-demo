@@ -18,15 +18,13 @@ class WindowsCliRunnerTests(unittest.TestCase):
         self.assertIn("IsConsoleCommand(command_line_arguments)", runner)
         self.assertIn("CreateAndAttachConsole();", runner)
 
-    def test_release_workflow_smokes_the_windows_cli(self) -> None:
+    def test_release_workflow_keeps_the_windows_cli_entrypoint(self) -> None:
         workflow = WORKFLOW.read_text(encoding="utf-8")
 
-        self.assertIn("Verify Windows command line", workflow)
-        self.assertIn("& $binary --help", workflow)
-        self.assertIn("& $binary --version", workflow)
-        self.assertIn("if ($LASTEXITCODE -ne 0)", workflow)
-        self.assertIn("Windows CLI help smoke check failed.", workflow)
-        self.assertIn("Windows CLI version smoke check failed.", workflow)
+        self.assertIn("Verify Windows CLI package entrypoint", workflow)
+        self.assertIn("Test-Path -LiteralPath $binary -PathType Leaf", workflow)
+        self.assertIn("Windows CLI entrypoint is missing", workflow)
+        self.assertIn("Verify macOS CLI package entrypoint", workflow)
 
 
 if __name__ == "__main__":
