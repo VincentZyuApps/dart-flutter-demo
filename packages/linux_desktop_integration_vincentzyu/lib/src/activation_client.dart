@@ -23,9 +23,6 @@ const String desktopIntegrationMethodChannel =
 const String _kWinBusName = 'org.kde.KWin';
 const String _kWinScriptingPath = '/Scripting';
 const String _kWinScriptingInterface = 'org.kde.kwin.Scripting';
-const String _desktopApplicationId =
-    'io.github.vincentzyuapps.dartflutterdemo';
-
 /// Environment variables a desktop shell uses to hand out an activation token.
 ///
 /// Wayland launchers export `XDG_ACTIVATION_TOKEN`, while X11 startup
