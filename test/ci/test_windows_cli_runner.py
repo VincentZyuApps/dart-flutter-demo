@@ -25,6 +25,7 @@ class WindowsCliRunnerTests(unittest.TestCase):
         self.assertIn("Test-Path -LiteralPath $binary -PathType Leaf", workflow)
         self.assertIn("Windows CLI entrypoint is missing", workflow)
         self.assertIn("Verify macOS CLI package entrypoint", workflow)
+        self.assertIn("*.app/Contents/MacOS/DartFlutterDemo", workflow)
 
 
 if __name__ == "__main__":

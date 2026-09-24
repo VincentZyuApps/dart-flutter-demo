@@ -303,7 +303,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          binary="$(find build/macos/Build/Products/Release -path '*.app/Contents/MacOS/dart_flutter_demo' -print -quit)"
+          binary="$(find build/macos/Build/Products/Release -path '*.app/Contents/MacOS/DartFlutterDemo' -print -quit)"
           test -n "$binary"
           test -x "$binary"
 
