@@ -22,6 +22,9 @@ class WindowsCliRunnerTests(unittest.TestCase):
         workflow = WORKFLOW.read_text(encoding="utf-8")
 
         self.assertIn("Verify Windows command line", workflow)
+        self.assertIn("& $binary --help", workflow)
+        self.assertIn("& $binary --version", workflow)
+        self.assertIn("if ($LASTEXITCODE -ne 0)", workflow)
         self.assertIn("Windows CLI help smoke check failed.", workflow)
         self.assertIn("Windows CLI version smoke check failed.", workflow)
 

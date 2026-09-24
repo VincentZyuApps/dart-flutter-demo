@@ -39,6 +39,15 @@ void main() {
       );
     });
 
+    test('keeps help text and version options discoverable', () {
+      expect(
+        CommandLineService.usage,
+        contains('DartFlutterDemo command line'),
+      );
+      expect(CommandLineService.usage, contains('-V, --version'));
+      expect(CommandLineService.usage, contains('--system-info[=json]'));
+    });
+
     test('requires explicit paths and confirmation for destructive commands', () {
       final CommandLineRequest export = CommandLineRequest.parse(<String>[
         '--export-logs',
