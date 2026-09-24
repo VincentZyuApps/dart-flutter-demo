@@ -238,18 +238,38 @@ class SystemInfoFormatter {
       if (snapshot.logicalProcessors != null)
         '(${snapshot.logicalProcessors} logical processors)',
     ].join(' ');
-    return <String, String>{
+    final values = <String, String>{
       'OS': _text(snapshot.operatingSystem),
       'Host': _text(snapshot.host),
       'Kernel': _text(snapshot.kernel),
       'Uptime': _duration(snapshot.uptime),
       'CPU': cpu.isEmpty ? 'unavailable' : cpu,
       'Memory': _usage(snapshot.memoryUsedBytes, snapshot.memoryTotalBytes),
-      _diskLabel: _usage(snapshot.diskUsedBytes, snapshot.diskTotalBytes),
       'Local IP': _text(snapshot.localIp),
       'Locale': _text(snapshot.locale),
     };
+    if (snapshot.storageVolumes.isEmpty) {
+      values[_diskLabel] = _usage(snapshot.diskUsedBytes, snapshot.diskTotalBytes);
+    } else {
+      for (final volume in snapshot.storageVolumes) {
+        values[_volumeLabel(volume)] = _volumeValue(volume);
+      }
+    }
+    return values;
   }
+
+  static String _volumeLabel(SystemStorageVolume volume) => volume.scope ==
+          SystemStorageScope.appVisible
+      ? 'Storage (app-visible)'
+      : 'Disk (${volume.mountPoint})';
+
+  static String _volumeValue(SystemStorageVolume volume) => <String>[
+        _usage(volume.usedBytes, volume.totalBytes),
+        if (_usable(volume.fileSystem)) volume.fileSystem!,
+        if (_usable(volume.device)) volume.device!,
+        if (volume.scope == SystemStorageScope.appVisible)
+          'The system exposes only storage available to this app.',
+      ].join(' · ');
 
   static String get _diskLabel {
     if (Platform.isWindows) return r'Disk (C:\)';

@@ -38,6 +38,14 @@ public final class SystemInfoVincentzyuPlugin: NSObject, FlutterPlugin {
         if let used = memory.used { values["memoryUsedBytes"] = used }
         if let used = disk.used { values["diskUsedBytes"] = used }
         if let total = disk.total { values["diskTotalBytes"] = total }
+        if let used = disk.used, let total = disk.total {
+            values["storageVolumes"] = [[
+                "mountPoint": "Storage (app-visible)",
+                "usedBytes": used,
+                "totalBytes": total,
+                "scope": "appVisible",
+            ]]
+        }
         if let ip = localIp() { values["localIp"] = ip }
         return values
     }

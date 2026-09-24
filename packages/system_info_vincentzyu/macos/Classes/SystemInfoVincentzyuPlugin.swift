@@ -36,6 +36,7 @@ public final class SystemInfoVincentzyuPlugin: NSObject, FlutterPlugin {
         if let used = memory.used { values["memoryUsedBytes"] = used }
         if let used = disk.used { values["diskUsedBytes"] = used }
         if let total = disk.total { values["diskTotalBytes"] = total }
+        values["storageVolumes"] = storageVolumes()
         if let ip = localIp() { values["localIp"] = ip }
         return values
     }
@@ -70,6 +71,36 @@ public final class SystemInfoVincentzyuPlugin: NSObject, FlutterPlugin {
         let available = values.volumeAvailableCapacityForImportantUsage ??
             values.volumeAvailableCapacity.map(Int64.init)
         return (available.map { max(total - $0, 0) }, total)
+    }
+
+    private func storageVolumes() -> [[String: Any]] {
+        let keys: Set<URLResourceKey> = [
+            .volumeNameKey,
+            .volumeTotalCapacityKey,
+            .volumeAvailableCapacityForImportantUsageKey,
+            .volumeAvailableCapacityKey,
+        ]
+        let urls = FileManager.default.mountedVolumeURLs(
+            includingResourceValuesForKeys: Array(keys),
+            options: [.skipHiddenVolumes]
+        ) ?? []
+        return urls.compactMap { url in
+            guard let values = try? url.resourceValues(forKeys: keys),
+                  let capacity = values.volumeTotalCapacity,
+                  capacity > 0 else { return nil }
+            let available = values.volumeAvailableCapacityForImportantUsage ??
+                values.volumeAvailableCapacity.map(Int64.init)
+            guard let available else { return nil }
+            var volume: [String: Any] = [
+                "mountPoint": url.path,
+                "usedBytes": max(Int64(capacity) - available, 0),
+                "totalBytes": Int64(capacity),
+            ]
+            if let name = values.volumeName, !name.isEmpty { volume["volumeLabel"] = name }
+            return volume
+        }.sorted { left, right in
+            (left["mountPoint"] as? String ?? "") < (right["mountPoint"] as? String ?? "")
+        }
     }
 
     private func sysctlString(_ name: String) -> String? {

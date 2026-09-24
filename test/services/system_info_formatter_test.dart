@@ -26,4 +26,30 @@ void main() {
     expect(values['Memory'], '4.00 GiB / 8.00 GiB (50%)');
     expect(values.values, contains('128.00 GiB / 256.00 GiB (50%)'));
   });
+
+  test('formats every visible storage volume with filesystem and device', () {
+    const snapshot = SystemInfoSnapshot(
+      storageVolumes: <SystemStorageVolume>[
+        SystemStorageVolume(
+          mountPoint: 'C:\\',
+          usedBytes: 128 * 1024 * 1024 * 1024,
+          totalBytes: 256 * 1024 * 1024 * 1024,
+          fileSystem: 'NTFS',
+          device: r'\\.\PhysicalDrive0',
+        ),
+        SystemStorageVolume(
+          mountPoint: 'D:\\',
+          usedBytes: 1,
+          totalBytes: 2,
+          fileSystem: 'exFAT',
+        ),
+      ],
+      diagnostics: SystemInfoDiagnostics.empty(),
+    );
+
+    final values = SystemInfoFormatter.format(snapshot);
+    expect(values['Disk (C:\\)'],
+        r'128.00 GiB / 256.00 GiB (50%) · NTFS · \\.\PhysicalDrive0');
+    expect(values['Disk (D:\\)'], '0.00 MiB / 0.00 MiB (50%) · exFAT');
+  });
 }

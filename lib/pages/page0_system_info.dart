@@ -30,22 +30,22 @@ class _Page0SystemInfoState extends State<Page0SystemInfo> {
   int _loadGeneration = 0;
   Timer? _loadTicker;
 
-  List<String> get _keys => [
+  List<String> get _keys {
+    final disks = _info.keys.where(
+      (key) => key.startsWith('Disk (') || key.startsWith('Storage ('),
+    );
+    return <String>[
         'OS',
         'Host',
         'Kernel',
         'Uptime',
         'CPU',
         'Memory',
-        if (Platform.isWindows)
-          'Disk (C:\\)'
-        else if (Platform.isLinux)
-          'Disk (/)'
-        else
-          'Disk',
+        if (disks.isEmpty) 'Disk' else ...disks,
         'Local IP',
         'Locale',
       ];
+  }
 
   @override
   void initState() {
@@ -463,7 +463,7 @@ class _Page0SystemInfoState extends State<Page0SystemInfo> {
       'Memory' => 'memoryUsedBytes',
       'Local IP' => 'localIp',
       'Locale' => 'locale',
-      _ when label.startsWith('Disk') => 'diskUsedBytes',
+      _ when label.startsWith('Disk') || label.startsWith('Storage') => 'storageVolumes',
       _ => null,
     };
     return wireName == null ? null : _debug.fieldDiagnostics[wireName];

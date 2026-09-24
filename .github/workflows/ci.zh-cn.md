@@ -44,7 +44,7 @@ feat(system-info): migrate collection into a reusable plugin
 | 🎯 目标 | 🖥️ Runner | 📦 Release 输出 |
 |---|---|---|
 | Windows x64 | `windows-latest` | 便携 ZIP、Inno Setup EXE 和 Store 提交用 MSIX |
-| Linux x64 | `ubuntu-22.04` 加 Freedesktop `25.08` 容器 | tar.gz、DEB、AppImage 和 Flatpak |
+| Linux x64 | `ubuntu-22.04` 加 Freedesktop `25.08` 容器 | tar.gz、DEB、RPM、AppImage 和 Flatpak |
 | macOS x64 | `macos-15-intel` | DMG 和 ZIP |
 | macOS ARM64 | `macos-latest` | DMG 和 ZIP |
 | Android | `ubuntu-latest` | Universal、ARM64 和 x86_64 APK |
@@ -54,7 +54,7 @@ feat(system-info): migrate collection into a reusable plugin
 
 Linux x64 目标会解包生成的 `AppImage`，并在其 desktop 入口未声明七个 `Actions=` 目标或缺少窗口的 `StartupWMClass` 时判定构建失败。
 
-同一目标还会解包生成的 `DEB`，补齐其 desktop 入口缺失的 `Actions=` 分组，再重新打包后上传产物。
+同一目标还会解包生成的 `DEB` 和 `RPM`，补齐缺失的 `Actions=` 分组及规范 desktop ID，重新打包并验证结果后再上传产物。
 
 ### 🧪 手动 Dry-Run
 
@@ -133,7 +133,7 @@ dart-flutter-demo-android-universal-profile-93ac817
 | 🧩 类型 | 📝 模式 |
 |---|---|
 | Windows | `dart-flutter-demo-windows-x64-v<version>.zip` / `-setup.exe` / `dart-flutter-demo-windows-x64-store-v<version>.msix` |
-| Linux | `dart-flutter-demo-linux-x64-v<version>.tar.gz` / `.deb` / `.AppImage` / `.flatpak` |
+| Linux | `dart-flutter-demo-linux-x64-v<version>.tar.gz` / `.deb` / `.rpm` / `.AppImage` / `.flatpak` |
 | macOS | `dart-flutter-demo-macos-<arch>-v<version>.dmg` / `.zip` |
 | Android | `dart-flutter-demo-android-<abi>-v<version>.apk` |
 | iOS | `dart-flutter-demo-ios-arm64-v<version>.ipa` |

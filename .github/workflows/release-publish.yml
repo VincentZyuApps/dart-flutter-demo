@@ -167,7 +167,7 @@ jobs:
         if: matrix.platform == 'linux-x64'
         run: |
           sudo apt-get update
-          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev patchelf libfuse2
+          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev patchelf libfuse2 rpm cpio
 
       - uses: subosito/flutter-action@v2
         with:
@@ -235,7 +235,7 @@ jobs:
         run: |
           set -euo pipefail
           flutter_distributor package --skip-clean --platform linux \
-            --targets deb,appimage --build-target-platform linux-x64
+            --targets deb,appimage,rpm --build-target-platform linux-x64
           tar -C build/linux/x64/release/bundle -czf dart-flutter-demo-linux-x64.tar.gz .
 
       - name: Verify Linux AppImage desktop actions
@@ -254,6 +254,15 @@ jobs:
           mapfile -t debs < <(find dist -type f -name '*.deb')
           test "${#debs[@]}" -ge 1
           python3 scripts/ci/packaging/linux/patch-deb-desktop.py "${debs[@]}"
+
+      - name: Add and verify Linux RPM desktop actions
+        if: matrix.platform == 'linux-x64'
+        shell: bash
+        run: |
+          set -euo pipefail
+          mapfile -t rpms < <(find dist -type f -name '*.rpm')
+          test "${#rpms[@]}" -ge 1
+          python3 scripts/ci/packaging/linux/patch-rpm-desktop.py "${rpms[@]}"
 
       - name: Preserve Flatpak package input
         if: matrix.platform == 'linux-x64'
@@ -508,7 +517,7 @@ jobs:
             "release-files/dart-flutter-demo-linux-x64-v${VERSION}.tar.gz"
           cp "artifacts/release-flatpak-x64/dart-flutter-demo-linux-x64-v${VERSION}.flatpak" \
             "release-files/dart-flutter-demo-linux-x64-v${VERSION}.flatpak"
-          find artifacts/release-linux-x64 -type f \( -name '*.deb' -o -name '*.AppImage' \) -print0 | while IFS= read -r -d '' file; do
+          find artifacts/release-linux-x64 -type f \( -name '*.deb' -o -name '*.rpm' -o -name '*.AppImage' \) -print0 | while IFS= read -r -d '' file; do
             extension="${file##*.}"
             cp "$file" "release-files/dart-flutter-demo-linux-x64-v${VERSION}.${extension}"
           done

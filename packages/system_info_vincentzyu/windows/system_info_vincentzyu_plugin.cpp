@@ -3,6 +3,7 @@
 #include <ws2tcpip.h>
 #include <iphlpapi.h>
 #include <windows.h>
+#include <winioctl.h>
 #include <winternl.h>
 
 #include "include/system_info_vincentzyu/system_info_vincentzyu_plugin.h"
@@ -21,9 +22,19 @@
 #include <optional>
 #include <sstream>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace {
+
+struct StorageVolume {
+  std::string mount_point;
+  std::string volume_label;
+  int64_t used_bytes = 0;
+  int64_t total_bytes = 0;
+  std::string file_system;
+  std::string device;
+};
 
 struct Values {
   std::string operating_system;
@@ -36,6 +47,7 @@ struct Values {
   int64_t memory_total_bytes = 0;
   int64_t disk_used_bytes = 0;
   int64_t disk_total_bytes = 0;
+  std::vector<StorageVolume> storage_volumes;
   std::string local_ip;
   std::string locale;
 };
@@ -161,6 +173,56 @@ std::string LocalIp() {
   return fallback;
 }
 
+std::vector<StorageVolume> CollectStorageVolumes() {
+  std::vector<StorageVolume> volumes;
+  const DWORD drives = GetLogicalDrives();
+  for (wchar_t letter = L'A'; letter <= L'Z'; ++letter) {
+    if ((drives & (1u << (letter - L'A'))) == 0) continue;
+    const std::wstring root = std::wstring(1, letter) + L":\\";
+    const UINT kind = GetDriveTypeW(root.c_str());
+    if (kind != DRIVE_FIXED && kind != DRIVE_REMOVABLE && kind != DRIVE_REMOTE &&
+        kind != DRIVE_RAMDISK) {
+      continue;
+    }
+
+    ULARGE_INTEGER available = {}, total = {}, free = {};
+    if (!GetDiskFreeSpaceExW(root.c_str(), &available, &total, &free) ||
+        total.QuadPart == 0) {
+      continue;
+    }
+    wchar_t label[MAX_PATH + 1] = {};
+    wchar_t file_system[MAX_PATH + 1] = {};
+    DWORD serial = 0, max_component_length = 0, flags = 0;
+    GetVolumeInformationW(root.c_str(), label, MAX_PATH, &serial,
+                          &max_component_length, &flags, file_system, MAX_PATH);
+
+    StorageVolume volume;
+    volume.mount_point = WideToUtf8(root);
+    volume.volume_label = WideToUtf8(label);
+    volume.total_bytes = static_cast<int64_t>(total.QuadPart);
+    volume.used_bytes = static_cast<int64_t>(total.QuadPart - available.QuadPart);
+    volume.file_system = WideToUtf8(file_system);
+
+    const std::wstring device_path = L"\\\\.\\" + std::wstring(1, letter) + L":";
+    HANDLE handle = CreateFileW(device_path.c_str(), 0,
+                                FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr,
+                                OPEN_EXISTING, 0, nullptr);
+    if (handle != INVALID_HANDLE_VALUE) {
+      VOLUME_DISK_EXTENTS extents = {};
+      DWORD returned = 0;
+      if (DeviceIoControl(handle, IOCTL_VOLUME_GET_VOLUME_DISK_EXTENTS, nullptr, 0,
+                          &extents, sizeof(extents), &returned, nullptr) &&
+          extents.NumberOfDiskExtents > 0) {
+        volume.device = "\\\\.\\PhysicalDrive" +
+                        std::to_string(extents.Extents[0].DiskNumber);
+      }
+      CloseHandle(handle);
+    }
+    volumes.push_back(std::move(volume));
+  }
+  return volumes;
+}
+
 Values CollectValues() {
   Values values;
   const RTL_OSVERSIONINFOW version = OsVersion();
@@ -182,11 +244,13 @@ Values CollectValues() {
         memory.ullTotalPhys - memory.ullAvailPhys);
   }
 
-  ULARGE_INTEGER available = {}, total = {}, free = {};
-  if (GetDiskFreeSpaceExW(L"C:\\", &available, &total, &free)) {
-    values.disk_total_bytes = static_cast<int64_t>(total.QuadPart);
-    values.disk_used_bytes = static_cast<int64_t>(
-        total.QuadPart - available.QuadPart);
+  values.storage_volumes = CollectStorageVolumes();
+  const auto primary = std::find_if(
+      values.storage_volumes.begin(), values.storage_volumes.end(),
+      [](const StorageVolume& volume) { return volume.mount_point == "C:\\"; });
+  if (primary != values.storage_volumes.end()) {
+    values.disk_total_bytes = primary->total_bytes;
+    values.disk_used_bytes = primary->used_bytes;
   }
   values.local_ip = LocalIp();
   wchar_t locale[LOCALE_NAME_MAX_LENGTH] = {};
@@ -219,6 +283,30 @@ std::string EscapeJson(const std::string& value) {
   return output.str();
 }
 
+std::string StorageVolumesToJson(const std::vector<StorageVolume>& volumes) {
+  std::ostringstream output;
+  output << "[";
+  for (size_t index = 0; index < volumes.size(); ++index) {
+    const auto& volume = volumes[index];
+    if (index > 0) output << ",";
+    output << "{\"mountPoint\":\"" << EscapeJson(volume.mount_point) << "\",";
+    if (!volume.volume_label.empty()) {
+      output << "\"volumeLabel\":\"" << EscapeJson(volume.volume_label) << "\",";
+    }
+    output << "\"usedBytes\":" << volume.used_bytes << ","
+           << "\"totalBytes\":" << volume.total_bytes;
+    if (!volume.file_system.empty()) {
+      output << ",\"fileSystem\":\"" << EscapeJson(volume.file_system) << "\"";
+    }
+    if (!volume.device.empty()) {
+      output << ",\"device\":\"" << EscapeJson(volume.device) << "\"";
+    }
+    output << "}";
+  }
+  output << "]";
+  return output.str();
+}
+
 std::string ValuesToJson(const Values& value) {
   std::ostringstream output;
   output << "{"
@@ -232,6 +320,7 @@ std::string ValuesToJson(const Values& value) {
          << "\"memoryTotalBytes\":" << value.memory_total_bytes << ","
          << "\"diskUsedBytes\":" << value.disk_used_bytes << ","
          << "\"diskTotalBytes\":" << value.disk_total_bytes << ","
+         << "\"storageVolumes\":" << StorageVolumesToJson(value.storage_volumes) << ","
          << "\"localIp\":\"" << EscapeJson(value.local_ip) << "\","
          << "\"locale\":\"" << EscapeJson(value.locale) << "\"}"
          ;
@@ -239,6 +328,18 @@ std::string ValuesToJson(const Values& value) {
 }
 
 flutter::EncodableMap ValuesToMap(const Values& value) {
+  flutter::EncodableList volumes;
+  for (const auto& volume : value.storage_volumes) {
+    flutter::EncodableMap entry = {
+        {flutter::EncodableValue("mountPoint"), flutter::EncodableValue(volume.mount_point)},
+        {flutter::EncodableValue("usedBytes"), flutter::EncodableValue(volume.used_bytes)},
+        {flutter::EncodableValue("totalBytes"), flutter::EncodableValue(volume.total_bytes)},
+    };
+    if (!volume.volume_label.empty()) entry[flutter::EncodableValue("volumeLabel")] = flutter::EncodableValue(volume.volume_label);
+    if (!volume.file_system.empty()) entry[flutter::EncodableValue("fileSystem")] = flutter::EncodableValue(volume.file_system);
+    if (!volume.device.empty()) entry[flutter::EncodableValue("device")] = flutter::EncodableValue(volume.device);
+    volumes.emplace_back(std::move(entry));
+  }
   return {
       {flutter::EncodableValue("operatingSystem"), flutter::EncodableValue(value.operating_system)},
       {flutter::EncodableValue("host"), flutter::EncodableValue(value.host)},
@@ -250,6 +351,7 @@ flutter::EncodableMap ValuesToMap(const Values& value) {
       {flutter::EncodableValue("memoryTotalBytes"), flutter::EncodableValue(value.memory_total_bytes)},
       {flutter::EncodableValue("diskUsedBytes"), flutter::EncodableValue(value.disk_used_bytes)},
       {flutter::EncodableValue("diskTotalBytes"), flutter::EncodableValue(value.disk_total_bytes)},
+      {flutter::EncodableValue("storageVolumes"), flutter::EncodableValue(volumes)},
       {flutter::EncodableValue("localIp"), flutter::EncodableValue(value.local_ip)},
       {flutter::EncodableValue("locale"), flutter::EncodableValue(value.locale)},
   };

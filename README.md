@@ -82,7 +82,7 @@ The seven in-app destinations (the five bottom tabs plus About and Guide) are al
 |---|---|---|
 | Jump list | Windows 10/11 | Right-clicking the taskbar button lists all seven destinations under a `Pages` category, each with its own glyph icon. |
 | Thumbnail toolbar | Windows 10/11 | Hovering the taskbar button shows up to seven glyph buttons; the current page is drawn disabled so it reads as pressed. |
-| Desktop actions | Linux | The Flatpak, AppImage, and DEB `.desktop` entries declare `Actions=` for all seven destinations. |
+| Desktop actions | Linux | The Flatpak, AppImage, DEB, and RPM `.desktop` entries declare `Actions=` for all seven destinations. |
 | MPRIS player | Linux | The visible page is published as an MPRIS item with its own cover art, title, and track object path; supported KDE/GNOME media controls can expose the transport actions. |
 | Notifications | Windows, Linux | Applying a desktop request raises the window and reports `Opened <label>`, through a shell balloon on Windows and a freedesktop notification on Linux. |
 
@@ -93,7 +93,7 @@ Platform caveats:
 - GNOME Shell offers no supported way for a non-native toolkit to add hover controls to a dock icon; MPRIS media controls remain available only where the shell chooses to expose them.
 - Desktop shells draw any MPRIS transport controls themselves, so the cover art of the current page is the only preview content this application controls.
 - The jump list reuses the Material glyphs of the thumbnail toolbar and writes them to `%LOCALAPPDATA%\DartFlutterDemo\taskbar-icons` at run time, because Explorer loads an icon from a real file path and neither a packaged installation directory nor a bundled asset provides one.
-- The DEB template writes `Actions=` names without the matching `[Desktop Action <name>]` groups, so the Linux release job unpacks the built DEB, adds the groups, and packs it again.
+- The DEB and RPM makers need package-level desktop entry completion. The Linux release job unpacks each package, adds the seven action groups and canonical desktop ID, rebuilds it, and verifies the result.
 - Wayland refuses to move the focus on behalf of a background application, so the raise falls back to an urgency hint on the dock entry there.
 - The MPRIS bridge is experimental and deliberately maps pages onto a synthetic track.
 
@@ -101,7 +101,7 @@ Platform caveats:
 
 ### 0. 🖥️ System Info
 
-Displays typed system information through the reusable local plugin `system_info_vincentzyu`: Win32 C++ FFI first on Windows, Kotlin/Swift MethodChannels on Android and Apple platforms, and Dart/OS interfaces on Linux. Formatting stays in the App layer. Every field shows its source, elapsed time, and fallback chain. Session logs are mirrored to memory, UI, console, and rotating files (10 MiB each, newest five retained); hostname and local IP are never uploaded automatically, and export requires a privacy confirmation.<br>
+Displays typed system information through the reusable local plugin `system_info_vincentzyu`: Win32 C++ FFI first on Windows, Kotlin/Swift MethodChannels on Android and Apple platforms, and Dart/OS interfaces on Linux. The System page lists every accessible volume with capacity, filesystem, and native device when the platform exposes it; mobile and sandboxed builds explicitly show only app-visible storage. Formatting stays in the App layer. Every field shows its source, elapsed time, and fallback chain. Session logs are mirrored to memory, UI, console, and rotating files (10 MiB each, newest five retained); hostname and local IP are never uploaded automatically, and export requires a privacy confirmation.<br>
 Source: [lib/pages/page0_system_info.dart](https://github.com/VincentZyu233/dart-flutter-demo/blob/main/lib/pages/page0_system_info.dart)
 
 <div align="center">

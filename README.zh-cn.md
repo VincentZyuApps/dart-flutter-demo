@@ -82,7 +82,7 @@
 |---|---|---|
 | 跳转列表 | Windows 10/11 | 右键任务栏按钮时在 `Pages` 分类下列出全部七个入口，每个入口使用自己的字形图标。 |
 | 缩略图工具栏 | Windows 10/11 | 悬停任务栏按钮时显示最多七个字形按钮；当前页面渲染为禁用态，看起来像按下。 |
-| 桌面 Actions | Linux | Flatpak、AppImage 与 DEB 的 `.desktop` 入口为全部七个目标声明 `Actions=`。 |
+| 桌面 Actions | Linux | Flatpak、AppImage、DEB 与 RPM 的 `.desktop` 入口为全部七个目标声明 `Actions=`。 |
 | MPRIS 播放器 | Linux | 当前页面作为 MPRIS 项发布，并带有自己的封面、标题与曲目对象路径；支持 MPRIS 的 KDE/GNOME 媒体控件可呈现传输操作。 |
 | 系统通知 | Windows、Linux | 应用桌面请求时会把窗口置前并报告 `Opened <label>`：Windows 使用 shell 气泡，Linux 使用 freedesktop 通知。 |
 
@@ -93,7 +93,7 @@
 - GNOME Shell 没有为非原生工具包提供在程序坞图标上添加悬停控件的受支持方式；只有 Shell 自行展示时才能使用 MPRIS 媒体控件。
 - MPRIS 传输控件由桌面自己绘制，因此当前页面的封面是本应用唯一能控制的预览内容。
 - 跳转列表复用缩略图工具栏的同一批 Material 字形，在运行时写入 `%LOCALAPPDATA%\DartFlutterDemo\taskbar-icons`，因为 Explorer 只从真实文件路径加载图标，而打包后的安装目录与包内资源都提供不了这样的路径。
-- Deb 模板只会写出 `Actions=` 名称而不生成对应的 `[Desktop Action <name>]` 组，因此 Linux 发布任务会解包生成的 Deb、补齐分组后再重新打包。
+- DEB 与 RPM 打包器都需要在包级补齐 desktop 入口。Linux 发布任务会解包每个包、补齐七个 action 分组与规范 desktop ID、重新打包并验证结果。
 - Wayland 不允许后台应用抢占焦点，因此在 Wayland 上置前会退化为程序坞条目的紧急提示。
 - MPRIS 桥接是实验性的，它把页面刻意映射成一条合成曲目。
 
@@ -101,7 +101,7 @@
 
 ### 0. 🖥️ 系统信息实验室
 
-通过可复用的本地插件 `system_info_vincentzyu` 获取类型化系统信息：Windows 优先使用 Win32 C++ FFI，Android 与 Apple 平台使用 Kotlin/Swift MethodChannel，Linux 使用 Dart/系统接口，显示格式统一留在 App 层。每个字段显示来源、耗时和 fallback 链。会话日志同步到内存、UI、Console 与轮转文件（每份 10 MiB，保留最新五份）；主机名和局域网 IP 不会自动上传，主动导出前会显示隐私提醒。<br>
+通过可复用的本地插件 `system_info_vincentzyu` 获取类型化系统信息：Windows 优先使用 Win32 C++ FFI，Android 与 Apple 平台使用 Kotlin/Swift MethodChannel，Linux 使用 Dart/系统接口。System 页面会列出全部可访问卷的容量、文件系统和平台可提供的原生设备；移动端与沙箱构建会明确只显示应用可见存储。显示格式统一留在 App 层。每个字段显示来源、耗时和 fallback 链。会话日志同步到内存、UI、Console 与轮转文件（每份 10 MiB，保留最新五份）；主机名和局域网 IP 不会自动上传，主动导出前会显示隐私提醒。<br>
 源码： [lib/pages/page0_system_info.dart](https://github.com/VincentZyu233/dart-flutter-demo/blob/main/lib/pages/page0_system_info.dart)
 
 <div align="center">

@@ -10,6 +10,7 @@ import 'model/system_info_event.dart';
 import 'model/system_info_field.dart';
 import 'model/system_info_snapshot.dart';
 import 'model/system_info_source.dart';
+import 'model/system_storage_volume.dart';
 
 typedef SystemInfoEventListener = void Function(SystemInfoEvent event);
 typedef SystemInfoFieldListener = void Function(
@@ -380,7 +381,62 @@ class SystemInfoClient {
     if (totalKb != null && availableKb != null) {
       values['memoryUsedBytes'] = (totalKb - availableKb) * 1024;
     }
+    values['storageVolumes'] = await _linuxStorageVolumes();
     return values;
+  }
+
+  Future<List<Map<String, Object?>>> _linuxStorageVolumes() async {
+    // `df` is the portable, sandbox-aware statvfs frontend. It returns only
+    // mounts visible to this process, which is exactly the boundary we expose.
+    ProcessResult result;
+    try {
+      result = await Process.run(
+        'df',
+        const <String>['-B1', '--output=source,fstype,size,used,target'],
+      );
+    } on ProcessException {
+      return const <Map<String, Object?>>[];
+    }
+    if (result.exitCode != 0) return const <Map<String, Object?>>[];
+
+    const pseudoFileSystems = <String>{
+      'autofs', 'cgroup', 'cgroup2', 'configfs', 'debugfs', 'devpts', 'devtmpfs',
+      'efivarfs', 'fusectl', 'hugetlbfs', 'mqueue', 'nsfs', 'proc',
+      'pstore', 'ramfs', 'securityfs', 'squashfs', 'sysfs', 'tmpfs', 'tracefs',
+    };
+    final volumes = <Map<String, Object?>>[];
+    final seenMounts = <String>{};
+    final lines = result.stdout.toString().split('\n').skip(1);
+    for (final rawLine in lines) {
+      final line = rawLine.trim();
+      if (line.isEmpty) continue;
+      final parts = line.split(RegExp(r'\s+'));
+      if (parts.length < 5) continue;
+      final source = parts[0];
+      final fileSystem = parts[1].toLowerCase();
+      final total = int.tryParse(parts[2]);
+      final used = int.tryParse(parts[3]);
+      final mountPoint = parts.sublist(4).join(' ');
+      if (total == null || used == null || total <= 0 ||
+          pseudoFileSystems.contains(fileSystem) || !seenMounts.add(mountPoint)) {
+        continue;
+      }
+      volumes.add(<String, Object?>{
+        'mountPoint': mountPoint,
+        'usedBytes': used,
+        'totalBytes': total,
+        'fileSystem': parts[1],
+        if (source.startsWith('/dev/') || source.contains('://') || source.startsWith('//'))
+          'device': source,
+        if (Platform.environment.containsKey('FLATPAK_ID')) 'scope': 'appVisible',
+      });
+    }
+    volumes.sort((left, right) {
+      if (left['mountPoint'] == '/') return -1;
+      if (right['mountPoint'] == '/') return 1;
+      return left['mountPoint'].toString().compareTo(right['mountPoint'].toString());
+    });
+    return volumes;
   }
 
   Future<Map<String, Object?>> _linuxCommandValues() async {
@@ -495,6 +551,7 @@ class SystemInfoClient {
       memoryTotalBytes: _asInt(values['memoryTotalBytes']),
       diskUsedBytes: _asInt(values['diskUsedBytes']),
       diskTotalBytes: _asInt(values['diskTotalBytes']),
+      storageVolumes: _storageVolumes(values['storageVolumes']),
       localIp: _asString(values['localIp']),
       locale: _asString(values['locale']),
       diagnostics: SystemInfoDiagnostics(
@@ -504,6 +561,13 @@ class SystemInfoClient {
         fields: diagnostics,
         logs: List<String>.unmodifiable(errors),
       ),
+    );
+  }
+
+  static List<SystemStorageVolume> _storageVolumes(Object? value) {
+    if (value is! List) return const <SystemStorageVolume>[];
+    return List<SystemStorageVolume>.unmodifiable(
+      value.map(SystemStorageVolume.fromJson).whereType<SystemStorageVolume>(),
     );
   }
 
@@ -569,6 +633,7 @@ class SystemInfoClient {
       memoryTotalBytes: snapshot.memoryTotalBytes,
       diskUsedBytes: snapshot.diskUsedBytes,
       diskTotalBytes: snapshot.diskTotalBytes,
+      storageVolumes: snapshot.storageVolumes,
       localIp: snapshot.localIp,
       locale: snapshot.locale,
       diagnostics: SystemInfoDiagnostics(

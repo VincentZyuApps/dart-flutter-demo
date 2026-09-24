@@ -85,6 +85,7 @@ python download-release.py --list-only
 │   ├── 🍎 dart-flutter-demo-ios-arm64-*.ipa
 │   ├── 🐧 dart-flutter-demo-linux-x64-*.AppImage
 │   ├── 🐧 dart-flutter-demo-linux-x64-*.deb
+│   ├── 🐧 dart-flutter-demo-linux-x64-*.rpm
 │   ├── 🐧 dart-flutter-demo-linux-x64-*.tar.gz
 │   ├── 🐧 dart-flutter-demo-linux-x64-profile-*.tar.gz
 │   ├── 🍎 dart-flutter-demo-macos-arm64-*.dmg

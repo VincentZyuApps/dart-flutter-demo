@@ -21,7 +21,7 @@ scripts/
 ## 🗂️ 目录约定
 
 - 🤖 `scripts/ci/` 只保存由 GitHub Actions 调用或用于验证 CI 行为的脚本。
-- 🐧 `scripts/ci/packaging/linux/` 保存 AppImage 包装器、Flatpak AppStream 元数据渲染器，以及 Release/package-only 共用的 Flatpak 安装与沙箱验证脚本。
+- 🐧 `scripts/ci/packaging/linux/` 保存 AppImage 包装器、DEB/RPM 桌面入口修复器、Flatpak AppStream 元数据渲染器，以及 Release/package-only 共用的 Flatpak 安装与沙箱验证脚本。
 - 🪟 `scripts/ci/packaging/windows/` 同时保存 Inno Setup 渲染器与 Windows x64 Store MSIX 打包校验器。
 - ✅ `scripts/ci/validation/` 保存安全 YAML 解析和重复键校验工具，详细用法见 [`ci/validation/README.md`](ci/validation/README.md)。
 - 🎨 `scripts/assets/` 保存生成和应用多平台图标的工具，详细约定见 [`assets/README.md`](assets/README.md)。

@@ -9,6 +9,7 @@ enum SystemInfoField {
   memoryTotalBytes,
   diskUsedBytes,
   diskTotalBytes,
+  storageVolumes,
   localIp,
   locale,
 }
@@ -25,6 +26,7 @@ extension SystemInfoFieldName on SystemInfoField {
         SystemInfoField.memoryTotalBytes => 'memoryTotalBytes',
         SystemInfoField.diskUsedBytes => 'diskUsedBytes',
         SystemInfoField.diskTotalBytes => 'diskTotalBytes',
+        SystemInfoField.storageVolumes => 'storageVolumes',
         SystemInfoField.localIp => 'localIp',
         SystemInfoField.locale => 'locale',
       };

@@ -44,7 +44,7 @@ The pipeline first runs `flutter analyze`, root tests, local-plugin tests, and C
 | 🎯 Target | 🖥️ Runner | 📦 Release output |
 |---|---|---|
 | Windows x64 | `windows-latest` | portable ZIP, Inno Setup EXE, and Store submission MSIX |
-| Linux x64 | `ubuntu-22.04` plus the Freedesktop `25.08` container | tar.gz, DEB, AppImage, and Flatpak |
+| Linux x64 | `ubuntu-22.04` plus the Freedesktop `25.08` container | tar.gz, DEB, RPM, AppImage, and Flatpak |
 | macOS x64 | `macos-15-intel` | DMG and ZIP |
 | macOS ARM64 | `macos-latest` | DMG and ZIP |
 | Android | `ubuntu-latest` | universal, ARM64, and x86_64 APKs |
@@ -54,7 +54,7 @@ The same run builds permanent Profile assets for Windows x64, Linux x64, and And
 
 The Linux x64 target extracts the packaged `AppImage` and rejects the build unless its desktop entry declares the seven `Actions=` destinations and the `StartupWMClass` of the window.
 
-The same target unpacks the packaged `DEB`, completes the missing `Actions=` groups of its desktop entry, and packs it again before the artifacts are uploaded.
+The same target unpacks both packaged `DEB` and `RPM` files, completes the missing `Actions=` groups and canonical desktop ID, rebuilds each package, and verifies the result before uploading artifacts.
 
 ### 🧪 Manual Dry-Run
 
@@ -133,7 +133,7 @@ It uploads `dart-flutter-demo-platform-roots-flutter-3.41.5` for seven days, inc
 | 🧩 Type | 📝 Pattern |
 |---|---|
 | Windows | `dart-flutter-demo-windows-x64-v<version>.zip` / `-setup.exe` / `dart-flutter-demo-windows-x64-store-v<version>.msix` |
-| Linux | `dart-flutter-demo-linux-x64-v<version>.tar.gz` / `.deb` / `.AppImage` / `.flatpak` |
+| Linux | `dart-flutter-demo-linux-x64-v<version>.tar.gz` / `.deb` / `.rpm` / `.AppImage` / `.flatpak` |
 | macOS | `dart-flutter-demo-macos-<arch>-v<version>.dmg` / `.zip` |
 | Android | `dart-flutter-demo-android-<abi>-v<version>.apk` |
 | iOS | `dart-flutter-demo-ios-arm64-v<version>.ipa` |

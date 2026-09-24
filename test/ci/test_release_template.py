@@ -36,7 +36,7 @@ class ReleaseTemplateTests(unittest.TestCase):
         )
         positions = [
             linux_row.index(suffix)
-            for suffix in (".AppImage", ".deb", ".tar.gz", ".flatpak")
+            for suffix in (".AppImage", ".deb", ".rpm", ".tar.gz", ".flatpak")
         ]
         self.assertEqual(positions, sorted(positions))
 

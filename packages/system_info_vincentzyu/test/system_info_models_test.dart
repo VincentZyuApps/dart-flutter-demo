@@ -16,6 +16,22 @@ void main() {
     expect(snapshot.diskUsedPercent, 75);
   });
 
+  test('storage volume keeps filesystem, native device, and visibility scope', () {
+    final volume = SystemStorageVolume.fromJson(<String, Object?>{
+      'mountPoint': 'C:\\',
+      'usedBytes': 75,
+      'totalBytes': 100,
+      'fileSystem': 'NTFS',
+      'device': r'\\.\PhysicalDrive0',
+    });
+
+    expect(volume, isNotNull);
+    expect(volume!.usedPercent, 75);
+    expect(volume.fileSystem, 'NTFS');
+    expect(volume.device, r'\\.\PhysicalDrive0');
+    expect(volume.scope, SystemStorageScope.hostVisible);
+  });
+
   test('field diagnostics serialize source, timing, attempts, and error', () {
     const diagnostic = SystemInfoFieldDiagnostic(
       source: SystemInfoSource.windowsFfi,

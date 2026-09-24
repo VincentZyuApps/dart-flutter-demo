@@ -1,5 +1,6 @@
 import 'system_info_diagnostics.dart';
 import 'system_info_field.dart';
+import 'system_storage_volume.dart';
 
 class SystemInfoSnapshot {
   final String? operatingSystem;
@@ -12,6 +13,7 @@ class SystemInfoSnapshot {
   final int? memoryTotalBytes;
   final int? diskUsedBytes;
   final int? diskTotalBytes;
+  final List<SystemStorageVolume> storageVolumes;
   final String? localIp;
   final String? locale;
   final SystemInfoDiagnostics diagnostics;
@@ -27,6 +29,7 @@ class SystemInfoSnapshot {
     this.memoryTotalBytes,
     this.diskUsedBytes,
     this.diskTotalBytes,
+    this.storageVolumes = const <SystemStorageVolume>[],
     this.localIp,
     this.locale,
     required this.diagnostics,
@@ -46,6 +49,7 @@ class SystemInfoSnapshot {
         'memoryTotalBytes': memoryTotalBytes,
         'diskUsedBytes': diskUsedBytes,
         'diskTotalBytes': diskTotalBytes,
+        'storageVolumes': storageVolumes.map((volume) => volume.toJson()).toList(),
         'localIp': localIp,
         'locale': locale,
         'diagnostics': diagnostics.toJson(),
@@ -62,6 +66,7 @@ class SystemInfoSnapshot {
         SystemInfoField.memoryTotalBytes => memoryTotalBytes,
         SystemInfoField.diskUsedBytes => diskUsedBytes,
         SystemInfoField.diskTotalBytes => diskTotalBytes,
+        SystemInfoField.storageVolumes => storageVolumes,
         SystemInfoField.localIp => localIp,
         SystemInfoField.locale => locale,
       };

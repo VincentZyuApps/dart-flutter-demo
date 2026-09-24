@@ -4,4 +4,5 @@ export 'src/model/system_info_event.dart';
 export 'src/model/system_info_field.dart';
 export 'src/model/system_info_snapshot.dart';
 export 'src/model/system_info_source.dart';
+export 'src/model/system_storage_volume.dart';
 export 'src/system_info_client.dart';

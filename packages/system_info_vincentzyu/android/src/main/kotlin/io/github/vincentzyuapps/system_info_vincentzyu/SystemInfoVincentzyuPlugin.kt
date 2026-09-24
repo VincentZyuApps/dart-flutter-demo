@@ -53,6 +53,12 @@ class SystemInfoVincentzyuPlugin : FlutterPlugin, MethodChannel.MethodCallHandle
             "memoryTotalBytes" to memory.totalMem,
             "diskUsedBytes" to (totalDisk - availableDisk).coerceAtLeast(0L),
             "diskTotalBytes" to totalDisk,
+            "storageVolumes" to listOf(mapOf(
+                "mountPoint" to "Storage (app-visible)",
+                "usedBytes" to (totalDisk - availableDisk).coerceAtLeast(0L),
+                "totalBytes" to totalDisk,
+                "scope" to "appVisible",
+            )),
             "localIp" to localIp(),
             "locale" to Locale.getDefault().toLanguageTag(),
         )
