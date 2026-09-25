@@ -56,6 +56,8 @@ Linux x64 目标会解包生成的 `AppImage`，并在其 desktop 入口未声�
 
 同一目标还会解包生成的 `DEB` 和 `RPM`，补齐缺失的 `Actions=` 分组及规范 desktop ID，重新打包，并通过真实 Fedora 44 `dnf install` 事务验证 RPM 后再上传产物。
 
+它还会直接运行已打包的 Linux 二进制的 `--help` 和 `--version`，要求输出正确且 stderr 不出现 GTK、Flutter、EGL、Mesa 或 GDK 诊断。
+
 ### 🧪 手动 Dry-Run
 
 手动运行默认 `publish=false`。它会执行质量检查、全部 Release 构建、Flatpak 打包与冒烟测试、三项永久 Profile 构建、MSIX 校验和 Release Notes 渲染，但只上传保留七天的 `release-dry-run-*` Artifact，不创建 tag 或 GitHub Release。

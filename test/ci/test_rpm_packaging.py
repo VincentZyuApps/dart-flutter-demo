@@ -92,7 +92,8 @@ class RpmPackagingTests(unittest.TestCase):
         self.assertIn("--version", workflow)
         self.assertIn("Verify Linux command line", workflow)
         self.assertIn('bundle/dart_flutter_demo', workflow)
-        self.assertIn("xvfb-run -a", workflow)
+        self.assertIn('"$binary" --help 2>help.stderr', workflow)
+        self.assertIn('"$binary" --version 2>version.stderr', workflow)
         self.assertIn("fedora:44", workflow)
         self.assertIn("dnf install -y /tmp/package.rpm", workflow)
 

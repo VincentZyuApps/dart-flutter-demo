@@ -34,6 +34,7 @@ jobs:
       should_publish: ${{ steps.trigger.outputs.should_publish }}
       should_publish_external_channels: ${{ steps.trigger.outputs.should_publish_external_channels }}
       version: ${{ steps.version.outputs.version }}
+      full_version: ${{ steps.version.outputs.full_version }}
       commits_log: ${{ steps.commits.outputs.log }}
     steps:
       - uses: actions/checkout@v4
@@ -88,6 +89,7 @@ jobs:
           FULL_VERSION="$(sed -n 's/^version:[[:space:]]*//p' pubspec.yaml | head -1)"
           test -n "$FULL_VERSION"
           echo "version=${FULL_VERSION%%+*}" >> "$GITHUB_OUTPUT"
+          echo "full_version=$FULL_VERSION" >> "$GITHUB_OUTPUT"
 
       - name: Collect commit log
         id: commits
@@ -253,8 +255,10 @@ jobs:
         run: |
           set -euo pipefail
           binary=build/linux/x64/release/bundle/dart_flutter_demo
-          xvfb-run -a "$binary" --help | grep -F 'DartFlutterDemo command line'
-          test -n "$(xvfb-run -a "$binary" --version)"
+          "$binary" --help 2>help.stderr | grep -F 'DartFlutterDemo command line'
+          test ! -s help.stderr
+          test "$("$binary" --version 2>version.stderr)" = "${{ needs.prepare.outputs.full_version }}"
+          test ! -s version.stderr
 
       - name: Verify Linux AppImage desktop actions
         if: matrix.platform == 'linux-x64'

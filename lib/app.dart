@@ -173,9 +173,23 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
                     final version = info == null
                         ? 'version loading...'
                         : '${info.version}+${info.buildNumber}';
+                    final colors = Theme.of(context).colorScheme;
                     return UserAccountsDrawerHeader(
-                      accountName: Text(appName),
-                      accountEmail: Text(version),
+                      decoration: BoxDecoration(
+                        color: colors.primaryContainer,
+                      ),
+                      accountName: Text(
+                        appName,
+                        style: TextStyle(color: colors.onPrimaryContainer),
+                      ),
+                      accountEmail: Text(
+                        version,
+                        style: TextStyle(
+                          color: colors.onPrimaryContainer.withValues(
+                            alpha: 0.78,
+                          ),
+                        ),
+                      ),
                       currentAccountPicture: const ClipRRect(
                         borderRadius: BorderRadius.all(Radius.circular(16)),
                         child: Image(

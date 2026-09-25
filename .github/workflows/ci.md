@@ -56,6 +56,8 @@ The Linux x64 target extracts the packaged `AppImage` and rejects the build unle
 
 The same target unpacks both packaged `DEB` and `RPM` files, completes the missing `Actions=` groups and canonical desktop ID, rebuilds each package, and verifies the RPM with a real Fedora 44 `dnf install` transaction before uploading artifacts.
 
+It also runs the packaged Linux binary directly for `--help` and `--version`, requiring correct output with no GTK, Flutter, EGL, Mesa, or GDK diagnostics on stderr.
+
 ### 🧪 Manual Dry-Run
 
 Manual runs default to `publish=false`. They execute quality checks, all Release builds, the Flatpak package and smoke test, all permanent Profile builds, MSIX validation, and release-note rendering, but upload a seven-day `release-dry-run-*` artifact instead of creating a tag or GitHub Release.
