@@ -54,7 +54,7 @@ feat(system-info): migrate collection into a reusable plugin
 
 Linux x64 目标会解包生成的 `AppImage`，并在其 desktop 入口未声明七个 `Actions=` 目标或缺少窗口的 `StartupWMClass` 时判定构建失败。
 
-同一目标还会解包生成的 `DEB` 和 `RPM`，补齐缺失的 `Actions=` 分组及规范 desktop ID，重新打包并验证结果后再上传产物。
+同一目标还会解包生成的 `DEB` 和 `RPM`，补齐缺失的 `Actions=` 分组及规范 desktop ID，重新打包，并通过真实 Fedora 44 `dnf install` 事务验证 RPM 后再上传产物。
 
 ### 🧪 手动 Dry-Run
 

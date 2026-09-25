@@ -48,6 +48,33 @@ class RpmPackagingTests(unittest.TestCase):
             )
         self.assertIn("launcher.chmod(0o755)", SCRIPT.read_text(encoding="utf-8"))
 
+    def test_spec_owns_only_application_private_directories(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory) / "package"
+            launcher = root / MODULE.LAUNCHER_PATH
+            launcher.parent.mkdir(parents=True)
+            launcher.write_text("#!/bin/sh\n", encoding="utf-8")
+            payload = root / MODULE.PAYLOAD_EXECUTABLE_PATH
+            payload.parent.mkdir(parents=True)
+            payload.write_text("binary", encoding="utf-8")
+            desktop = root / "usr/share/applications/demo.desktop"
+            desktop.parent.mkdir(parents=True)
+            desktop.write_text("[Desktop Entry]\n", encoding="utf-8")
+
+            spec = MODULE._rpm_spec(
+                root,
+                Path(directory) / "rpmbuild",
+                "0.5.4",
+                "0.beta.21.20260925",
+                "x86_64",
+            ).read_text(encoding="utf-8")
+
+        self.assertIn("/usr/bin/dart_flutter_demo", spec)
+        self.assertIn("%dir /opt/dart_flutter_demo", spec)
+        self.assertNotIn("%dir /usr", spec)
+        self.assertNotIn("%dir /usr/bin", spec)
+        self.assertNotIn("%dir /usr/share", spec)
+
     def test_maps_prerelease_to_rpm_version_and_release(self) -> None:
         self.assertEqual(
             MODULE.rpm_fields("0.5.3-beta.19+20260924"),
@@ -66,6 +93,8 @@ class RpmPackagingTests(unittest.TestCase):
         self.assertIn("Verify Linux command line", workflow)
         self.assertIn('bundle/dart_flutter_demo', workflow)
         self.assertIn("xvfb-run -a", workflow)
+        self.assertIn("fedora:44", workflow)
+        self.assertIn("dnf install -y /tmp/package.rpm", workflow)
 
 
 if __name__ == "__main__":

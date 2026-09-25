@@ -283,6 +283,22 @@ jobs:
           python3 scripts/ci/packaging/linux/patch-rpm-desktop.py \
             --version "${{ needs.prepare.outputs.version }}" "${debs[@]}"
 
+      - name: Verify Linux RPM installation on Fedora
+        if: matrix.platform == 'linux-x64'
+        shell: bash
+        run: |
+          set -euo pipefail
+          rpm_package="$(find dist -type f -name '*.rpm' -print -quit)"
+          test -n "$rpm_package"
+          docker run --rm \
+            --volume "$PWD/$rpm_package:/tmp/package.rpm:ro" \
+            fedora:44 \
+            bash -c 'set -euo pipefail
+              dnf install -y /tmp/package.rpm
+              test -x /usr/bin/dart_flutter_demo
+              rpm -qf /usr/bin/dart_flutter_demo | grep -F "dart-flutter-demo-showcase-"
+              rpm -qf /usr/bin | grep -F "filesystem-"'
+
       - name: Preserve Flatpak package input
         if: matrix.platform == 'linux-x64'
         shell: bash

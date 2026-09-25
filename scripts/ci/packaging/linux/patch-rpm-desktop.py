@@ -25,6 +25,7 @@ SPEC.loader.exec_module(PATCHER)
 DESKTOP_GLOB = "usr/share/applications/*.desktop"
 LAUNCHER_PATH = Path("usr/bin/dart_flutter_demo")
 PAYLOAD_EXECUTABLE_PATH = Path("opt/dart_flutter_demo/dart_flutter_demo")
+PACKAGE_OWNED_DIRECTORY_ROOTS = (Path("opt/dart_flutter_demo"),)
 
 
 PACKAGE_NAME = "dart-flutter-demo-showcase"
@@ -93,6 +94,27 @@ def _verify_launcher(root: Path, package: Path) -> None:
         raise SystemExit(f"{package.name} launcher does not start the bundled executable")
 
 
+def _is_package_owned_directory(relative: Path) -> bool:
+    return any(
+        relative == directory or directory in relative.parents
+        for directory in PACKAGE_OWNED_DIRECTORY_ROOTS
+    )
+
+
+def _rpm_file_manifest(root: Path) -> list[str]:
+    """Lists payload files and only application-private directories for RPM."""
+    files: list[str] = []
+    for entry in sorted(root.rglob("*")):
+        relative_path = entry.relative_to(root)
+        relative = "/" + relative_path.as_posix()
+        if entry.is_dir():
+            if _is_package_owned_directory(relative_path):
+                files.append(f"%dir {relative}")
+        else:
+            files.append(relative)
+    return files
+
+
 def rpm_fields(full_version: str) -> tuple[str, str]:
     match = VERSION_PATTERN.fullmatch(full_version)
     if match is None:
@@ -117,10 +139,7 @@ def _rpm_spec(root: Path, topdir: Path, version: str, release: str, arch: str) -
         for item in root.iterdir():
             archive.add(item, arcname=item.name, recursive=True)
 
-    files: list[str] = []
-    for entry in sorted(root.rglob("*")):
-        relative = "/" + entry.relative_to(root).as_posix()
-        files.append(f"%dir {relative}" if entry.is_dir() else relative)
+    files = _rpm_file_manifest(root)
     spec = topdir / "SPECS" / "patched.spec"
     spec.parent.mkdir(parents=True)
     spec.write_text(

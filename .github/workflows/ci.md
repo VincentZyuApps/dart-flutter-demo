@@ -54,7 +54,7 @@ The same run builds permanent Profile assets for Windows x64, Linux x64, and And
 
 The Linux x64 target extracts the packaged `AppImage` and rejects the build unless its desktop entry declares the seven `Actions=` destinations and the `StartupWMClass` of the window.
 
-The same target unpacks both packaged `DEB` and `RPM` files, completes the missing `Actions=` groups and canonical desktop ID, rebuilds each package, and verifies the result before uploading artifacts.
+The same target unpacks both packaged `DEB` and `RPM` files, completes the missing `Actions=` groups and canonical desktop ID, rebuilds each package, and verifies the RPM with a real Fedora 44 `dnf install` transaction before uploading artifacts.
 
 ### 🧪 Manual Dry-Run
 
