@@ -64,6 +64,69 @@ Animated breakdowns of tracked code, script, doc, and build-config size by bytes
 </table>
 </div>
 
+### 🖱️ Dock Hover
+
+Hovering over the taskbar or dock button reveals window previews and thumbnail controls.<br>
+
+<div align="center">
+<table>
+  <thead>
+    <tr>
+      <th align="center">Windows 11</th>
+      <th align="center">Fedora 44 KDE</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td align="center"><img src="doc/images/preview/dock.hover.windows11.png" /><br><sub>Windows 11 taskbar thumbnail toolbar</sub></td>
+      <td align="center"><img src="doc/images/preview/dock.hover.fedora44.kde.png" /><br><sub>Fedora 44 KDE task manager thumbnail</sub></td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+### 📑 Dock Right-Click
+
+Right-clicking the taskbar or dock button reveals destination shortcuts and desktop actions.<br>
+
+<div align="center">
+<table>
+  <thead>
+    <tr>
+      <th align="center">Windows 11</th>
+      <th align="center">Fedora 44 KDE</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td align="center"><img src="doc/images/preview/dock.right-click.windows11.png" /><br><sub>Windows 11 jump list</sub></td>
+      <td align="center"><img src="doc/images/preview/dock.right-click.fedora44.kde.png" /><br><sub>Fedora 44 KDE desktop actions</sub></td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+### 🔔 Notifications
+
+Triggering a desktop request raises the window and reports a system notification banner.<br>
+
+<div align="center">
+<table>
+  <thead>
+    <tr>
+      <th align="center">Windows 11</th>
+      <th align="center">Fedora 44 KDE</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td align="center"><img src="doc/images/preview/notify.windows11.png" /><br><sub>Windows 11 notification</sub></td>
+      <td align="center"><img src="doc/images/preview/notify.fedora44.kde.png" /><br><sub>Fedora 44 KDE notification</sub></td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
 ### ℹ️ About
 
 An app information dialog that displays app name, version, build number, publisher, and related links. Accessible from the AppBar menu.<br>

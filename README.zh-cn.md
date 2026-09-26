@@ -64,6 +64,69 @@
 </table>
 </div>
 
+### 🖱️ Dock 悬停
+
+悬停在任务栏或程序坞图标上，可预览运行窗口状态及快捷控制控件。<br>
+
+<div align="center">
+<table>
+  <thead>
+    <tr>
+      <th align="center">Windows 11</th>
+      <th align="center">Fedora 44 KDE</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td align="center"><img src="doc/images/preview/dock.hover.windows11.png" /><br><sub>Windows 11 任务栏缩略图工具栏</sub></td>
+      <td align="center"><img src="doc/images/preview/dock.hover.fedora44.kde.png" /><br><sub>Fedora 44 KDE 任务管理器缩略图</sub></td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+### 📑 Dock 右键菜单
+
+右键点击任务栏或程序坞图标，可唤起快捷跳转菜单与桌面动作。<br>
+
+<div align="center">
+<table>
+  <thead>
+    <tr>
+      <th align="center">Windows 11</th>
+      <th align="center">Fedora 44 KDE</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td align="center"><img src="doc/images/preview/dock.right-click.windows11.png" /><br><sub>Windows 11 跳转列表</sub></td>
+      <td align="center"><img src="doc/images/preview/dock.right-click.fedora44.kde.png" /><br><sub>Fedora 44 KDE 桌面 Actions</sub></td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+### 🔔 系统通知
+
+执行桌面快捷操作或切换页面时，窗口被置顶唤起并弹出系统通知横幅。<br>
+
+<div align="center">
+<table>
+  <thead>
+    <tr>
+      <th align="center">Windows 11</th>
+      <th align="center">Fedora 44 KDE</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td align="center"><img src="doc/images/preview/notify.windows11.png" /><br><sub>Windows 11 系统通知</sub></td>
+      <td align="center"><img src="doc/images/preview/notify.fedora44.kde.png" /><br><sub>Fedora 44 KDE 系统通知</sub></td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
 ### ℹ️ 关于
 
 显示应用名称、版本号、构建号、发布方及相关链接的应用信息对话框。从 AppBar 菜单中打开。<br>
