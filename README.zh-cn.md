@@ -95,12 +95,14 @@
     <tr>
       <th align="center">Windows 11</th>
       <th align="center">Fedora 44 KDE</th>
+      <th align="center">Ubuntu 22.04 GNOME</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <td align="center"><img src="doc/images/preview/dock.right-click.windows11.png" /><br><sub>Windows 11 跳转列表</sub></td>
       <td align="center"><img src="doc/images/preview/dock.right-click.fedora44.kde.png" /><br><sub>Fedora 44 KDE 桌面 Actions</sub></td>
+      <td align="center"><img src="doc/images/preview/dock.right-click.ubuntu22.gnome.png" /><br><sub>Ubuntu 22.04 GNOME 桌面 Actions</sub></td>
     </tr>
   </tbody>
 </table>
@@ -116,12 +118,14 @@
     <tr>
       <th align="center">Windows 11</th>
       <th align="center">Fedora 44 KDE</th>
+      <th align="center">Ubuntu 22.04 GNOME</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <td align="center"><img src="doc/images/preview/notify.windows11.png" /><br><sub>Windows 11 系统通知</sub></td>
       <td align="center"><img src="doc/images/preview/notify.fedora44.kde.png" /><br><sub>Fedora 44 KDE 系统通知</sub></td>
+      <td align="center"><img src="doc/images/preview/nofify.ubuntu22.gnome.png" /><br><sub>Ubuntu 22.04 GNOME 系统通知</sub></td>
     </tr>
   </tbody>
 </table>

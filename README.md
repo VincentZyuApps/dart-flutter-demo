@@ -95,12 +95,14 @@ Right-clicking the taskbar or dock button reveals destination shortcuts and desk
     <tr>
       <th align="center">Windows 11</th>
       <th align="center">Fedora 44 KDE</th>
+      <th align="center">Ubuntu 22.04 GNOME</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <td align="center"><img src="doc/images/preview/dock.right-click.windows11.png" /><br><sub>Windows 11 jump list</sub></td>
       <td align="center"><img src="doc/images/preview/dock.right-click.fedora44.kde.png" /><br><sub>Fedora 44 KDE desktop actions</sub></td>
+      <td align="center"><img src="doc/images/preview/dock.right-click.ubuntu22.gnome.png" /><br><sub>Ubuntu 22.04 GNOME desktop actions</sub></td>
     </tr>
   </tbody>
 </table>
@@ -116,12 +118,14 @@ Triggering a desktop request raises the window and reports a system notification
     <tr>
       <th align="center">Windows 11</th>
       <th align="center">Fedora 44 KDE</th>
+      <th align="center">Ubuntu 22.04 GNOME</th>
     </tr>
   </thead>
   <tbody>
     <tr>
       <td align="center"><img src="doc/images/preview/notify.windows11.png" /><br><sub>Windows 11 notification</sub></td>
       <td align="center"><img src="doc/images/preview/notify.fedora44.kde.png" /><br><sub>Fedora 44 KDE notification</sub></td>
+      <td align="center"><img src="doc/images/preview/nofify.ubuntu22.gnome.png" /><br><sub>Ubuntu 22.04 GNOME notification</sub></td>
     </tr>
   </tbody>
 </table>
