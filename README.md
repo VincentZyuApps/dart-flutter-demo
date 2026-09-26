@@ -147,11 +147,11 @@ The seven in-app destinations (the five bottom tabs plus About and Guide) are al
 
 | Surface | Platform | What it does |
 |---|---|---|
-| Jump list | Windows 10/11 | Right-clicking the taskbar button lists all seven destinations under a `Pages` category, each with its own glyph icon. |
-| Thumbnail toolbar | Windows 10/11 | Hovering the taskbar button shows up to seven glyph buttons; the current page is drawn disabled so it reads as pressed. |
-| Desktop actions | Linux | The Flatpak, AppImage, DEB, and RPM `.desktop` entries declare `Actions=` for all seven destinations. |
-| MPRIS player | Linux | The visible page is published as an MPRIS item with its own cover art, title, and track object path; supported KDE/GNOME media controls can expose the transport actions. |
-| Notifications | Windows, Linux | Applying a desktop request raises the window and reports `Opened <label>`, through a shell balloon on Windows and a freedesktop notification on Linux. |
+| Jump list (Right-click) | Windows 10/11 | Right-clicking the taskbar button lists all seven destinations under a `Pages` category, each with its own glyph icon. |
+| Thumbnail toolbar (Hover) | Windows 10/11 | Hovering the taskbar button shows up to seven glyph buttons; the current page is drawn disabled so it reads as pressed. |
+| Desktop actions (Right-click) | Linux | Right-clicking the dock or app icon lists all seven destinations declared as `Actions=` in the Flatpak, AppImage, DEB, and RPM `.desktop` entries. |
+| MPRIS player | Linux | The visible page is published as an MPRIS item with its own cover art, title, and track object path; supported desktop media controls expose transport actions (KDE Plasma shows them in taskbar hover previews and the bottom-right system tray media player; GNOME defaults to the top-center calendar/notification menu; other environments depend on panel applets). |
+| Notifications | Windows, Linux | Applying a desktop request raises the window and reports `Opened <label>`: Windows 10/11 and KDE Plasma default to bottom-right popups, while GNOME defaults to a top-center banner. Driven by Windows shell notifications and the Linux freedesktop specification. |
 
 A second launch forwards its command line to the running window, over a session-bus `Activate(as, s)` call on Linux and over `WM_COPYDATA` on Windows, and then exits.
 
