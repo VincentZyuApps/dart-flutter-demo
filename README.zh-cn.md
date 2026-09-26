@@ -147,11 +147,11 @@
 
 | 入口 | 平台 | 作用 |
 |---|---|---|
-| 跳转列表（右键菜单） | Windows 10/11 | 右键任务栏按钮时在 `Pages` 分类下列出全部七个入口，每个入口使用自己的字形图标。 |
+| 跳转列表（右键菜单等） | Windows 10/11 | 右键任务栏按钮等操作时在 `Pages` 分类下列出全部七个入口（系统信息、对话框实验等），每个入口使用自己的字形图标。 |
 | 缩略图工具栏（悬停预览） | Windows 10/11 | 悬停任务栏按钮时显示最多七个字形按钮；当前页面渲染为禁用态，看起来像按下。 |
 | 桌面 Actions（右键菜单） | Linux | 右键程序坞或应用图标时列出全部七个入口；由 Flatpak、AppImage、DEB 与 RPM 的 `.desktop` 规范声明 `Actions=`。 |
-| MPRIS 播放器 | Linux | 当前页面作为 MPRIS 项发布，并带有自己的封面、标题与曲目对象路径；支持 MPRIS 的桌面媒体控件可呈现传输操作（KDE Plasma 在任务栏悬停与右下角系统托盘媒体中心展示，GNOME 默认在屏幕顶部正中日历/通知栏展示，其他环境取决于面板插件）。 |
-| 系统通知 | Windows、Linux | 应用桌面请求时会把窗口置前并报告 `Opened <label>`：Windows 10/11 与 KDE 默认在屏幕右下角弹出，GNOME 默认在屏幕顶部居中弹出横幅；底层分别走 Windows shell 气泡与 Linux freedesktop 规范。 |
+| MPRIS 播放器（悬停预览 / 媒体中心） | Linux | 当前页面作为 MPRIS 项发布，并带有自己的封面、标题与曲目对象路径；支持 MPRIS 的桌面媒体控件可呈现传输操作（KDE Plasma 在任务栏悬停与右下角系统托盘媒体中心展示，GNOME 默认在屏幕顶部正中日历/通知栏展示，其他环境取决于面板插件）。 |
+| 系统通知（右下角 / 顶部等弹窗） | Windows、Linux | 应用桌面请求时会把窗口置前并报告 `Opened <label>`：Windows 10/11 与 KDE 默认在屏幕右下角弹出，GNOME 默认在屏幕顶部居中弹出横幅，其他环境视配置在右上角等位置弹出；底层分别走 Windows shell 气泡与 Linux freedesktop 等规范。 |
 
 第二次启动会把命令行转发给正在运行的窗口：Linux 走 session bus 的 `Activate(as, s)` 调用，Windows 走 `WM_COPYDATA`，随后自身退出。
 
