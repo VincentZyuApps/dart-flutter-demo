@@ -108,6 +108,27 @@ Right-clicking the taskbar or dock button reveals destination shortcuts and desk
 </table>
 </div>
 
+### 🎵 MPRIS Media Controls
+
+On Linux desktops, the application publishes the current page state and cover art as an MPRIS media item, controllable via desktop media widgets and quick actions.<br>
+
+<div align="center">
+<table>
+  <thead>
+    <tr>
+      <th align="center">Fedora 44 KDE</th>
+      <th align="center">Ubuntu 22.04 GNOME</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td align="center"><img src="doc/images/preview/mpris.fedora44.kde.png" /><br><sub>Fedora 44 KDE system tray media player</sub></td>
+      <td align="center"><img src="doc/images/preview/mpris.notify.ubuntu22.gnome.png" /><br><sub>Ubuntu 22.04 GNOME top bar media card & notification history</sub></td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
 ### 🔔 Notifications
 
 Triggering a desktop request raises the window and reports a system notification banner.<br>

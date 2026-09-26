@@ -108,6 +108,27 @@
 </table>
 </div>
 
+### 🎵 MPRIS 媒体控件
+
+在 Linux 桌面环境下，应用作为 MPRIS 媒体项发布当前页面状态与封面，支持通过系统媒体中心及快捷控件控制。<br>
+
+<div align="center">
+<table>
+  <thead>
+    <tr>
+      <th align="center">Fedora 44 KDE</th>
+      <th align="center">Ubuntu 22.04 GNOME</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td align="center"><img src="doc/images/preview/mpris.fedora44.kde.png" /><br><sub>Fedora 44 KDE 系统托盘媒体播放器</sub></td>
+      <td align="center"><img src="doc/images/preview/mpris.notify.ubuntu22.gnome.png" /><br><sub>Ubuntu 22.04 GNOME 顶部面板媒体卡片与通知历史</sub></td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
 ### 🔔 系统通知
 
 执行桌面快捷操作或切换页面时，窗口被置顶唤起并弹出系统通知横幅。<br>
