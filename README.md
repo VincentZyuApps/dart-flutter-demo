@@ -92,6 +92,7 @@ Platform caveats:
 
 - GNOME Shell offers no supported way for a non-native toolkit to add hover controls to a dock icon; MPRIS media controls remain available only where the shell chooses to expose them.
 - Desktop shells draw any MPRIS transport controls themselves, so the cover art of the current page is the only preview content this application controls.
+- Desktop-request notifications create a fresh banner after one quiet second; more frequent page switches update one pending banner with the final page.
 - The jump list reuses the Material glyphs of the thumbnail toolbar and writes them to `%LOCALAPPDATA%\DartFlutterDemo\taskbar-icons` at run time, because Explorer loads an icon from a real file path and neither a packaged installation directory nor a bundled asset provides one.
 - The DEB and RPM makers need package-level desktop entry completion. The Linux release job unpacks each package, adds the seven action groups and canonical desktop ID, rebuilds it, and verifies the result.
 - Wayland refuses to move the focus on behalf of a background application, so the raise falls back to an urgency hint on the dock entry there.

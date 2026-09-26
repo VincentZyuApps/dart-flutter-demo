@@ -32,10 +32,12 @@ class WindowsDesktopIntegration {
   static Future<bool> showNotification({
     required String title,
     required String body,
+    bool replaceExisting = true,
   }) {
     return WindowsDesktopIntegrationPlatform.instance.showNotification(
       title: title,
       body: body,
+      replaceExisting: replaceExisting,
     );
   }
 

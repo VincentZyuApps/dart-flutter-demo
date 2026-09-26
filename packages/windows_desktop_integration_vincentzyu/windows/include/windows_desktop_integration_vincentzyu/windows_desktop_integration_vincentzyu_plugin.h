@@ -54,7 +54,8 @@ class WindowsDesktopIntegrationVincentzyuPlugin : public flutter::Plugin {
   void ActivateWindow();
 
   // Shows the shell notification that reports an applied desktop request.
-  bool ShowNotification(const std::wstring& title, const std::wstring& body);
+  bool ShowNotification(const std::wstring& title, const std::wstring& body,
+                        bool replace_existing);
   void RemoveTrayIcon();
   HICON TrayIcon();
 

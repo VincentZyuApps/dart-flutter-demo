@@ -506,7 +506,10 @@ void WindowsDesktopIntegrationVincentzyuPlugin::HandleMethodCall(
       result->Error("invalid-arguments", "Expected notification text.");
       return;
     }
-    result->Success(flutter::EncodableValue(ShowNotification(title, body)));
+    const bool replace_existing =
+        BoolValue(MapValue(*arguments, "replaceExisting"), true);
+    result->Success(flutter::EncodableValue(
+        ShowNotification(title, body, replace_existing)));
     return;
   }
 
@@ -770,10 +773,17 @@ void WindowsDesktopIntegrationVincentzyuPlugin::RemoveTrayIcon() {
 }
 
 bool WindowsDesktopIntegrationVincentzyuPlugin::ShowNotification(
-    const std::wstring& title, const std::wstring& body) {
+    const std::wstring& title, const std::wstring& body,
+    bool replace_existing) {
   EnsureSinkWindow();
   if (sink_window_ == nullptr) {
     return false;
+  }
+
+  // A distinct action needs a new shell notification. Reusing the temporary
+  // icon would otherwise let Explorer silently coalesce it with an old balloon.
+  if (!replace_existing) {
+    RemoveTrayIcon();
   }
 
   NOTIFYICONDATAW data = {};

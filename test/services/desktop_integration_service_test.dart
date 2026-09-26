@@ -111,6 +111,37 @@ void main() {
     });
   });
 
+  group('DesktopNotificationPolicy', () {
+    test('starts a fresh notification and merges requests inside one second',
+        () {
+      final policy = DesktopNotificationPolicy();
+      final start = DateTime.utc(2026, 9, 26, 12);
+
+      expect(policy.select(start), DesktopNotificationMode.fresh);
+      expect(
+        policy.select(start.add(const Duration(milliseconds: 999))),
+        DesktopNotificationMode.replace,
+      );
+      expect(
+        policy.select(start.add(const Duration(seconds: 1))),
+        DesktopNotificationMode.replace,
+      );
+    });
+
+    test('creates a fresh notification after one quiet second', () {
+      final policy = DesktopNotificationPolicy();
+      final start = DateTime.utc(2026, 9, 26, 12);
+
+      policy.select(start);
+      expect(
+        policy.select(start.add(const Duration(seconds: 1))),
+        DesktopNotificationMode.fresh,
+      );
+      policy.reset();
+      expect(policy.select(start), DesktopNotificationMode.fresh);
+    });
+  });
+
   group('pending requests', () {
     tearDown(() {
       drainPendingRequests();

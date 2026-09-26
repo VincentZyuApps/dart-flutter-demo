@@ -39,6 +39,7 @@ class DesktopNotifier {
     String body = '',
     String? iconPath,
     int timeoutMs = 5000,
+    bool replaceExisting = true,
   }) async {
     if (_closed) {
       return false;
@@ -52,7 +53,7 @@ class DesktopNotifier {
         name: 'Notify',
         values: <DBusValue>[
           DBusString(desktopEntry),
-          DBusUint32(_replacesId),
+          DBusUint32(replaceExisting ? _replacesId : 0),
           DBusString(iconPath ?? ''),
           DBusString(summary),
           DBusString(body),
@@ -65,8 +66,8 @@ class DesktopNotifier {
       );
       for (final DBusValue value in response.returnValues) {
         if (value is DBusUint32) {
-          // Reusing the identifier replaces the previous banner instead of
-          // stacking one more of them, so a burst of requests stays readable.
+          // A fresh notification still becomes the replacement target of a
+          // subsequent burst, without suppressing the next distinct action.
           _replacesId = value.value;
         }
       }

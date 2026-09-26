@@ -17,6 +17,7 @@ class _RecordingTaskbarPlatform extends WindowsDesktopIntegrationPlatform {
   String? toolbarActiveId;
   String? notificationTitle;
   String? notificationBody;
+  bool? notificationReplaceExisting;
 
   @override
   Future<bool> acquireSingleInstance() async {
@@ -47,10 +48,12 @@ class _RecordingTaskbarPlatform extends WindowsDesktopIntegrationPlatform {
   Future<bool> showNotification({
     required String title,
     required String body,
+    bool replaceExisting = true,
   }) async {
     calls.add('showNotification');
     notificationTitle = title;
     notificationBody = body;
+    notificationReplaceExisting = replaceExisting;
     return true;
   }
 
@@ -129,15 +132,18 @@ void main() {
     expect(received.single.commandId, 'type');
   });
 
-  test('forwards notification text to the platform', () async {
+  test('forwards notification text and its replacement mode to the platform',
+      () async {
     expect(
       await WindowsDesktopIntegration.showNotification(
         title: 'DartFlutterDemo',
         body: 'Opened Adaptive Grid',
+        replaceExisting: false,
       ),
       isTrue,
     );
     expect(platform.notificationTitle, 'DartFlutterDemo');
     expect(platform.notificationBody, 'Opened Adaptive Grid');
+    expect(platform.notificationReplaceExisting, isFalse);
   });
 }

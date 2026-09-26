@@ -27,7 +27,11 @@ abstract class WindowsDesktopIntegrationPlatform {
   ///
   /// Returns false when the platform has no notification implementation or
   /// refused to show one.
-  Future<bool> showNotification({required String title, required String body});
+  Future<bool> showNotification({
+    required String title,
+    required String body,
+    bool replaceExisting = true,
+  });
 
   /// Stream of taskbar events.
   Stream<TaskbarEvent> get events;
@@ -102,12 +106,14 @@ class MethodChannelWindowsDesktopIntegration
   Future<bool> showNotification({
     required String title,
     required String body,
+    bool replaceExisting = true,
   }) async {
     try {
       final bool? shown = await _methods
           .invokeMethod<bool>('showNotification', <String, Object?>{
         'title': title,
         'body': body,
+        'replaceExisting': replaceExisting,
       });
       return shown ?? false;
     } on MissingPluginException {

@@ -185,6 +185,33 @@ enum KdeWaylandFocusPolicy {
   }
 }
 
+/// Whether a desktop request creates a new notification or updates a burst.
+enum DesktopNotificationMode { fresh, replace }
+
+/// Selects a readable notification mode without allowing rapid input to stack
+/// banners across the desktop.
+class DesktopNotificationPolicy {
+  DesktopNotificationPolicy({
+    this.quietPeriod = const Duration(seconds: 1),
+  });
+
+  final Duration quietPeriod;
+  DateTime? _lastRequestAt;
+
+  DesktopNotificationMode select(DateTime requestedAt) {
+    final DateTime? previous = _lastRequestAt;
+    _lastRequestAt = requestedAt;
+    if (previous == null || requestedAt.difference(previous) >= quietPeriod) {
+      return DesktopNotificationMode.fresh;
+    }
+    return DesktopNotificationMode.replace;
+  }
+
+  void reset() {
+    _lastRequestAt = null;
+  }
+}
+
 /// Origins that report the applied request through a system notification.
 const Set<DesktopRequestOrigin> notifyingOrigins = <DesktopRequestOrigin>{
   DesktopRequestOrigin.launchArguments,
@@ -225,7 +252,7 @@ void _enqueueDesktopRequest(
     ));
   }
   if (notifyingOrigins.contains(origin)) {
-    unawaited(DesktopIntegrationService.showShortcutNotification(shortcut));
+    DesktopIntegrationService.queueShortcutNotification(shortcut, origin);
   }
 }
 
@@ -269,6 +296,9 @@ class DesktopIntegrationService {
   static MprisBridge? _mprisBridge;
   static DesktopNotifier? _notifier;
   static StreamSubscription<TaskbarEvent>? _taskbarEvents;
+  static final DesktopNotificationPolicy _notificationPolicy =
+      DesktopNotificationPolicy();
+  static Future<void> _notificationQueue = Future<void>.value();
 
   /// Cover art URL of every destination, keyed by shortcut identifier.
   static final Map<String, String> _artUrls = <String, String>{};
@@ -290,7 +320,7 @@ class DesktopIntegrationService {
   /// Cover art of the page that is currently visible.
   ///
   /// The desktop shells draw their own transport buttons, so the cover is the
-  /// only part of the hover preview this application controls.
+  /// only part of the media-control preview this application controls.
   static String? get _artUrl =>
       _artUrls[_pageShortcut(_currentPage).id] ?? _fallbackArtUrl;
 
@@ -431,17 +461,44 @@ class DesktopIntegrationService {
     await _publishNowPlaying();
   }
 
+  /// Queues one system-notification request and records its delivery result.
+  static void queueShortcutNotification(
+    DesktopShortcut shortcut,
+    DesktopRequestOrigin origin,
+  ) {
+    final DesktopNotificationMode mode = _notificationPolicy.select(
+      DateTime.now(),
+    );
+    _notificationQueue = _notificationQueue.then((_) async {
+      var delivered = false;
+      try {
+        delivered = await showShortcutNotification(shortcut, mode: mode);
+      } catch (_) {
+        // Delivery is intentionally best effort and never blocks navigation.
+      }
+      desktopRequestLogger?.call(
+        'Desktop notification: ${shortcut.id} via ${origin.wireName} '
+        'mode=${mode.name} ${delivered ? 'delivered' : 'rejected'}',
+      );
+    });
+    unawaited(_notificationQueue);
+  }
+
   /// Reports an applied desktop request through a system notification.
   ///
   /// Best effort on both platforms: Windows draws the shell balloon and Linux
   /// asks the freedesktop notification service, and a desktop that declines the
   /// notification still gets the in-window feedback.
-  static Future<bool> showShortcutNotification(DesktopShortcut shortcut) async {
+  static Future<bool> showShortcutNotification(
+    DesktopShortcut shortcut, {
+    DesktopNotificationMode mode = DesktopNotificationMode.fresh,
+  }) async {
     final String body = 'Opened ${shortcut.label}';
     if (Platform.isWindows) {
       return WindowsDesktopIntegration.showNotification(
         title: desktopAppName,
         body: body,
+        replaceExisting: mode == DesktopNotificationMode.replace,
       );
     }
     if (Platform.isLinux) {
@@ -452,6 +509,7 @@ class DesktopIntegrationService {
         summary: desktopAppName,
         body: body,
         iconPath: artUrl == null ? null : Uri.parse(artUrl).toFilePath(),
+        replaceExisting: mode == DesktopNotificationMode.replace,
       );
     }
     return false;
@@ -507,6 +565,9 @@ class DesktopIntegrationService {
     final MprisBridge? bridge = _mprisBridge;
     _mprisBridge = null;
     await bridge?.close();
+    await _notificationQueue;
+    _notificationPolicy.reset();
+    _notificationQueue = Future<void>.value();
     final DesktopNotifier? notifier = _notifier;
     _notifier = null;
     await notifier?.close();
@@ -670,8 +731,10 @@ class DesktopIntegrationService {
     await _prepareNowPlayingArt();
     final MprisBridge bridge = MprisBridge();
     if (!await bridge.start(initialState: _nowPlayingState())) {
+      desktopRequestLogger?.call('MPRIS bridge: registration unavailable');
       return;
     }
+    desktopRequestLogger?.call('MPRIS bridge: registered');
     final MprisMediaPlayerObject? player = bridge.player;
     if (player != null) {
       player.onNext = () async {
@@ -703,7 +766,11 @@ class DesktopIntegrationService {
     if (bridge == null) {
       return;
     }
-    await bridge.update(_nowPlayingState());
+    try {
+      await bridge.update(_nowPlayingState());
+    } catch (_) {
+      desktopRequestLogger?.call('MPRIS bridge: state update rejected');
+    }
   }
 
   static NowPlayingState _nowPlayingState() {
