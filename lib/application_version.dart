@@ -2,4 +2,4 @@
 ///
 /// The command-line entry point reads this compile-time constant so `--version`
 /// remains available before Flutter creates a window or invokes a plugin.
-const String applicationVersion = '0.5.6-beta.23+20260926';
+const String applicationVersion = '0.5.6-rc.1+20261002';
