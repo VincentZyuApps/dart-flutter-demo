@@ -339,7 +339,7 @@ GitHub Actions 使用精确且区分大小写的连字符关键词：`[build-rel
 
 所有 Windows 产物（包括 Microsoft Store 提交用 MSIX）都仅支持 x64。未签名 MSIX 只用于提交 Partner Center；普通 GitHub 下载请使用 EXE 或便携 ZIP。
 
-iOS 基线表示工程配置的理论最低构建版本，不代表所有系统与设备组合都经过实测。目前已知的实体设备验证结果是 iPad Air 5 / iOS 17。
+iOS 基线表示工程配置的理论最低构建版本，不代表所有系统与设备组合都经过实测。目前已知的实体设备验证结果是 iPad Air 5 / iOS 17、26。
 
 ## ⚠️🩺 故障排除
 
@@ -347,7 +347,7 @@ iOS 基线表示工程配置的理论最低构建版本，不代表所有系统�
 - **🍎 macOS 安全提示**：如果 macOS 拦截启动 并提示 Apple 无法验证此 app，请打开**系统设置 → 隐私与安全性**，向下滑到**安全性**，然后为 `dart_flutter_demo` 点击**仍要打开**。
 - **🍎 macOS 虚拟机 图形问题**（VMware、VirtualBox 等）：Flutter 桌面应用依赖 Apple Metal，虚拟机无法提供 Metal 支持，因此无法运行。请使用物理 Mac 或 [GitHub Actions macOS runners](https://github.com/VincentZyuApps/mac-test-action-runner)。
 - **🤖 Android APK**：未使用固定 keystore 签名。每次 release 使用不同的 debug key，安装新版本前需要**先卸载旧版本**以避免签名冲突。
-- **📱 iOS IPA**：CI 未配置代码签名，想在自己设备上运行需要自行签名。<br>*(仅供参考 — 测试设备 iPad Air 5，iOS 17；其他设备/系统版本可能有差异)*：
+- **📱 iOS IPA**：CI 未配置代码签名，想在自己设备上运行需要自行签名。<br>*(仅供参考 — 测试设备 iPad Air 5，iOS 17、26；其他设备/系统版本可能有差异)*：
   1. 在 Windows 或 macOS 上下载并安装 [AltStore](https://altstore.io)，打开 AltServer（系统托盘）
   2. iPad 用 USB 连电脑 → 托盘图标 → Install AltStore → 选择你的 iPad
   3. 输入 Apple ID（仅用于签名，不会存储）
@@ -393,4 +393,4 @@ iOS 基线表示工程配置的理论最低构建版本，不代表所有系统�
 | Version | [![Version](https://img.shields.io/badge/Version-0.4.1--alpha.1-02569B.svg?logo=flutter&labelColor=181717)](https://github.com/VincentZyuApps/dart-flutter-demo/releases) |
 | Stars | [![Stars](https://img.shields.io/github/stars/VincentZyuApps/dart-flutter-demo?style=flat&logo=github&label=stars&labelColor=181717&color=FFD700)](https://github.com/VincentZyuApps/dart-flutter-demo/stargazers) |
 | Last Commit | [![Last Commit](https://img.shields.io/github/last-commit/VincentZyuApps/dart-flutter-demo?logo=github&label=last%20commit&labelColor=181717&color=02569B)](https://github.com/VincentZyuApps/dart-flutter-demo/commits/main/) |
-| Github Action CI/CD | [![release](https://img.shields.io/github/v/release/VincentZyuApps/dart-flutter-demo?logo=github&label=发布&color=02569B&labelColor=181717)](https://github.com/VincentZyuApps/dart-flutter-demo/releases) · [![build](https://img.shields.io/github/actions/workflow/status/VincentZyuApps/dart-flutter-demo/release-publish.yml?branch=main&logo=githubactions&label=构建)](https://github.com/VincentZyuApps/dart-flutter-demo/actions/workflows/release-publish.yml) |
+| Github Action CI/CD | [![release](https://img.shields.io/github/v/release/VincentZyuApps/dart-flutter-demo?logo=github&label=release&color=02569B&labelColor=181717)](https://github.com/VincentZyuApps/dart-flutter-demo/releases) · [![build](https://img.shields.io/github/actions/workflow/status/VincentZyuApps/dart-flutter-demo/release-publish.yml?branch=main&logo=githubactions&label=build)](https://github.com/VincentZyuApps/dart-flutter-demo/actions/workflows/release-publish.yml) |

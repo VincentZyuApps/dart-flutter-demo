@@ -110,6 +110,8 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
+      - name: Sync application version from pubspec.yaml
+        run: python scripts/version/sync-version.py
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
@@ -152,6 +154,8 @@ jobs:
             flutter_arch: arm64
     steps:
       - uses: actions/checkout@v4
+      - name: Sync application version from pubspec.yaml
+        run: python scripts/version/sync-version.py
 
       - name: Verify committed platform roots
         shell: bash

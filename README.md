@@ -339,7 +339,7 @@ GitHub Actions uses exact, case-sensitive hyphenated tokens: `[build-release]` p
 
 Every Windows artifact, including the Microsoft Store submission MSIX, is x64-only. The unsigned MSIX is intended for Partner Center submission; use the EXE or portable ZIP for normal GitHub downloads.
 
-The iOS baseline is the configured build minimum, not a claim that every OS/device combination has been tested. The current known physical-device result is iPad Air 5 on iOS 17.
+The iOS baseline is the configured build minimum, not a claim that every OS/device combination has been tested. The current known physical-device result is iPad Air 5 on iOS 17 and 26.
 
 ## ⚠️🩺 Troubleshooting
 
@@ -347,7 +347,7 @@ The iOS baseline is the configured build minimum, not a claim that every OS/devi
 - **🍎 macOS security prompt**: If macOS blocks the app because Apple cannot verify it, open **System Settings → Privacy & Security**, scroll down to **Security**, then click **Open Anyway** for `dart_flutter_demo`.
 - **🍎 macOS virtual machines graphic issues** (VMware, VirtualBox, etc.): Flutter desktop apps require Apple Metal, which is unavailable in VMs. Use a physical Mac or [GitHub Actions macOS runners](https://github.com/VincentZyuApps/mac-test-action-runner) instead.
 - **🤖 Android APK**: Not signed with a persistent keystore. Each release uses a different debug key, so you must **uninstall the old version** before installing a new one to avoid signature conflicts.
-- **📱 iOS IPA**: CI does not configure code signing. To run on your own device, self-sign the `.ipa` before installing.<br>*(for reference — tested on iPad Air 5, iOS 17; other devices/versions may vary)*:
+- **📱 iOS IPA**: CI does not configure code signing. To run on your own device, self-sign the `.ipa` before installing.<br>*(for reference — tested on iPad Air 5, iOS 17, 26; other devices/versions may vary)*:
   1. Download and install [AltStore](https://altstore.io) on Windows or macOS, open AltServer (system tray)
   2. Connect iPad via USB → tray icon → Install AltStore → select your iPad
   3. Enter your Apple ID (used only for signing, not stored)
