@@ -21,7 +21,7 @@ class AppConfigService {
   ];
 
   ThemeMode themeMode = ThemeMode.system;
-  AppFontFamily fontFamily = AppFontFamily.system;
+  AppFontFamily fontFamily = AppFontFamily.lxgwWenKai;
   ProxyMode proxyMode = ProxyMode.system;
   String manualProxyUrl = NetworkProxyService.defaultManualProxy;
   bool enableLazerHud = false;
@@ -34,6 +34,25 @@ class AppConfigService {
   bool _initialized = false;
 
   bool get isInitialized => _initialized;
+
+  @visibleForTesting
+  void setConfigFileForTesting(File? file) {
+    _resolvedConfigFile = file;
+  }
+
+  @visibleForTesting
+  void resetForTesting() {
+    themeMode = ThemeMode.system;
+    fontFamily = AppFontFamily.lxgwWenKai;
+    proxyMode = ProxyMode.system;
+    manualProxyUrl = NetworkProxyService.defaultManualProxy;
+    enableLazerHud = false;
+    detailedLazerHud = true;
+    githubToken = '';
+    sources = List.from(defaultSources);
+    _resolvedConfigFile = null;
+    _initialized = false;
+  }
 
   Future<File> resolveConfigFile() async {
     if (_resolvedConfigFile != null) return _resolvedConfigFile!;

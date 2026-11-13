@@ -10,14 +10,33 @@ void main() {
 
   group('AppConfigService tests', () {
     final cfg = AppConfigService.instance;
+    late Directory tempDir;
+    late File tempFile;
+
+    setUp(() async {
+      tempDir = await Directory.systemTemp.createTemp('dart_flutter_demo_cfg_test_');
+      tempFile = File('${tempDir.path}${Platform.pathSeparator}config.yaml');
+      cfg.resetForTesting();
+      cfg.setConfigFileForTesting(tempFile);
+    });
+
+    tearDown(() async {
+      try {
+        if (await tempDir.exists()) {
+          await tempDir.delete(recursive: true);
+        }
+      } catch (_) {}
+      cfg.resetForTesting();
+    });
 
     test('initial defaults are standard', () {
       expect(cfg.themeMode, ThemeMode.system);
-      expect(cfg.fontFamily, AppFontFamily.system);
+      expect(cfg.fontFamily, AppFontFamily.lxgwWenKai);
       expect(cfg.proxyMode, ProxyMode.system);
       expect(cfg.manualProxyUrl, NetworkProxyService.defaultManualProxy);
       expect(cfg.enableLazerHud, isFalse);
       expect(cfg.detailedLazerHud, isTrue);
+      expect(cfg.githubToken, '');
       expect(cfg.sources.length, 3);
     });
 
@@ -36,6 +55,7 @@ void main() {
       // 重置内存字段并从文件重新加载
       cfg.githubToken = '';
       cfg.themeMode = ThemeMode.system;
+      cfg.fontFamily = AppFontFamily.lxgwWenKai;
       await cfg.load();
 
       expect(cfg.githubToken, 'ghp_mock_token_12345');

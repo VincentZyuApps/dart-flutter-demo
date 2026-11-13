@@ -82,7 +82,7 @@ class FontService {
   static final FontService instance = FontService._();
 
   final ValueNotifier<AppFontFamily> currentFontNotifier =
-      ValueNotifier<AppFontFamily>(AppFontFamily.system);
+      ValueNotifier<AppFontFamily>(AppFontFamily.lxgwWenKai);
 
   AppFontFamily get currentFont => currentFontNotifier.value;
 
