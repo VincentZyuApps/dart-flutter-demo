@@ -524,7 +524,7 @@ jobs:
             "build/flatpak/metadata/${FLATPAK_APP_ID}.metainfo.xml"
 
       - name: Build Flatpak bundle
-        uses: flatpak/flatpak-github-actions/flatpak-builder@bf5cafdfd97dcf5a89c7475bbc86a616e1f86acb # v6.7
+        uses: flatpak/flatpak-github-actions/flatpak-builder@401fe28a8384095fc1531b9d320b292f0ee45adb # v6.7
         with:
           bundle: dart-flutter-demo-linux-x64-v${{ needs.prepare.outputs.version }}.flatpak
           manifest-path: linux/packaging/flatpak/io.github.vincentzyuapps.dartflutterdemo.yml
