@@ -60,6 +60,7 @@ class FlutterShowcaseApp extends StatelessWidget {
           brightness: Brightness.light,
           pageTransitionsTheme: _pageTransitions,
         );
+        final lightText = FontService.instance.applyFont(lightBase.textTheme, font);
 
         final darkBase = ThemeData(
           colorSchemeSeed: Colors.indigo,
@@ -67,16 +68,23 @@ class FlutterShowcaseApp extends StatelessWidget {
           brightness: Brightness.dark,
           pageTransitionsTheme: _pageTransitions,
         );
+        final darkText = FontService.instance.applyFont(darkBase.textTheme, font);
 
         return MaterialApp(
           title: 'Dart + Flutter Demo',
           debugShowCheckedModeBanner: false,
           themeMode: themeMode,
           theme: lightBase.copyWith(
-            textTheme: FontService.instance.applyFont(lightBase.textTheme, font),
+            textTheme: lightText,
+            navigationBarTheme: NavigationBarThemeData(
+              labelTextStyle: WidgetStatePropertyAll(lightText.labelMedium),
+            ),
           ),
           darkTheme: darkBase.copyWith(
-            textTheme: FontService.instance.applyFont(darkBase.textTheme, font),
+            textTheme: darkText,
+            navigationBarTheme: NavigationBarThemeData(
+              labelTextStyle: WidgetStatePropertyAll(darkText.labelMedium),
+            ),
           ),
           home: const HomeShell(),
         );

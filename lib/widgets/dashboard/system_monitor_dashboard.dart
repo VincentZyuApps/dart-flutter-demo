@@ -147,9 +147,9 @@ class _SystemMonitorDashboardState extends State<SystemMonitorDashboard> {
       bg,
     );
 
-    final decorSize = isNarrow ? 210.0 : 250.0;
-    final decorEnd = isNarrow ? -45.0 : -55.0;
-    final decorTop = isNarrow ? -50.0 : -65.0;
+    final decorSize = isNarrow ? 138.0 : 165.0;
+    final decorEnd = isNarrow ? -24.0 : -32.0;
+    final decorTop = isNarrow ? -28.0 : -38.0;
 
     return Container(
       decoration: BoxDecoration(
@@ -160,7 +160,7 @@ class _SystemMonitorDashboardState extends State<SystemMonitorDashboard> {
       clipBehavior: Clip.antiAlias,
       child: Stack(
         children: [
-          // 1. 底层：大号偏心向日葵背景波浪 (Eccentric Fluid Backdrop)
+          // 1. 底层：紧凑偏心向日葵背景波浪 (Eccentric Fluid Backdrop)
           PositionedDirectional(
             end: decorEnd,
             top: decorTop,
@@ -171,7 +171,7 @@ class _SystemMonitorDashboardState extends State<SystemMonitorDashboard> {
               builder: (context, progress, _) {
                 final decorColor = Color.lerp(inactiveTone, activeTone, progress)!;
                 final decorTurn = (2 * math.pi / 12) * progress;
-                final decorScale = 1.0 + 0.10 * progress;
+                final decorScale = 1.0 + 0.05 * progress;
 
                 return Transform.rotate(
                   angle: -decorTurn * 0.5,

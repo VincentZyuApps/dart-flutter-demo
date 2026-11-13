@@ -268,7 +268,6 @@ class _Page0SystemInfoState extends State<Page0SystemInfo> {
                     style: TextStyle(
                       fontSize: 11,
                       color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
-                      fontFamily: 'JetBrainsMono',
                     ),
                   ),
                 ),
@@ -383,7 +382,6 @@ class _Page0SystemInfoState extends State<Page0SystemInfo> {
           Text(
             PlatformInfo.hostname,
             style: TextStyle(
-              fontFamily: 'JetBrainsMono',
               fontSize: 13,
               fontWeight: FontWeight.bold,
               color: theme.colorScheme.primary,
@@ -433,7 +431,6 @@ class _Page0SystemInfoState extends State<Page0SystemInfo> {
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                   fontSize: 11,
-                  fontFamily: 'JetBrainsMono',
                   color: theme.colorScheme.onErrorContainer,
                 ),
               ),
@@ -473,7 +470,6 @@ class _Page0SystemInfoState extends State<Page0SystemInfo> {
         title: Text(
           'Debug Trace',
           style: TextStyle(
-            fontFamily: 'JetBrainsMono',
             fontSize: 12.5,
             fontWeight: FontWeight.bold,
             color: theme.colorScheme.primary,
@@ -482,7 +478,6 @@ class _Page0SystemInfoState extends State<Page0SystemInfo> {
         subtitle: Text(
           'source=${_debug.source}  ffi=${_debug.ffiStatus}  logs=${logs.length}',
           style: TextStyle(
-            fontFamily: 'JetBrainsMono',
             fontSize: 10.5,
             color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
           ),
@@ -497,7 +492,6 @@ class _Page0SystemInfoState extends State<Page0SystemInfo> {
           SelectableText(
             logs.isEmpty ? 'No debug logs captured yet.' : logs.join('\n'),
             style: TextStyle(
-              fontFamily: 'JetBrainsMono',
               fontSize: 11,
               height: 1.45,
               color: theme.colorScheme.onSurface,
@@ -566,7 +560,6 @@ class _InfoRow extends StatelessWidget {
               child: SelectableText(
                 label,
                 style: TextStyle(
-                  fontFamily: 'JetBrainsMono',
                   fontWeight: FontWeight.bold,
                   fontSize: 14.4,
                   color: theme.colorScheme.primary,
@@ -590,7 +583,6 @@ class _InfoRow extends StatelessWidget {
                         Text(
                           'Loading...',
                           style: TextStyle(
-                            fontFamily: 'JetBrainsMono',
                             fontSize: 15.6,
                             color: theme.colorScheme.onSurface.withValues(alpha: 0.55),
                           ),
@@ -603,7 +595,6 @@ class _InfoRow extends StatelessWidget {
                         SelectableText(
                           value ?? '-',
                           style: TextStyle(
-                            fontFamily: 'JetBrainsMono',
                             fontSize: 15.6,
                             color: theme.colorScheme.onSurface,
                             height: 1.4,
@@ -616,7 +607,6 @@ class _InfoRow extends StatelessWidget {
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
-                              fontFamily: 'JetBrainsMono',
                               fontSize: 9.5,
                               color: theme.colorScheme.onSurface.withValues(alpha: 0.48),
                             ),
@@ -652,7 +642,6 @@ class _DebugKv extends StatelessWidget {
           Text(
             label,
             style: TextStyle(
-              fontFamily: 'JetBrainsMono',
               fontSize: 10.5,
               fontWeight: FontWeight.bold,
               color: theme.colorScheme.primary,
@@ -662,7 +651,6 @@ class _DebugKv extends StatelessWidget {
           SelectableText(
             value.isEmpty ? '-' : value,
             style: TextStyle(
-              fontFamily: 'JetBrainsMono',
               fontSize: 11,
               height: 1.35,
               color: theme.colorScheme.onSurface.withValues(alpha: 0.9),
