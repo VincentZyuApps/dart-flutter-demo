@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../models/page3_enums.dart';
 import '../services/github_repository_service.dart';
+import '../services/linguist_color_service.dart';
 import 'tag.dart';
 
 class RepositoryCard extends StatefulWidget {
@@ -118,7 +119,42 @@ class _RepositoryCardState extends State<RepositoryCard> {
                       children: [
                         Tag(text: repo.fullName),
                         if (repo.language != null && repo.language!.isNotEmpty)
-                          Tag(text: repo.language!),
+                          ValueListenableBuilder<int>(
+                            valueListenable: LinguistColorService.instance.versionNotifier,
+                            builder: (context, _, __) {
+                              final dotColor = LinguistColorService.instance.getColor(repo.language);
+                              return Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                decoration: BoxDecoration(
+                                  color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.6),
+                                  borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(
+                                    color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Container(
+                                      width: 8,
+                                      height: 8,
+                                      decoration: BoxDecoration(
+                                        color: dotColor,
+                                        shape: BoxShape.circle,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 5),
+                                    Text(
+                                      repo.language!,
+                                      style: theme.textTheme.labelSmall?.copyWith(
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                          ),
                         Tag(text: '★ ${repo.stars}'),
                         Tag(text: '⑂ ${repo.forks}'),
                         if (repo.archived) const Tag(text: 'Archived'),

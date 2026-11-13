@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -39,7 +40,10 @@ class _Page3AdaptiveGridState extends State<Page3AdaptiveGrid> {
   bool _loading = false;
   String? _error;
   String _status = 'Ready';
-  List<GitHubRepositoryItem> _repositories = const [];
+  List<GitHubRepositoryItem> _displayRepositories = const [];
+  final List<GitHubRepositoryItem> _incomingQueue = [];
+  final Set<String> _knownRepoIds = {};
+  Timer? _staggerTimer;
   List<String> _logs = const [];
 
   @override
@@ -53,6 +57,7 @@ class _Page3AdaptiveGridState extends State<Page3AdaptiveGrid> {
 
   @override
   void dispose() {
+    _staggerTimer?.cancel();
     _searchController.dispose();
     for (final controller in _sourceControllers) {
       controller.dispose();
@@ -60,7 +65,41 @@ class _Page3AdaptiveGridState extends State<Page3AdaptiveGrid> {
     super.dispose();
   }
 
+  void _startStaggerTimerIfNeeded() {
+    if (_staggerTimer != null && _staggerTimer!.isActive) return;
+    _staggerTimer = Timer.periodic(const Duration(milliseconds: 35), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+
+      if (_incomingQueue.isEmpty) {
+        if (!_loading) {
+          timer.cancel();
+          setState(() {
+            _status =
+                'Loaded ${_displayRepositories.length} repositories from ${_sourceControllers.length} sources';
+          });
+        }
+        return;
+      }
+
+      final nextItem = _incomingQueue.removeAt(0);
+      setState(() {
+        _displayRepositories = [..._displayRepositories, nextItem];
+        if (_incomingQueue.isNotEmpty) {
+          _status =
+              'Streaming: ${_displayRepositories.length} displayed (+${_incomingQueue.length} queued)...';
+        }
+      });
+    });
+  }
+
   Future<void> _refresh() async {
+    _staggerTimer?.cancel();
+    _incomingQueue.clear();
+    _knownRepoIds.clear();
+
     final sources = _sourceControllers
         .map((c) => c.text.trim())
         .where((v) => v.isNotEmpty)
@@ -78,29 +117,25 @@ class _Page3AdaptiveGridState extends State<Page3AdaptiveGrid> {
       _error = null;
       _status = 'Connecting...';
       _logs = [];
-      _repositories = [];
+      _displayRepositories = [];
     });
 
     try {
-      final deduped = <String, GitHubRepositoryItem>{};
       await for (final chunk in _service.fetchRepositoriesStream(
         sourceUrls: sources,
         pageSize: _pageSize,
       )) {
         if (!mounted) return;
+        _logs.add(chunk.log);
+        for (final item in chunk.newItems) {
+          if (_knownRepoIds.add(item.id)) {
+            _incomingQueue.add(item);
+          }
+        }
+        _startStaggerTimerIfNeeded();
         setState(() {
-          _logs.add(chunk.log);
-          for (final item in chunk.newItems) {
-            deduped[item.id] = item;
-          }
-          _repositories = _sortRepositories(deduped.values.toList());
-          if (chunk.isAllDone) {
-            _status =
-                'Loaded ${_repositories.length} repositories from ${sources.length} sources';
-          } else {
-            _status =
-                'Streaming ${chunk.source.label} (Page ${chunk.page})... ${_repositories.length} loaded';
-          }
+          _status =
+              'Streaming ${chunk.source.label}: ${_displayRepositories.length} displayed (+${_incomingQueue.length} queued)...';
         });
       }
     } catch (e) {
@@ -113,6 +148,12 @@ class _Page3AdaptiveGridState extends State<Page3AdaptiveGrid> {
     } finally {
       if (mounted) {
         setState(() => _loading = false);
+        if (_incomingQueue.isEmpty) {
+          setState(() {
+            _status =
+                'Loaded ${_displayRepositories.length} repositories from ${sources.length} sources';
+          });
+        }
       }
     }
   }
@@ -125,7 +166,7 @@ class _Page3AdaptiveGridState extends State<Page3AdaptiveGrid> {
 
   List<GitHubRepositoryItem> get _filteredRepositories {
     final query = _searchController.text.trim().toLowerCase();
-    final sorted = _sortRepositories(_repositories);
+    final sorted = _sortRepositories(_displayRepositories);
     if (query.isEmpty) return sorted;
     return sorted.where((repo) {
       return repo.name.toLowerCase().contains(query) ||
@@ -203,7 +244,7 @@ class _Page3AdaptiveGridState extends State<Page3AdaptiveGrid> {
                 AnimatedSwitcher(
                   duration: const Duration(milliseconds: 300),
                   transitionBuilder: _animatedTransitionBuilder,
-                  child: _loading
+                  child: (_loading && _displayRepositories.isEmpty)
                       ? _buildLoadingState(key: const ValueKey('loading'))
                       : filtered.isEmpty
                           ? _buildEmptyState(key: const ValueKey('empty'))
@@ -741,7 +782,7 @@ class _Page3AdaptiveGridState extends State<Page3AdaptiveGrid> {
         density: density,
         padding: density.cardPadding,
         radius: density.cardRadius,
-        delayMs: 25 * (index % _pageSize),
+        delayMs: 20,
         onOpen: () => _openRepository(items[index].htmlUrl),
       ),
     );
@@ -773,7 +814,7 @@ class _Page3AdaptiveGridState extends State<Page3AdaptiveGrid> {
                       density: density,
                       padding: density.cardPadding,
                       radius: density.cardRadius,
-                      delayMs: 25 * ((columnIndex + i) % _pageSize),
+                      delayMs: 20,
                       onOpen: () => _openRepository(columnItems[i].htmlUrl),
                     ),
                     SizedBox(height: gap),
@@ -800,7 +841,7 @@ class _Page3AdaptiveGridState extends State<Page3AdaptiveGrid> {
         key: ValueKey(items[index].id),
         repository: items[index],
         density: density,
-        delayMs: 20 * (index % _pageSize),
+        delayMs: 20,
         onOpen: () => _openRepository(items[index].htmlUrl),
       ),
     );
