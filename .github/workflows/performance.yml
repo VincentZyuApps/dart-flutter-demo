@@ -211,7 +211,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Download platform reports
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           pattern: performance-staging-*
           path: collected
@@ -295,7 +295,7 @@ jobs:
       contents: write
     steps:
       - name: Download the aggregated report
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: performance-report-${{ needs.prepare.outputs.short_sha }}
           path: release-files
