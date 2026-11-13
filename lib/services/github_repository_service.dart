@@ -99,6 +99,24 @@ class GitHubRepositorySourceParseException implements Exception {
   String toString() => message;
 }
 
+class GitHubRepositoryStreamChunk {
+  const GitHubRepositoryStreamChunk({
+    required this.newItems,
+    required this.source,
+    required this.page,
+    required this.isSourceDone,
+    required this.isAllDone,
+    required this.log,
+  });
+
+  final List<GitHubRepositoryItem> newItems;
+  final GitHubRepositorySource source;
+  final int page;
+  final bool isSourceDone;
+  final bool isAllDone;
+  final String log;
+}
+
 class GitHubRepositoryService {
   static final RegExp _userPathPattern =
       RegExp(r'^/([A-Za-z0-9](?:[A-Za-z0-9-]{0,38}))/?$');
@@ -140,14 +158,14 @@ class GitHubRepositoryService {
     );
   }
 
-  Future<GitHubRepositoryFetchResult> fetchRepositories({
+  Stream<GitHubRepositoryStreamChunk> fetchRepositoriesStream({
     required List<String> sourceUrls,
+    int pageSize = 25,
     bool? useProxy,
     String? proxyUrl,
-  }) async {
-    final logs = <String>[];
+  }) async* {
+    final effectivePageSize = pageSize.clamp(1, 100);
     final parsedSources = <GitHubRepositorySource>[];
-
     for (final sourceUrl in sourceUrls) {
       parsedSources.add(parseSource(sourceUrl));
     }
@@ -161,98 +179,160 @@ class GitHubRepositoryService {
         );
       }
       client.findProxy = (_) => 'PROXY ${proxy.host}:${proxy.port}';
-      logs.add('Proxy enabled: ${proxy.scheme}://${proxy.host}:${proxy.port}');
+      yield GitHubRepositoryStreamChunk(
+        newItems: const [],
+        source: parsedSources.first,
+        page: 0,
+        isSourceDone: false,
+        isAllDone: false,
+        log: 'Proxy enabled: ${proxy.scheme}://${proxy.host}:${proxy.port}',
+      );
     } else if (useProxy == false) {
       client.findProxy = (_) => 'DIRECT';
-      logs.add('Proxy disabled (forced direct).');
+      yield GitHubRepositoryStreamChunk(
+        newItems: const [],
+        source: parsedSources.first,
+        page: 0,
+        isSourceDone: false,
+        isAllDone: false,
+        log: 'Proxy disabled (forced direct).',
+      );
     } else {
-      logs.add('Using global network proxy configuration.');
+      yield GitHubRepositoryStreamChunk(
+        newItems: const [],
+        source: parsedSources.first,
+        page: 0,
+        isSourceDone: false,
+        isAllDone: false,
+        log: 'Using global network proxy configuration.',
+      );
     }
 
     try {
-      final allRepositories = <GitHubRepositoryItem>[];
-      for (final source in parsedSources) {
-        logs.add('Fetching ${source.rawUrl}');
-        final repositories = await _fetchSource(client, source);
-        logs.add('Loaded ${repositories.length} repositories from ${source.label}');
-        allRepositories.addAll(repositories);
-      }
+      for (var sIdx = 0; sIdx < parsedSources.length; sIdx++) {
+        final source = parsedSources[sIdx];
+        final isLastSource = sIdx == parsedSources.length - 1;
 
-      final deduped = <String, GitHubRepositoryItem>{};
-      for (final repository in allRepositories) {
-        deduped[repository.id] = repository;
-      }
+        yield GitHubRepositoryStreamChunk(
+          newItems: const [],
+          source: source,
+          page: 0,
+          isSourceDone: false,
+          isAllDone: false,
+          log: 'Fetching ${source.rawUrl}',
+        );
 
-      return GitHubRepositoryFetchResult(
-        repositories: deduped.values.toList(),
-        logs: logs,
-      );
+        for (var page = 1; page <= 5; page++) {
+          final uri = switch (source.kind) {
+            GitHubRepositorySourceKind.user => Uri.https(
+                'api.github.com',
+                '/users/${source.handle}/repos',
+                <String, String>{
+                  'type': 'owner',
+                  'sort': 'updated',
+                  'per_page': '$effectivePageSize',
+                  'page': '$page',
+                },
+              ),
+            GitHubRepositorySourceKind.organization => Uri.https(
+                'api.github.com',
+                '/orgs/${source.handle}/repos',
+                <String, String>{
+                  'type': 'public',
+                  'sort': 'updated',
+                  'per_page': '$effectivePageSize',
+                  'page': '$page',
+                },
+              ),
+          };
+
+          final request = await client.getUrl(uri);
+          request.headers.set(
+            HttpHeaders.acceptHeader,
+            'application/vnd.github+json',
+          );
+          request.headers.set(
+            HttpHeaders.userAgentHeader,
+            'dart_flutter_demo/0.2',
+          );
+          request.headers.set('X-GitHub-Api-Version', '2022-11-28');
+
+          final response = await request.close();
+          final body = await utf8.decodeStream(response);
+          if (response.statusCode < 200 || response.statusCode >= 300) {
+            throw HttpException(
+              'GitHub API request failed (${response.statusCode}) for ${source.handle}: $body',
+              uri: uri,
+            );
+          }
+
+          final json = jsonDecode(body);
+          if (json is! List) {
+            throw HttpException(
+              'GitHub API returned an unexpected payload.',
+              uri: uri,
+            );
+          }
+
+          final pageItems = json
+              .whereType<Map>()
+              .map((item) => GitHubRepositoryItem.fromJson(
+                    Map<String, dynamic>.from(item),
+                    source,
+                  ))
+              .toList();
+
+          final isSourceDone =
+              pageItems.length < effectivePageSize || page == 5;
+          final isAllDone = isLastSource && isSourceDone;
+
+          yield GitHubRepositoryStreamChunk(
+            newItems: pageItems,
+            source: source,
+            page: page,
+            isSourceDone: isSourceDone,
+            isAllDone: isAllDone,
+            log:
+                'Loaded ${pageItems.length} repos from ${source.label} (Page $page)',
+          );
+
+          if (isSourceDone) {
+            break;
+          }
+        }
+      }
     } finally {
       client.close(force: true);
     }
   }
 
-  Future<List<GitHubRepositoryItem>> _fetchSource(
-    HttpClient client,
-    GitHubRepositorySource source,
-  ) async {
-    final repositories = <GitHubRepositoryItem>[];
-    for (var page = 1; page <= 5; page++) {
-      final uri = switch (source.kind) {
-        GitHubRepositorySourceKind.user => Uri.https(
-            'api.github.com',
-            '/users/${source.handle}/repos',
-            <String, String>{
-              'type': 'owner',
-              'sort': 'updated',
-              'per_page': '100',
-              'page': '$page',
-            },
-          ),
-        GitHubRepositorySourceKind.organization => Uri.https(
-            'api.github.com',
-            '/orgs/${source.handle}/repos',
-            <String, String>{
-              'type': 'public',
-              'sort': 'updated',
-              'per_page': '100',
-              'page': '$page',
-            },
-          ),
-      };
+  Future<GitHubRepositoryFetchResult> fetchRepositories({
+    required List<String> sourceUrls,
+    int pageSize = 25,
+    bool? useProxy,
+    String? proxyUrl,
+  }) async {
+    final allRepositories = <GitHubRepositoryItem>[];
+    final logs = <String>[];
 
-      final request = await client.getUrl(uri);
-      request.headers.set(HttpHeaders.acceptHeader, 'application/vnd.github+json');
-      request.headers.set(HttpHeaders.userAgentHeader, 'dart_flutter_demo/0.2');
-      request.headers.set('X-GitHub-Api-Version', '2022-11-28');
-
-      final response = await request.close();
-      final body = await utf8.decodeStream(response);
-      if (response.statusCode < 200 || response.statusCode >= 300) {
-        throw HttpException(
-          'GitHub API request failed (${response.statusCode}) for ${source.handle}: $body',
-          uri: uri,
-        );
-      }
-
-      final json = jsonDecode(body);
-      if (json is! List) {
-        throw HttpException('GitHub API returned an unexpected payload.', uri: uri);
-      }
-
-      final pageItems = json
-          .whereType<Map>()
-          .map((item) => GitHubRepositoryItem.fromJson(
-                Map<String, dynamic>.from(item),
-                source,
-              ))
-          .toList();
-
-      repositories.addAll(pageItems);
-      if (pageItems.length < 100) {
-        break;
-      }
+    await for (final chunk in fetchRepositoriesStream(
+      sourceUrls: sourceUrls,
+      pageSize: pageSize,
+      useProxy: useProxy,
+      proxyUrl: proxyUrl,
+    )) {
+      logs.add(chunk.log);
+      allRepositories.addAll(chunk.newItems);
     }
-    return repositories;
+
+    final deduped = <String, GitHubRepositoryItem>{};
+    for (final repository in allRepositories) {
+      deduped[repository.id] = repository;
+    }
+
+    return GitHubRepositoryFetchResult(
+      repositories: deduped.values.toList(),
+      logs: logs,
+    );
   }
 }

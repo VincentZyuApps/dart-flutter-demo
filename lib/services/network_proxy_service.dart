@@ -17,7 +17,7 @@ class NetworkProxyService {
   static const String defaultManualProxy = 'http://127.0.0.1:7890';
 
   final ValueNotifier<ProxyMode> modeNotifier =
-      ValueNotifier<ProxyMode>(ProxyMode.manual);
+      ValueNotifier<ProxyMode>(ProxyMode.system);
   final ValueNotifier<String> manualUrlNotifier =
       ValueNotifier<String>(defaultManualProxy);
 

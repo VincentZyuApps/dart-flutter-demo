@@ -21,6 +21,7 @@ class _Page3AdaptiveGridState extends State<Page3AdaptiveGrid> {
   static const _defaultSources = <String>[
     'https://github.com/VincentZyu233?tab=repositories',
     'https://github.com/orgs/VincentZyuApps/repositories',
+    'https://github.com/VincentZyuLive?tab=repositories',
   ];
 
   final _service = GitHubRepositoryService();
@@ -30,6 +31,7 @@ class _Page3AdaptiveGridState extends State<Page3AdaptiveGrid> {
   LayoutMode _layoutMode = LayoutMode.masonry;
   DensityMode _densityMode = DensityMode.three;
   SortMode _sortMode = SortMode.updated;
+  int _pageSize = 25;
   bool _controlsExpanded = false;
   bool _autoColumns = true;
   bool _animateTransitions = true;
@@ -59,7 +61,10 @@ class _Page3AdaptiveGridState extends State<Page3AdaptiveGrid> {
   }
 
   Future<void> _refresh() async {
-    final sources = _sourceControllers.map((c) => c.text.trim()).where((v) => v.isNotEmpty).toList();
+    final sources = _sourceControllers
+        .map((c) => c.text.trim())
+        .where((v) => v.isNotEmpty)
+        .toList();
     if (sources.isEmpty) {
       setState(() {
         _error = 'Add at least one GitHub repositories page.';
@@ -71,31 +76,51 @@ class _Page3AdaptiveGridState extends State<Page3AdaptiveGrid> {
     setState(() {
       _loading = true;
       _error = null;
-      _status = 'Loading...';
+      _status = 'Connecting...';
+      _logs = [];
+      _repositories = [];
     });
 
     try {
-      final result = await _service.fetchRepositories(
+      final deduped = <String, GitHubRepositoryItem>{};
+      await for (final chunk in _service.fetchRepositoriesStream(
         sourceUrls: sources,
-      );
-      if (!mounted) return;
-      setState(() {
-        _repositories = _sortRepositories(result.repositories);
-        _logs = result.logs;
-        _status = 'Loaded ${_repositories.length} repositories from ${sources.length} sources';
-      });
+        pageSize: _pageSize,
+      )) {
+        if (!mounted) return;
+        setState(() {
+          _logs.add(chunk.log);
+          for (final item in chunk.newItems) {
+            deduped[item.id] = item;
+          }
+          _repositories = _sortRepositories(deduped.values.toList());
+          if (chunk.isAllDone) {
+            _status =
+                'Loaded ${_repositories.length} repositories from ${sources.length} sources';
+          } else {
+            _status =
+                'Streaming ${chunk.source.label} (Page ${chunk.page})... ${_repositories.length} loaded';
+          }
+        });
+      }
     } catch (e) {
       if (!mounted) return;
       setState(() {
         _error = e.toString();
         _status = 'Load failed';
-        _logs = ['Error: $e'];
+        _logs.add('Error: $e');
       });
     } finally {
       if (mounted) {
         setState(() => _loading = false);
       }
     }
+  }
+
+  void _addSource([String initialUrl = '']) {
+    setState(() {
+      _sourceControllers.add(TextEditingController(text: initialUrl));
+    });
   }
 
   List<GitHubRepositoryItem> get _filteredRepositories {
@@ -357,6 +382,48 @@ class _Page3AdaptiveGridState extends State<Page3AdaptiveGrid> {
                     setState(() => _sortMode = value);
                   },
                 ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: theme.colorScheme.outlineVariant),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.auto_stories_outlined, size: 16),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Page Size: $_pageSize',
+                        style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+                      ),
+                      const SizedBox(width: 4),
+                      IconButton(
+                        visualDensity: VisualDensity.compact,
+                        iconSize: 16,
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                        tooltip: 'Decrease (Min 1)',
+                        icon: const Icon(Icons.remove_circle_outline),
+                        onPressed: _pageSize <= 1
+                            ? null
+                            : () => setState(() => _pageSize--),
+                      ),
+                      const SizedBox(width: 4),
+                      IconButton(
+                        visualDensity: VisualDensity.compact,
+                        iconSize: 16,
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                        tooltip: 'Increase (Max 100)',
+                        icon: const Icon(Icons.add_circle_outline),
+                        onPressed: _pageSize >= 100
+                            ? null
+                            : () => setState(() => _pageSize++),
+                      ),
+                    ],
+                  ),
+                ),
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -493,57 +560,94 @@ class _Page3AdaptiveGridState extends State<Page3AdaptiveGrid> {
         border: Border.all(color: theme.colorScheme.outlineVariant),
         borderRadius: BorderRadius.circular(14),
       ),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: DataTable(
-          columns: const [
-            DataColumn(label: Text('Source URL')),
-            DataColumn(label: Text('Kind')),
-            DataColumn(label: Text('Status')),
-            DataColumn(label: Text('')),
-          ],
-          rows: List.generate(_sourceControllers.length, (index) {
-            final controller = _sourceControllers[index];
-            final parsed = _tryParseSource(controller.text.trim());
-            final status = parsed == null
-                ? 'Invalid'
-                : parsed.kind == GitHubRepositorySourceKind.user
-                    ? 'User'
-                    : 'Org';
-            return DataRow(
-              cells: [
-                DataCell(
-                  SizedBox(
-                    width: 360,
-                    child: TextField(
-                      controller: controller,
-                      onChanged: (_) => setState(() {}),
-                      decoration: InputDecoration(
-                        isDense: true,
-                        hintText: index == 0
-                            ? 'https://github.com/VincentZyu233?tab=repositories'
-                            : 'https://github.com/orgs/VincentZyuApps/repositories',
-                        errorText: controller.text.trim().isEmpty || parsed != null
-                            ? null
-                            : 'Invalid GitHub repositories page',
-                        border: const OutlineInputBorder(),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: DataTable(
+              columns: const [
+                DataColumn(label: Text('Source URL')),
+                DataColumn(label: Text('Kind')),
+                DataColumn(label: Text('Status')),
+                DataColumn(label: Text('')),
+              ],
+              rows: List.generate(_sourceControllers.length, (index) {
+                final controller = _sourceControllers[index];
+                final parsed = _tryParseSource(controller.text.trim());
+                final status = parsed == null
+                    ? 'Invalid'
+                    : parsed.kind == GitHubRepositorySourceKind.user
+                        ? 'User'
+                        : 'Org';
+                return DataRow(
+                  cells: [
+                    DataCell(
+                      SizedBox(
+                        width: 360,
+                        child: TextField(
+                          controller: controller,
+                          onChanged: (_) => setState(() {}),
+                          decoration: InputDecoration(
+                            isDense: true,
+                            hintText: switch (index) {
+                              0 => 'https://github.com/VincentZyu233?tab=repositories',
+                              1 => 'https://github.com/orgs/VincentZyuApps/repositories',
+                              _ => 'https://github.com/VincentZyuLive?tab=repositories',
+                            },
+                            errorText: controller.text.trim().isEmpty || parsed != null
+                                ? null
+                                : 'Invalid GitHub repositories page',
+                            border: const OutlineInputBorder(),
+                          ),
+                        ),
                       ),
                     ),
-                  ),
+                    DataCell(Text(status)),
+                    DataCell(Text(parsed?.label ?? '-')),
+                    DataCell(
+                      IconButton(
+                        tooltip: 'Remove source',
+                        onPressed: _sourceControllers.length <= 1 ? null : () => _removeSource(index),
+                        icon: const Icon(Icons.delete_outline),
+                      ),
+                    ),
+                  ],
+                );
+              }),
+            ),
+          ),
+          const Divider(height: 1),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            child: Wrap(
+              spacing: 8,
+              runSpacing: 6,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                OutlinedButton.icon(
+                  onPressed: () => _addSource(),
+                  icon: const Icon(Icons.add_rounded, size: 18),
+                  label: const Text('添加数据源 (Add Source)'),
                 ),
-                DataCell(Text(status)),
-                DataCell(Text(parsed?.label ?? '-')),
-                DataCell(
-                  IconButton(
-                    tooltip: 'Remove source',
-                    onPressed: _sourceControllers.length <= 1 ? null : () => _removeSource(index),
-                    icon: const Icon(Icons.delete_outline),
-                  ),
+                TextButton.icon(
+                  onPressed: () {
+                    for (final c in _sourceControllers) {
+                      c.dispose();
+                    }
+                    _sourceControllers.clear();
+                    for (final s in _defaultSources) {
+                      _sourceControllers.add(TextEditingController(text: s));
+                    }
+                    setState(() {});
+                  },
+                  icon: const Icon(Icons.restore_rounded, size: 16),
+                  label: const Text('恢复预设三大源'),
                 ),
               ],
-            );
-          }),
-        ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -632,11 +736,12 @@ class _Page3AdaptiveGridState extends State<Page3AdaptiveGrid> {
       ),
       itemCount: items.length,
       itemBuilder: (context, index) => RepositoryCard(
+        key: ValueKey(items[index].id),
         repository: items[index],
         density: density,
         padding: density.cardPadding,
         radius: density.cardRadius,
-        delayMs: 30 * index,
+        delayMs: 25 * (index % _pageSize),
         onOpen: () => _openRepository(items[index].htmlUrl),
       ),
     );
@@ -663,11 +768,12 @@ class _Page3AdaptiveGridState extends State<Page3AdaptiveGrid> {
                 children: [
                   for (var i = 0; i < columnItems.length; i++) ...[
                     RepositoryCard(
+                      key: ValueKey(columnItems[i].id),
                       repository: columnItems[i],
                       density: density,
                       padding: density.cardPadding,
                       radius: density.cardRadius,
-                      delayMs: 35 * (columnIndex + i),
+                      delayMs: 25 * ((columnIndex + i) % _pageSize),
                       onOpen: () => _openRepository(columnItems[i].htmlUrl),
                     ),
                     SizedBox(height: gap),
@@ -691,9 +797,10 @@ class _Page3AdaptiveGridState extends State<Page3AdaptiveGrid> {
       itemCount: items.length,
       separatorBuilder: (_, __) => SizedBox(height: gap),
       itemBuilder: (context, index) => RepositoryListTile(
+        key: ValueKey(items[index].id),
         repository: items[index],
         density: density,
-        delayMs: 25 * index,
+        delayMs: 20 * (index % _pageSize),
         onOpen: () => _openRepository(items[index].htmlUrl),
       ),
     );
