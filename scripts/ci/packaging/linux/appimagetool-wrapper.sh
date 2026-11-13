@@ -63,4 +63,5 @@ if [[ "$entry" != "$canonical_entry" ]]; then
   mv -f -- "$entry" "$canonical_entry"
 fi
 
+export ARCH="${ARCH:-x86_64}"
 exec "${APPIMAGETOOL_REAL:-/usr/local/bin/appimagetool.real}" "$@"
