@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import '../services/android_home_widget_service.dart';
 import '../services/system_info_service.dart';
 import '../widgets/animated_page.dart';
+import '../widgets/dashboard/system_monitor_dashboard.dart';
 
 class Page0SystemInfo extends StatefulWidget {
   const Page0SystemInfo({super.key});
@@ -310,10 +311,61 @@ class _Page0SystemInfoState extends State<Page0SystemInfo> {
                 ],
               ),
               const SizedBox(height: 12),
+              _buildMonitorHeader(theme),
+              const SizedBox(height: 10),
+              SystemMonitorDashboard(
+                hostInfo: _info['Host'],
+                osInfo: _info['OS'],
+              ),
+              const SizedBox(height: 20),
               _buildDebugPanel(theme),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildMonitorHeader(ThemeData theme) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+      child: Row(
+        children: [
+          Icon(Icons.insights_rounded, size: 16, color: theme.colorScheme.primary),
+          const SizedBox(width: 8),
+          Text(
+            '实时系统监视器',
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.bold,
+              color: theme.colorScheme.primary,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+            decoration: BoxDecoration(
+              color: theme.colorScheme.primaryContainer.withValues(alpha: 0.5),
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: Text(
+              'FlClash Expressive',
+              style: TextStyle(
+                fontSize: 10,
+                color: theme.colorScheme.onPrimaryContainer,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+          const Spacer(),
+          Text(
+            'Sunflower 动效中枢',
+            style: TextStyle(
+              fontSize: 10,
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.35),
+            ),
+          ),
+        ],
       ),
     );
   }
