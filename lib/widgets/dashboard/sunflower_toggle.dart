@@ -66,13 +66,6 @@ class _SunflowerToggleState extends State<SunflowerToggle>
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final primary = widget.primaryColor ?? colorScheme.primary;
-    final badgeColor = widget.badgeColor ??
-        (theme.brightness == Brightness.dark
-            ? const Color(0xFF1E2838)
-            : colorScheme.primaryContainer.withValues(alpha: 0.35));
-
-    final totalSize = widget.size * 1.5;
-    final ghostSize = widget.size * 1.24;
 
     return Semantics(
       button: true,
@@ -85,59 +78,16 @@ class _SunflowerToggleState extends State<SunflowerToggle>
             final progress = _animation.value;
             // 旋转 2π / 12 (即一个花瓣步进角 30°)
             final turnAngle = (2 * math.pi / 12) * progress;
-            // 微动放大 1.0 -> 1.10
-            final scale = 1.0 + 0.10 * progress;
+            // 微动放大 1.0 -> 1.06
+            final scale = 1.0 + 0.06 * progress;
 
             return SizedBox(
-              width: totalSize,
-              height: totalSize,
+              width: widget.size,
+              height: widget.size,
               child: Stack(
                 alignment: Alignment.center,
                 children: [
-                  // 1. 底层：大号暗色不规则水滴遮罩 (Fluid Backdrop)
-                  Transform.rotate(
-                    angle: -turnAngle * 0.4,
-                    child: CustomPaint(
-                      size: Size(totalSize, totalSize),
-                      painter: _SunflowerPathPainter(
-                        progress: progress,
-                        color: badgeColor,
-                        petals: 12,
-                        dentDepth: 0.18,
-                      ),
-                    ),
-                  ),
-
-                  // 2. 中层：淡淡的浅色向日葵光环 (Ghost Sunflower Bloom)
-                  // 随转动伴随 15° 相位交错，产生双层花瓣重叠与通透漫反射光晕
-                  if (progress > 0.01)
-                    Transform.rotate(
-                      angle: turnAngle + (math.pi / 12),
-                      child: Container(
-                        width: ghostSize,
-                        height: ghostSize,
-                        decoration: BoxDecoration(
-                          boxShadow: [
-                            BoxShadow(
-                              color: primary.withValues(alpha: 0.25 * progress),
-                              blurRadius: 24.0,
-                              spreadRadius: 2.0,
-                            ),
-                          ],
-                        ),
-                        child: CustomPaint(
-                          size: Size(ghostSize, ghostSize),
-                          painter: _SunflowerPathPainter(
-                            progress: progress,
-                            color: primary.withValues(alpha: 0.22 * progress),
-                            petals: 12,
-                            dentDepth: 0.14,
-                          ),
-                        ),
-                      ),
-                    ),
-
-                  // 3. 顶层：饱满圆润的 Cookie-12 曲奇向日葵主按钮
+                  // 前景主按钮：未运行为正圆，运行时形变为 12 瓣圆润曲奇向日葵
                   Transform.rotate(
                     angle: turnAngle,
                     child: Transform.scale(
@@ -148,15 +98,15 @@ class _SunflowerToggleState extends State<SunflowerToggle>
                         decoration: BoxDecoration(
                           boxShadow: [
                             BoxShadow(
-                              color: primary.withValues(alpha: 0.35 * progress + 0.12),
-                              blurRadius: 16.0,
-                              offset: const Offset(0, 6),
+                              color: primary.withValues(alpha: 0.32 * progress + 0.16),
+                              blurRadius: 14.0,
+                              offset: const Offset(0, 4),
                             ),
                           ],
                         ),
                         child: CustomPaint(
                           size: Size(widget.size, widget.size),
-                          painter: _SunflowerPathPainter(
+                          painter: SunflowerPathPainter(
                             progress: progress,
                             color: primary,
                             petals: 12,
@@ -167,7 +117,7 @@ class _SunflowerToggleState extends State<SunflowerToggle>
                     ),
                   ),
 
-                  // 4. 居中形变矢量图标 (Play ▶ <-> Pause ⏸)
+                  // 居中形变矢量图标 (Play ▶ <-> Pause ⏸)
                   Center(
                     child: AnimatedCrossFade(
                       duration: const Duration(milliseconds: 250),
@@ -176,7 +126,7 @@ class _SunflowerToggleState extends State<SunflowerToggle>
                           : CrossFadeState.showFirst,
                       firstChild: Icon(
                         Icons.play_arrow_rounded,
-                        size: widget.size * 0.48,
+                        size: widget.size * 0.50,
                         color: colorScheme.onPrimary,
                       ),
                       secondChild: Icon(
@@ -198,8 +148,8 @@ class _SunflowerToggleState extends State<SunflowerToggle>
 
 /// 采用严格三次贝塞尔切线平滑连接的 12 瓣圆滑曲奇向日葵 Painter
 /// 波峰外凸为平滑圆弧，波谷内凹亦为平滑圆弧，彻底消除尖锐棱角
-class _SunflowerPathPainter extends CustomPainter {
-  const _SunflowerPathPainter({
+class SunflowerPathPainter extends CustomPainter {
+  const SunflowerPathPainter({
     required this.progress,
     required this.color,
     this.petals = 12,
@@ -267,7 +217,7 @@ class _SunflowerPathPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_SunflowerPathPainter oldDelegate) {
+  bool shouldRepaint(SunflowerPathPainter oldDelegate) {
     return oldDelegate.progress != progress ||
         oldDelegate.color != color ||
         oldDelegate.dentDepth != dentDepth;

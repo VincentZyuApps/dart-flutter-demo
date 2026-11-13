@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../../services/system_monitor_service.dart';
@@ -134,19 +135,70 @@ class _SystemMonitorDashboardState extends State<SystemMonitorDashboard> {
   ) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+    final primary = colorScheme.primary;
     final isRunning = _service.isMonitoring;
 
+    // 未运行状态为纯暗中性灰色；运行中平滑渐变到带有 12% 品牌色的微光深色
+    final inactiveTone = theme.brightness == Brightness.dark
+        ? const Color(0xFF22242B)
+        : const Color(0xFFE5E7EB);
+    final activeTone = Color.alphaBlend(
+      primary.withValues(alpha: theme.brightness == Brightness.dark ? 0.14 : 0.10),
+      bg,
+    );
+
+    final decorSize = isNarrow ? 210.0 : 250.0;
+    final decorEnd = isNarrow ? -45.0 : -55.0;
+    final decorTop = isNarrow ? -50.0 : -65.0;
+
     return Container(
-      padding: EdgeInsets.symmetric(
-        horizontal: isNarrow ? 16 : 20,
-        vertical: isNarrow ? 14 : 18,
-      ),
       decoration: BoxDecoration(
         color: bg,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: border, width: 1.0),
       ),
-      child: Row(
+      clipBehavior: Clip.antiAlias,
+      child: Stack(
+        children: [
+          // 1. 底层：大号偏心向日葵背景波浪 (Eccentric Fluid Backdrop)
+          PositionedDirectional(
+            end: decorEnd,
+            top: decorTop,
+            child: TweenAnimationBuilder<double>(
+              tween: Tween(end: isRunning ? 1.0 : 0.0),
+              duration: const Duration(milliseconds: 450),
+              curve: Curves.easeOutBack,
+              builder: (context, progress, _) {
+                final decorColor = Color.lerp(inactiveTone, activeTone, progress)!;
+                final decorTurn = (2 * math.pi / 12) * progress;
+                final decorScale = 1.0 + 0.10 * progress;
+
+                return Transform.rotate(
+                  angle: -decorTurn * 0.5,
+                  child: Transform.scale(
+                    scale: decorScale,
+                    child: CustomPaint(
+                      size: Size(decorSize, decorSize),
+                      painter: SunflowerPathPainter(
+                        progress: 1.0,
+                        color: decorColor,
+                        petals: 12,
+                        dentDepth: 0.16,
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+
+          // 2. 顶层内容：左侧信息 + 右侧 SunflowerToggle 按钮
+          Padding(
+            padding: EdgeInsets.symmetric(
+              horizontal: isNarrow ? 16 : 20,
+              vertical: isNarrow ? 14 : 18,
+            ),
+            child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           // 左侧系统概要与运行状态
@@ -234,7 +286,10 @@ class _SystemMonitorDashboardState extends State<SystemMonitorDashboard> {
           ),
         ],
       ),
-    );
+    ),
+  ],
+),
+);
   }
 
   Widget _buildMetricCardContainer({
