@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 enum LayoutMode { grid, masonry, list }
-enum SortMode { updated, stars, name }
+enum SortMode { natural, updated, stars, name }
 
 enum DensityMode {
   five,

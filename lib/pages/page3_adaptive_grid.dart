@@ -27,6 +27,8 @@ class _Page3AdaptiveGridState extends State<Page3AdaptiveGrid> {
   DensityMode _densityMode = DensityMode.three;
   SortMode _sortMode = SortMode.updated;
   int _pageSize = 25;
+  late final TextEditingController _pageSizeController;
+  late final FocusNode _pageSizeFocusNode;
   bool _controlsExpanded = false;
   bool _autoColumns = true;
   bool _animateTransitions = true;
@@ -43,16 +45,38 @@ class _Page3AdaptiveGridState extends State<Page3AdaptiveGrid> {
   @override
   void initState() {
     super.initState();
+    _pageSizeController = TextEditingController(text: '$_pageSize');
+    _pageSizeFocusNode = FocusNode();
+    _pageSizeFocusNode.addListener(() {
+      if (!_pageSizeFocusNode.hasFocus) {
+        _commitPageSize(_pageSizeController.text);
+      }
+    });
     AppConfigService.instance.changeNotifier.addListener(_onConfigChanged);
     WidgetsBinding.instance.addPostFrameCallback((_) => _refresh());
   }
 
   @override
   void dispose() {
+    _pageSizeController.dispose();
+    _pageSizeFocusNode.dispose();
     AppConfigService.instance.changeNotifier.removeListener(_onConfigChanged);
     _staggerTimer?.cancel();
     _searchController.dispose();
     super.dispose();
+  }
+
+  void _commitPageSize(String raw) {
+    final parsed = int.tryParse(raw.trim());
+    if (parsed == null) {
+      _pageSizeController.text = '$_pageSize';
+      return;
+    }
+    final clamped = parsed.clamp(1, 100);
+    setState(() {
+      _pageSize = clamped;
+      _pageSizeController.text = '$clamped';
+    });
   }
 
   void _onConfigChanged() {
@@ -153,9 +177,11 @@ class _Page3AdaptiveGridState extends State<Page3AdaptiveGrid> {
 
   List<GitHubRepositoryItem> get _filteredRepositories {
     final query = _searchController.text.trim().toLowerCase();
-    final sorted = _sortRepositories(_displayRepositories);
-    if (query.isEmpty) return sorted;
-    return sorted.where((repo) {
+    final isStreaming = _loading || _incomingQueue.isNotEmpty;
+    // 流式加载期间保持稳定的到达顺序（Append Only），避免新卡片插队导致已有卡片全局索引位移与跳列
+    final baseList = isStreaming ? _displayRepositories : _sortRepositories(_displayRepositories);
+    if (query.isEmpty) return baseList;
+    return baseList.where((repo) {
       return repo.name.toLowerCase().contains(query) ||
           repo.fullName.toLowerCase().contains(query) ||
           (repo.description ?? '').toLowerCase().contains(query) ||
@@ -164,9 +190,11 @@ class _Page3AdaptiveGridState extends State<Page3AdaptiveGrid> {
   }
 
   List<GitHubRepositoryItem> _sortRepositories(List<GitHubRepositoryItem> items) {
+    if (_sortMode == SortMode.natural) return items;
     final sorted = [...items];
     sorted.sort((a, b) {
       return switch (_sortMode) {
+        SortMode.natural => 0,
         SortMode.updated => (b.updatedAt ?? DateTime.fromMillisecondsSinceEpoch(0))
             .compareTo(a.updatedAt ?? DateTime.fromMillisecondsSinceEpoch(0)),
         SortMode.stars => b.stars.compareTo(a.stars),
@@ -397,6 +425,7 @@ class _Page3AdaptiveGridState extends State<Page3AdaptiveGrid> {
                     DropdownMenuItem(value: SortMode.updated, child: Text('Sort: Updated')),
                     DropdownMenuItem(value: SortMode.stars, child: Text('Sort: Stars')),
                     DropdownMenuItem(value: SortMode.name, child: Text('Sort: Name')),
+                    DropdownMenuItem(value: SortMode.natural, child: Text('Sort: Natural (Arrival)')),
                   ],
                   onChanged: (value) {
                     if (value == null) return;
@@ -415,8 +444,39 @@ class _Page3AdaptiveGridState extends State<Page3AdaptiveGrid> {
                       const Icon(Icons.auto_stories_outlined, size: 16),
                       const SizedBox(width: 6),
                       Text(
-                        'Page Size: $_pageSize',
+                        'Page Size: ',
                         style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+                      ),
+                      SizedBox(
+                        width: 40,
+                        height: 28,
+                        child: TextField(
+                          controller: _pageSizeController,
+                          focusNode: _pageSizeFocusNode,
+                          keyboardType: TextInputType.number,
+                          textAlign: TextAlign.center,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: theme.colorScheme.primary,
+                          ),
+                          decoration: InputDecoration(
+                            isDense: true,
+                            contentPadding: const EdgeInsets.symmetric(vertical: 2, horizontal: 2),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(6),
+                              borderSide: BorderSide(color: theme.colorScheme.outlineVariant),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(6),
+                              borderSide: BorderSide(color: theme.colorScheme.outlineVariant),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(6),
+                              borderSide: BorderSide(color: theme.colorScheme.primary, width: 1.5),
+                            ),
+                          ),
+                          onSubmitted: _commitPageSize,
+                        ),
                       ),
                       const SizedBox(width: 4),
                       IconButton(
@@ -428,7 +488,12 @@ class _Page3AdaptiveGridState extends State<Page3AdaptiveGrid> {
                         icon: const Icon(Icons.remove_circle_outline),
                         onPressed: _pageSize <= 1
                             ? null
-                            : () => setState(() => _pageSize--),
+                            : () {
+                                setState(() {
+                                  _pageSize--;
+                                  _pageSizeController.text = '$_pageSize';
+                                });
+                              },
                       ),
                       const SizedBox(width: 4),
                       IconButton(
@@ -440,7 +505,12 @@ class _Page3AdaptiveGridState extends State<Page3AdaptiveGrid> {
                         icon: const Icon(Icons.add_circle_outline),
                         onPressed: _pageSize >= 100
                             ? null
-                            : () => setState(() => _pageSize++),
+                            : () {
+                                setState(() {
+                                  _pageSize++;
+                                  _pageSizeController.text = '$_pageSize';
+                                });
+                              },
                       ),
                     ],
                   ),
@@ -486,7 +556,12 @@ class _Page3AdaptiveGridState extends State<Page3AdaptiveGrid> {
                   ),
                 ),
                 FilledButton.icon(
-                  onPressed: _loading ? null : _refresh,
+                  onPressed: _loading
+                      ? null
+                      : () {
+                          setState(() => _controlsExpanded = false);
+                          _refresh();
+                        },
                   icon: _loading
                       ? const SizedBox(
                           width: 16,
@@ -686,11 +761,34 @@ class _Page3AdaptiveGridState extends State<Page3AdaptiveGrid> {
     );
   }
 
+  double _estimateCardHeight(GitHubRepositoryItem repo, DensityMode density) {
+    double h = 80.0;
+    final desc = repo.description;
+    if (desc != null && desc.isNotEmpty) {
+      final lines = (desc.length / 32).ceil().clamp(1, 4);
+      h += lines * 18.0;
+    }
+    h += 24.0;
+    return h;
+  }
+
   Widget _buildMasonry(List<GitHubRepositoryItem> items, int columns, DensityMode density, {Key? key}) {
     final gap = density.gap;
     final buckets = List.generate(columns, (_) => <GitHubRepositoryItem>[]);
+    final columnHeights = List.filled(columns, 0.0);
+
     for (var i = 0; i < items.length; i++) {
-      buckets[i % columns].add(items[i]);
+      final item = items[i];
+      int targetCol = 0;
+      double minH = columnHeights[0];
+      for (var col = 1; col < columns; col++) {
+        if (columnHeights[col] < minH) {
+          minH = columnHeights[col];
+          targetCol = col;
+        }
+      }
+      buckets[targetCol].add(item);
+      columnHeights[targetCol] += _estimateCardHeight(item, density) + gap;
     }
 
     return Padding(
