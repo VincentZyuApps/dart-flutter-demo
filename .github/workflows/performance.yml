@@ -195,7 +195,7 @@ jobs:
             --output-directory report
 
       - name: Upload staging performance report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: performance-staging-${{ matrix.platform }}
           path: report/*
@@ -278,7 +278,7 @@ jobs:
           test -s "$LOG_PATH"
 
       - name: Upload seven-day performance bundle
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: performance-report-${{ needs.prepare.outputs.short_sha }}
           path: release-files/*

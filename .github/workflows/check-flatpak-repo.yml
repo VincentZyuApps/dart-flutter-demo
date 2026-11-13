@@ -52,7 +52,7 @@ jobs:
             build/flatpak/metadata
 
       - name: Upload internal package input
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: flatpak-package-input-${{ github.run_id }}
           path: flatpak-package-input.tar.gz
@@ -123,7 +123,7 @@ jobs:
             "${{ steps.version.outputs.version }}"
 
       - name: Upload package-only Flatpak
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: flatpak-package-only-${{ github.run_id }}
           path: |
