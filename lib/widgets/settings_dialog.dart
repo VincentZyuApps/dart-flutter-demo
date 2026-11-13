@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../app.dart';
+import '../services/app_config_service.dart';
 import '../services/app_performance.dart';
 import '../services/font_service.dart';
 import '../services/network_proxy_service.dart';
@@ -21,6 +23,9 @@ class SettingsDialog extends StatefulWidget {
 
 class _SettingsDialogState extends State<SettingsDialog> {
   late final TextEditingController _proxyController;
+  late final TextEditingController _tokenController;
+  final List<TextEditingController> _sourceControllers = [];
+  bool _obscureToken = true;
 
   @override
   void initState() {
@@ -28,12 +33,160 @@ class _SettingsDialogState extends State<SettingsDialog> {
     _proxyController = TextEditingController(
       text: NetworkProxyService.instance.manualUrl,
     );
+    _tokenController = TextEditingController(
+      text: AppConfigService.instance.githubToken,
+    );
+    for (final src in AppConfigService.instance.sources) {
+      _sourceControllers.add(TextEditingController(text: src));
+    }
   }
 
   @override
   void dispose() {
     _proxyController.dispose();
+    _tokenController.dispose();
+    for (final c in _sourceControllers) {
+      c.dispose();
+    }
     super.dispose();
+  }
+
+  void _syncAndSave() {
+    final cfg = AppConfigService.instance;
+    cfg.themeMode = themeNotifier.value;
+    cfg.fontFamily = FontService.instance.currentFont;
+    cfg.proxyMode = NetworkProxyService.instance.mode;
+    cfg.manualProxyUrl = _proxyController.text.trim();
+    cfg.enableLazerHud = showPerformanceHudNotifier.value;
+    cfg.detailedLazerHud = detailedPerformanceHudNotifier.value;
+    cfg.githubToken = _tokenController.text.trim();
+    cfg.sources = _sourceControllers
+        .map((c) => c.text.trim())
+        .where((s) => s.isNotEmpty)
+        .toList();
+    if (cfg.sources.isEmpty) {
+      cfg.sources = List.from(AppConfigService.defaultSources);
+    }
+    cfg.save();
+  }
+
+  void _showTokenGuideDialog(BuildContext context) {
+    final guideTokenCtrl = TextEditingController(text: _tokenController.text);
+    showDialog<void>(
+      context: context,
+      builder: (ctx) {
+        final theme = Theme.of(ctx);
+        return AlertDialog(
+          title: const Row(
+            children: [
+              Icon(Icons.vpn_key_rounded, color: Colors.blueAccent),
+              SizedBox(width: 8),
+              Text('GitHub Token 获取与提额向导'),
+            ],
+          ),
+          content: SizedBox(
+            width: 480,
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.green.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: Colors.green.withValues(alpha: 0.4)),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.speed_rounded, color: Colors.green),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            '配置 Token 后，GitHub API 配额从 60 次/小时 直接飙升至 5,000 次/小时，彻底告别 403 / 429 速率限制报错！',
+                            style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.blue.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: Colors.blue.withValues(alpha: 0.3)),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.shield_outlined, color: Colors.blueAccent),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            '安全承诺：本应用仅抓取公开公开仓库（Public Repos），无需勾选任何账号私有读写权限，零泄露风险。',
+                            style: theme.textTheme.bodySmall,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Center(
+                    child: FilledButton.icon(
+                      style: FilledButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                      ),
+                      onPressed: () {
+                        const url =
+                            'https://github.com/settings/tokens/new?description=DartFlutterDemo&scopes=public_repo';
+                        launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+                      },
+                      icon: const Icon(Icons.open_in_browser_rounded),
+                      label: const Text('🚀 打开 GitHub 预填生成页 (自动配好权限)'),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Center(
+                    child: Text(
+                      '打开后滑到页面底部，点击绿色 Generate token 并复制即可',
+                      style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: guideTokenCtrl,
+                    decoration: const InputDecoration(
+                      labelText: '在此粘贴生成的 Token (形如 ghp_xxx)',
+                      prefixIcon: Icon(Icons.content_paste_rounded),
+                      border: OutlineInputBorder(),
+                      isDense: true,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('取消'),
+            ),
+            FilledButton(
+              onPressed: () {
+                setState(() {
+                  _tokenController.text = guideTokenCtrl.text.trim();
+                });
+                _syncAndSave();
+                Navigator.pop(ctx);
+              },
+              child: const Text('保存并应用'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -50,7 +203,7 @@ class _SettingsDialogState extends State<SettingsDialog> {
         ],
       ),
       content: SizedBox(
-        width: 560,
+        width: 580,
         child: SingleChildScrollView(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -66,49 +219,46 @@ class _SettingsDialogState extends State<SettingsDialog> {
                     segments: const [
                       ButtonSegment(
                         value: ThemeMode.system,
-                        icon: Icon(Icons.desktop_windows_outlined),
+                        icon: Icon(Icons.brightness_auto),
                         label: Text('跟随系统'),
                       ),
                       ButtonSegment(
                         value: ThemeMode.light,
-                        icon: Icon(Icons.wb_sunny_outlined),
+                        icon: Icon(Icons.light_mode),
                         label: Text('浅色'),
                       ),
                       ButtonSegment(
                         value: ThemeMode.dark,
-                        icon: Icon(Icons.nightlight_round),
+                        icon: Icon(Icons.dark_mode),
                         label: Text('深色'),
                       ),
                     ],
                     selected: {currentMode},
-                    onSelectionChanged: (newSet) {
-                      setThemeMode(newSet.first);
+                    onSelectionChanged: (selection) {
+                      setThemeMode(selection.first);
+                      _syncAndSave();
                     },
                   );
                 },
               ),
               const SizedBox(height: 20),
 
-              // 2. 全局字体矩阵 (真实落地)
-              _buildSectionHeader(context, Icons.text_fields_rounded, '全局字体字族切换 (10 款精选)'),
+              // 2. 全局字体矩阵模块
+              _buildSectionHeader(context, Icons.text_fields_rounded, '全局字体矩阵 (10 款精选字族)'),
               const SizedBox(height: 8),
               ValueListenableBuilder<AppFontFamily>(
                 valueListenable: FontService.instance.currentFontNotifier,
                 builder: (context, currentFont, _) {
                   return Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                     decoration: BoxDecoration(
-                      color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.35),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: colorScheme.outlineVariant.withValues(alpha: 0.4),
-                      ),
+                      border: Border.all(color: colorScheme.outlineVariant),
+                      borderRadius: BorderRadius.circular(10),
                     ),
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
                     child: DropdownButtonHideUnderline(
                       child: DropdownButton<AppFontFamily>(
                         value: currentFont,
                         isExpanded: true,
-                        icon: const Icon(Icons.keyboard_arrow_down_rounded),
                         items: AppFontFamily.values.map((font) {
                           return DropdownMenuItem<AppFontFamily>(
                             value: font,
@@ -116,20 +266,22 @@ class _SettingsDialogState extends State<SettingsDialog> {
                               children: [
                                 Text(
                                   font.displayName,
-                                  style: const TextStyle(fontWeight: FontWeight.w600),
+                                  style: theme.textTheme.bodyMedium?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                 ),
                                 const SizedBox(width: 8),
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                   decoration: BoxDecoration(
-                                    color: colorScheme.primaryContainer.withValues(alpha: 0.6),
-                                    borderRadius: BorderRadius.circular(4),
+                                    color: colorScheme.primaryContainer,
+                                    borderRadius: BorderRadius.circular(6),
                                   ),
                                   child: Text(
                                     font.category,
-                                    style: TextStyle(
-                                      fontSize: 10,
+                                    style: theme.textTheme.labelSmall?.copyWith(
                                       color: colorScheme.onPrimaryContainer,
+                                      fontSize: 10,
                                     ),
                                   ),
                                 ),
@@ -140,6 +292,7 @@ class _SettingsDialogState extends State<SettingsDialog> {
                         onChanged: (newFont) {
                           if (newFont != null) {
                             FontService.instance.setFont(newFont);
+                            _syncAndSave();
                           }
                         },
                       ),
@@ -165,7 +318,7 @@ class _SettingsDialogState extends State<SettingsDialog> {
               ),
               const SizedBox(height: 20),
 
-              // 3. Firefox 三态全局代理模块 (真实落地)
+              // 3. Firefox 三态全局代理模块
               _buildSectionHeader(context, Icons.vpn_lock_rounded, '全局网络代理设置 (Firefox 经典三态)'),
               const SizedBox(height: 8),
               ValueListenableBuilder<ProxyMode>(
@@ -195,6 +348,7 @@ class _SettingsDialogState extends State<SettingsDialog> {
                         selected: {mode},
                         onSelectionChanged: (selection) {
                           NetworkProxyService.instance.setMode(selection.first);
+                          _syncAndSave();
                         },
                       ),
                       const SizedBox(height: 8),
@@ -230,6 +384,7 @@ class _SettingsDialogState extends State<SettingsDialog> {
                                 ),
                                 onChanged: (val) {
                                   NetworkProxyService.instance.setManualUrl(val);
+                                  _syncAndSave();
                                 },
                               ),
                             ),
@@ -240,6 +395,7 @@ class _SettingsDialogState extends State<SettingsDialog> {
                                 NetworkProxyService.instance.setManualUrl(
                                   NetworkProxyService.defaultManualProxy,
                                 );
+                                _syncAndSave();
                               },
                               icon: const Icon(Icons.restore_rounded, size: 16),
                               label: const Text('默认'),
@@ -253,7 +409,126 @@ class _SettingsDialogState extends State<SettingsDialog> {
               ),
               const SizedBox(height: 20),
 
-              // 4. Lazer 实时性能指示器模块
+              // 4. 🔑 GitHub API 鉴权 Token 模块 (解决 403 限流)
+              _buildSectionHeader(context, Icons.key_rounded, 'GitHub API 鉴权配置 (配额提至 5,000次/小时)'),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _tokenController,
+                      obscureText: _obscureToken,
+                      decoration: InputDecoration(
+                        labelText: 'GitHub Personal Access Token',
+                        hintText: 'ghp_************************************',
+                        prefixIcon: const Icon(Icons.lock_outline_rounded),
+                        suffixIcon: IconButton(
+                          icon: Icon(_obscureToken ? Icons.visibility_off : Icons.visibility),
+                          onPressed: () => setState(() => _obscureToken = !_obscureToken),
+                        ),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                        isDense: true,
+                      ),
+                      onChanged: (_) => _syncAndSave(),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  FilledButton.tonalIcon(
+                    onPressed: () => _showTokenGuideDialog(context),
+                    icon: const Icon(Icons.help_outline_rounded, size: 18),
+                    label: const Text('获取向导'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              Text(
+                '未配置时限制 60次/小时，配置后提升至 5,000次/小时。仅读取公开仓库，无需私有权限。',
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                  fontSize: 11,
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              // 5. 🌐 GitHub 数据源管理模块 (持久化存盘)
+              _buildSectionHeader(context, Icons.source_rounded, 'GitHub 数据源列表 (Sources 持久化)'),
+              const SizedBox(height: 8),
+              Container(
+                decoration: BoxDecoration(
+                  border: Border.all(color: colorScheme.outlineVariant),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                padding: const EdgeInsets.all(8),
+                child: Column(
+                  children: [
+                    for (int i = 0; i < _sourceControllers.length; i++) ...[
+                      Row(
+                        children: [
+                          Expanded(
+                            child: TextField(
+                              controller: _sourceControllers[i],
+                              decoration: InputDecoration(
+                                isDense: true,
+                                border: const OutlineInputBorder(),
+                                hintText: 'https://github.com/Username?tab=repositories',
+                              ),
+                              onChanged: (_) => _syncAndSave(),
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          IconButton(
+                            icon: const Icon(Icons.delete_outline, size: 20),
+                            tooltip: '删除此源',
+                            onPressed: _sourceControllers.length <= 1
+                                ? null
+                                : () {
+                                    setState(() {
+                                      _sourceControllers.removeAt(i).dispose();
+                                    });
+                                    _syncAndSave();
+                                  },
+                          ),
+                        ],
+                      ),
+                      if (i < _sourceControllers.length - 1) const SizedBox(height: 8),
+                    ],
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        OutlinedButton.icon(
+                          onPressed: () {
+                            setState(() {
+                              _sourceControllers.add(TextEditingController());
+                            });
+                            _syncAndSave();
+                          },
+                          icon: const Icon(Icons.add, size: 16),
+                          label: const Text('添加数据源'),
+                        ),
+                        const SizedBox(width: 8),
+                        TextButton.icon(
+                          onPressed: () {
+                            for (final c in _sourceControllers) {
+                              c.dispose();
+                            }
+                            _sourceControllers.clear();
+                            for (final s in AppConfigService.defaultSources) {
+                              _sourceControllers.add(TextEditingController(text: s));
+                            }
+                            setState(() {});
+                            _syncAndSave();
+                          },
+                          icon: const Icon(Icons.restore_rounded, size: 16),
+                          label: const Text('恢复预置三大源'),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              // 6. Lazer 实时性能指示器模块
               _buildSectionHeader(context, Icons.speed_rounded, 'Lazer 实时性能 HUD 胶囊'),
               const SizedBox(height: 6),
               ValueListenableBuilder<bool>(
@@ -265,6 +540,7 @@ class _SettingsDialogState extends State<SettingsDialog> {
                     value: isShown,
                     onChanged: (val) {
                       showPerformanceHudNotifier.value = val;
+                      _syncAndSave();
                     },
                     contentPadding: EdgeInsets.zero,
                     dense: true,
@@ -280,6 +556,7 @@ class _SettingsDialogState extends State<SettingsDialog> {
                     value: isDetailed,
                     onChanged: (val) {
                       detailedPerformanceHudNotifier.value = val;
+                      _syncAndSave();
                     },
                     contentPadding: EdgeInsets.zero,
                     dense: true,
@@ -292,8 +569,11 @@ class _SettingsDialogState extends State<SettingsDialog> {
       ),
       actions: [
         FilledButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('确定'),
+          onPressed: () {
+            _syncAndSave();
+            Navigator.pop(context);
+          },
+          child: const Text('完成'),
         ),
       ],
     );

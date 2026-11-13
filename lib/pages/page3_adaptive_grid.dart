@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../models/page3_enums.dart';
+import '../services/app_config_service.dart';
 import '../services/github_repository_service.dart';
 import '../services/network_proxy_service.dart';
 import '../widgets/animated_page.dart';
@@ -19,15 +20,8 @@ class Page3AdaptiveGrid extends StatefulWidget {
 }
 
 class _Page3AdaptiveGridState extends State<Page3AdaptiveGrid> {
-  static const _defaultSources = <String>[
-    'https://github.com/VincentZyu233?tab=repositories',
-    'https://github.com/orgs/VincentZyuApps/repositories',
-    'https://github.com/VincentZyuLive?tab=repositories',
-  ];
-
   final _service = GitHubRepositoryService();
   final _searchController = TextEditingController();
-  final List<TextEditingController> _sourceControllers = [];
 
   LayoutMode _layoutMode = LayoutMode.masonry;
   DensityMode _densityMode = DensityMode.three;
@@ -49,20 +43,22 @@ class _Page3AdaptiveGridState extends State<Page3AdaptiveGrid> {
   @override
   void initState() {
     super.initState();
-    for (final source in _defaultSources) {
-      _sourceControllers.add(TextEditingController(text: source));
-    }
+    AppConfigService.instance.changeNotifier.addListener(_onConfigChanged);
     WidgetsBinding.instance.addPostFrameCallback((_) => _refresh());
   }
 
   @override
   void dispose() {
+    AppConfigService.instance.changeNotifier.removeListener(_onConfigChanged);
     _staggerTimer?.cancel();
     _searchController.dispose();
-    for (final controller in _sourceControllers) {
-      controller.dispose();
-    }
     super.dispose();
+  }
+
+  void _onConfigChanged() {
+    if (mounted) {
+      _refresh();
+    }
   }
 
   void _startStaggerTimerIfNeeded() {
@@ -78,7 +74,7 @@ class _Page3AdaptiveGridState extends State<Page3AdaptiveGrid> {
           timer.cancel();
           setState(() {
             _status =
-                'Loaded ${_displayRepositories.length} repositories from ${_sourceControllers.length} sources';
+                'Loaded ${_displayRepositories.length} repositories from ${AppConfigService.instance.sources.length} sources';
           });
         }
         return;
@@ -100,13 +96,10 @@ class _Page3AdaptiveGridState extends State<Page3AdaptiveGrid> {
     _incomingQueue.clear();
     _knownRepoIds.clear();
 
-    final sources = _sourceControllers
-        .map((c) => c.text.trim())
-        .where((v) => v.isNotEmpty)
-        .toList();
+    final sources = AppConfigService.instance.sources;
     if (sources.isEmpty) {
       setState(() {
-        _error = 'Add at least one GitHub repositories page.';
+        _error = 'Add at least one GitHub repositories page in Settings.';
         _status = 'No sources';
       });
       return;
@@ -158,12 +151,6 @@ class _Page3AdaptiveGridState extends State<Page3AdaptiveGrid> {
     }
   }
 
-  void _addSource([String initialUrl = '']) {
-    setState(() {
-      _sourceControllers.add(TextEditingController(text: initialUrl));
-    });
-  }
-
   List<GitHubRepositoryItem> get _filteredRepositories {
     final query = _searchController.text.trim().toLowerCase();
     final sorted = _sortRepositories(_displayRepositories);
@@ -187,13 +174,6 @@ class _Page3AdaptiveGridState extends State<Page3AdaptiveGrid> {
       };
     });
     return sorted;
-  }
-
-  void _removeSource(int index) {
-    if (_sourceControllers.length <= 1) return;
-    setState(() {
-      _sourceControllers.removeAt(index).dispose();
-    });
   }
 
   String _widthBucket(double width) {
@@ -519,41 +499,65 @@ class _Page3AdaptiveGridState extends State<Page3AdaptiveGrid> {
               ],
             ),
             const SizedBox(height: 12),
-            _buildSourceTable(theme),
-            const SizedBox(height: 12),
-            ValueListenableBuilder<ProxyMode>(
-              valueListenable: NetworkProxyService.instance.modeNotifier,
-              builder: (context, mode, _) {
-                final summary = NetworkProxyService.instance.summary;
+            ValueListenableBuilder<int>(
+              valueListenable: AppConfigService.instance.changeNotifier,
+              builder: (context, _, __) {
+                final token = AppConfigService.instance.githubToken.trim();
+                final sourcesCount = AppConfigService.instance.sources.length;
+                final proxySummary = NetworkProxyService.instance.summary;
                 return Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                   decoration: BoxDecoration(
-                    color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
-                    borderRadius: BorderRadius.circular(10),
+                    color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.6),
+                    borderRadius: BorderRadius.circular(12),
                     border: Border.all(
                       color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
                     ),
                   ),
-                  child: Row(
+                  child: Wrap(
+                    spacing: 16,
+                    runSpacing: 8,
+                    crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
-                      Icon(Icons.vpn_lock_rounded, size: 18, color: theme.colorScheme.primary),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          '网络代理: $summary (已接管全局)',
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            fontWeight: FontWeight.w500,
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            token.isNotEmpty ? Icons.key_rounded : Icons.key_off_rounded,
+                            size: 18,
+                            color: token.isNotEmpty ? Colors.green : Colors.orange,
                           ),
-                        ),
+                          const SizedBox(width: 6),
+                          Text(
+                            token.isNotEmpty ? 'Token: 已鉴权 (5,000次/h)' : 'Token: 未配置 (60次/h限制)',
+                            style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
+                          ),
+                        ],
                       ),
-                      TextButton.icon(
-                        style: TextButton.styleFrom(
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.source_rounded, size: 18, color: theme.colorScheme.primary),
+                          const SizedBox(width: 6),
+                          Text('$sourcesCount 个数据源', style: theme.textTheme.bodySmall),
+                        ],
+                      ),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.vpn_lock_rounded, size: 18, color: theme.colorScheme.primary),
+                          const SizedBox(width: 6),
+                          Text('代理: $proxySummary', style: theme.textTheme.bodySmall),
+                        ],
+                      ),
+                      FilledButton.tonalIcon(
+                        style: FilledButton.styleFrom(
                           visualDensity: VisualDensity.compact,
-                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          padding: const EdgeInsets.symmetric(horizontal: 10),
                         ),
                         onPressed: () => SettingsDialog.show(context),
                         icon: const Icon(Icons.tune_rounded, size: 16),
-                        label: const Text('设置'),
+                        label: const Text('管理数据源与全局设置'),
                       ),
                     ],
                   ),
@@ -593,112 +597,6 @@ class _Page3AdaptiveGridState extends State<Page3AdaptiveGrid> {
         ],
       ),
     );
-  }
-
-  Widget _buildSourceTable(ThemeData theme) {
-    return Container(
-      decoration: BoxDecoration(
-        border: Border.all(color: theme.colorScheme.outlineVariant),
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: DataTable(
-              columns: const [
-                DataColumn(label: Text('Source URL')),
-                DataColumn(label: Text('Kind')),
-                DataColumn(label: Text('Status')),
-                DataColumn(label: Text('')),
-              ],
-              rows: List.generate(_sourceControllers.length, (index) {
-                final controller = _sourceControllers[index];
-                final parsed = _tryParseSource(controller.text.trim());
-                final status = parsed == null
-                    ? 'Invalid'
-                    : parsed.kind == GitHubRepositorySourceKind.user
-                        ? 'User'
-                        : 'Org';
-                return DataRow(
-                  cells: [
-                    DataCell(
-                      SizedBox(
-                        width: 360,
-                        child: TextField(
-                          controller: controller,
-                          onChanged: (_) => setState(() {}),
-                          decoration: InputDecoration(
-                            isDense: true,
-                            hintText: switch (index) {
-                              0 => 'https://github.com/VincentZyu233?tab=repositories',
-                              1 => 'https://github.com/orgs/VincentZyuApps/repositories',
-                              _ => 'https://github.com/VincentZyuLive?tab=repositories',
-                            },
-                            errorText: controller.text.trim().isEmpty || parsed != null
-                                ? null
-                                : 'Invalid GitHub repositories page',
-                            border: const OutlineInputBorder(),
-                          ),
-                        ),
-                      ),
-                    ),
-                    DataCell(Text(status)),
-                    DataCell(Text(parsed?.label ?? '-')),
-                    DataCell(
-                      IconButton(
-                        tooltip: 'Remove source',
-                        onPressed: _sourceControllers.length <= 1 ? null : () => _removeSource(index),
-                        icon: const Icon(Icons.delete_outline),
-                      ),
-                    ),
-                  ],
-                );
-              }),
-            ),
-          ),
-          const Divider(height: 1),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            child: Wrap(
-              spacing: 8,
-              runSpacing: 6,
-              crossAxisAlignment: WrapCrossAlignment.center,
-              children: [
-                OutlinedButton.icon(
-                  onPressed: () => _addSource(),
-                  icon: const Icon(Icons.add_rounded, size: 18),
-                  label: const Text('添加数据源 (Add Source)'),
-                ),
-                TextButton.icon(
-                  onPressed: () {
-                    for (final c in _sourceControllers) {
-                      c.dispose();
-                    }
-                    _sourceControllers.clear();
-                    for (final s in _defaultSources) {
-                      _sourceControllers.add(TextEditingController(text: s));
-                    }
-                    setState(() {});
-                  },
-                  icon: const Icon(Icons.restore_rounded, size: 16),
-                  label: const Text('恢复预设三大源'),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  GitHubRepositorySource? _tryParseSource(String value) {
-    try {
-      return _service.parseSource(value);
-    } catch (_) {
-      return null;
-    }
   }
 
   Widget _buildStateBar(ThemeData theme, double width, int columns, int count, DensityMode density) {

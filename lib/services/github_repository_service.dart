@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'app_config_service.dart';
+
 class GitHubRepositorySource {
   final String rawUrl;
   final GitHubRepositorySourceKind kind;
@@ -208,6 +210,18 @@ class GitHubRepositoryService {
       );
     }
 
+    final configuredToken = AppConfigService.instance.githubToken.trim();
+    yield GitHubRepositoryStreamChunk(
+      newItems: const [],
+      source: parsedSources.first,
+      page: 0,
+      isSourceDone: false,
+      isAllDone: false,
+      log: configuredToken.isNotEmpty
+          ? 'GitHub Token: Authenticated (5,000 req/hr quota)'
+          : 'GitHub Token: Not configured (60 req/hr anonymous limit)',
+    );
+
     try {
       for (var sIdx = 0; sIdx < parsedSources.length; sIdx++) {
         final source = parsedSources[sIdx];
@@ -256,6 +270,11 @@ class GitHubRepositoryService {
             'dart_flutter_demo/0.2',
           );
           request.headers.set('X-GitHub-Api-Version', '2022-11-28');
+
+          final token = AppConfigService.instance.githubToken.trim();
+          if (token.isNotEmpty) {
+            request.headers.set(HttpHeaders.authorizationHeader, 'Bearer $token');
+          }
 
           final response = await request.close();
           final body = await utf8.decodeStream(response);
