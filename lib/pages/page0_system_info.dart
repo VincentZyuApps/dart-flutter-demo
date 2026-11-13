@@ -246,10 +246,20 @@ class _Page0SystemInfoState extends State<Page0SystemInfo> {
               bottom: 80,
             ),
             children: [
-              _buildHeader(theme),
-              const SizedBox(height: 2),
-              _buildSeparator(theme),
+              // 1. 🚀 首屏置顶：实时动态监控仪表盘 (Dashboard First)
+              _buildMonitorHeader(theme),
               const SizedBox(height: 8),
+              SystemMonitorDashboard(
+                hostInfo: _info['Host'],
+                osInfo: _info['OS'],
+              ),
+              const SizedBox(height: 20),
+
+              // 2. 📜 次屏下滑：静态硬件与系统详情 (Fastfetch Style)
+              _buildSeparator(theme),
+              const SizedBox(height: 10),
+              _buildHeader(theme),
+              const SizedBox(height: 4),
               if (_loadDurationMs != null && !_loading)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 8),
@@ -310,14 +320,7 @@ class _Page0SystemInfoState extends State<Page0SystemInfo> {
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
-              _buildMonitorHeader(theme),
-              const SizedBox(height: 10),
-              SystemMonitorDashboard(
-                hostInfo: _info['Host'],
-                osInfo: _info['OS'],
-              ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 16),
               _buildDebugPanel(theme),
             ],
           ),

@@ -72,6 +72,7 @@ class _SunflowerToggleState extends State<SunflowerToggle>
             : colorScheme.primaryContainer.withValues(alpha: 0.35));
 
     final totalSize = widget.size * 1.5;
+    final ghostSize = widget.size * 1.24;
 
     return Semantics(
       button: true,
@@ -82,7 +83,7 @@ class _SunflowerToggleState extends State<SunflowerToggle>
           animation: _animation,
           builder: (context, child) {
             final progress = _animation.value;
-            // 旋转 2π / 12 (即一个完整花瓣步进角 30°)
+            // 旋转 2π / 12 (即一个花瓣步进角 30°)
             final turnAngle = (2 * math.pi / 12) * progress;
             // 微动放大 1.0 -> 1.10
             final scale = 1.0 + 0.10 * progress;
@@ -93,9 +94,9 @@ class _SunflowerToggleState extends State<SunflowerToggle>
               child: Stack(
                 alignment: Alignment.center,
                 children: [
-                  // 1. 背后大号深色/半透明同心水滴光晕 (ShapeBadge)
+                  // 1. 底层：大号暗色不规则水滴遮罩 (Fluid Backdrop)
                   Transform.rotate(
-                    angle: -turnAngle * 0.5,
+                    angle: -turnAngle * 0.4,
                     child: CustomPaint(
                       size: Size(totalSize, totalSize),
                       painter: _SunflowerPathPainter(
@@ -103,12 +104,40 @@ class _SunflowerToggleState extends State<SunflowerToggle>
                         color: badgeColor,
                         petals: 12,
                         dentDepth: 0.18,
-                        isShadowBadge: true,
                       ),
                     ),
                   ),
 
-                  // 2. Sunflower 主体向日葵按钮 (M3 Expressive Cookie-12)
+                  // 2. 中层：淡淡的浅色向日葵光环 (Ghost Sunflower Bloom)
+                  // 随转动伴随 15° 相位交错，产生双层花瓣重叠与通透漫反射光晕
+                  if (progress > 0.01)
+                    Transform.rotate(
+                      angle: turnAngle + (math.pi / 12),
+                      child: Container(
+                        width: ghostSize,
+                        height: ghostSize,
+                        decoration: BoxDecoration(
+                          boxShadow: [
+                            BoxShadow(
+                              color: primary.withValues(alpha: 0.25 * progress),
+                              blurRadius: 24.0,
+                              spreadRadius: 2.0,
+                            ),
+                          ],
+                        ),
+                        child: CustomPaint(
+                          size: Size(ghostSize, ghostSize),
+                          painter: _SunflowerPathPainter(
+                            progress: progress,
+                            color: primary.withValues(alpha: 0.22 * progress),
+                            petals: 12,
+                            dentDepth: 0.14,
+                          ),
+                        ),
+                      ),
+                    ),
+
+                  // 3. 顶层：饱满圆润的 Cookie-12 曲奇向日葵主按钮
                   Transform.rotate(
                     angle: turnAngle,
                     child: Transform.scale(
@@ -119,7 +148,7 @@ class _SunflowerToggleState extends State<SunflowerToggle>
                         decoration: BoxDecoration(
                           boxShadow: [
                             BoxShadow(
-                              color: primary.withValues(alpha: 0.28 * progress + 0.12),
+                              color: primary.withValues(alpha: 0.35 * progress + 0.12),
                               blurRadius: 16.0,
                               offset: const Offset(0, 6),
                             ),
@@ -131,14 +160,14 @@ class _SunflowerToggleState extends State<SunflowerToggle>
                             progress: progress,
                             color: primary,
                             petals: 12,
-                            dentDepth: 0.14,
+                            dentDepth: 0.13,
                           ),
                         ),
                       ),
                     ),
                   ),
 
-                  // 3. 居中形变矢量图标 (Play ▶ <-> Pause ⏸)
+                  // 4. 居中形变矢量图标 (Play ▶ <-> Pause ⏸)
                   Center(
                     child: AnimatedCrossFade(
                       duration: const Duration(milliseconds: 250),
@@ -167,53 +196,65 @@ class _SunflowerToggleState extends State<SunflowerToggle>
   }
 }
 
-/// 采用三次贝塞尔平滑连接的 12 瓣向日葵几何图形 Painter
+/// 采用严格三次贝塞尔切线平滑连接的 12 瓣圆滑曲奇向日葵 Painter
+/// 波峰外凸为平滑圆弧，波谷内凹亦为平滑圆弧，彻底消除尖锐棱角
 class _SunflowerPathPainter extends CustomPainter {
   const _SunflowerPathPainter({
     required this.progress,
     required this.color,
     this.petals = 12,
-    this.dentDepth = 0.14,
-    this.isShadowBadge = false,
+    this.dentDepth = 0.13,
   });
 
   final double progress;
   final Color color;
   final int petals;
   final double dentDepth;
-  final bool isShadowBadge;
 
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
     final outerRadius = size.width / 2;
-    // 当 progress=0 为正圆；随着 progress 增加，凹槽逐渐加深到 dentDepth
+    // 当 progress=0 为正圆；随着 progress 增加，凹槽平滑加深
     final innerRadius = outerRadius * (1.0 - dentDepth * progress);
 
     final path = Path();
-    final step = (math.pi * 2) / (petals * 2);
+    final totalNodes = petals * 2;
+    final step = (math.pi * 2) / totalNodes;
 
-    for (int i = 0; i < petals * 2; i++) {
+    // 收集所有关键节点坐标
+    final points = <Offset>[];
+    for (int i = 0; i < totalNodes; i++) {
       final angle = i * step;
       final isPeak = i.isEven;
       final r = isPeak ? outerRadius : innerRadius;
-      final x = center.dx + r * math.cos(angle);
-      final y = center.dy + r * math.sin(angle);
+      points.add(Offset(
+        center.dx + r * math.cos(angle),
+        center.dy + r * math.sin(angle),
+      ));
+    }
 
-      if (i == 0) {
-        path.moveTo(x, y);
-      } else {
-        // 使用平滑贝塞尔连接
-        final prevAngle = (i - 1) * step;
-        final prevR = (i - 1).isEven ? outerRadius : innerRadius;
-        final midAngle = (prevAngle + angle) / 2;
-        final midR = (prevR + r) / 2;
+    // 使用三次贝塞尔曲线沿极坐标切线平滑环绕
+    path.moveTo(points.first.dx, points.first.dy);
 
-        final cx = center.dx + midR * math.cos(midAngle);
-        final cy = center.dy + midR * math.sin(midAngle);
+    for (int i = 0; i < totalNodes; i++) {
+      final nextIdx = (i + 1) % totalNodes;
+      final p0 = points[i];
+      final p1 = points[nextIdx];
 
-        path.quadraticBezierTo(cx, cy, x, y);
-      }
+      final angle0 = i * step;
+      final angle1 = nextIdx * step;
+
+      // 切线正交向量，确保每个极值点处切线绝对垂直于半径 (导数一阶连续平滑，完全无折角)
+      final t0 = Offset(-math.sin(angle0), math.cos(angle0));
+      final t1 = Offset(-math.sin(angle1), math.cos(angle1));
+
+      final dist = (p1 - p0).distance * 0.36;
+
+      final c0 = p0 + t0 * dist;
+      final c1 = p1 - t1 * dist;
+
+      path.cubicTo(c0.dx, c0.dy, c1.dx, c1.dy, p1.dx, p1.dy);
     }
     path.close();
 

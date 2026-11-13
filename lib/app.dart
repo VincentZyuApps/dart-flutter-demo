@@ -10,8 +10,13 @@ import 'pages/page4_controls_feedback.dart';
 import 'services/app_performance.dart';
 import 'services/desktop_integration_service.dart';
 import 'widgets/animated_page.dart';
+import 'widgets/settings_dialog.dart';
 
 final themeNotifier = ValueNotifier<ThemeMode>(ThemeMode.system);
+
+void setThemeMode(ThemeMode mode) {
+  themeNotifier.value = mode;
+}
 
 void toggleThemeMode() {
   themeNotifier.value = switch (themeNotifier.value) {
@@ -157,6 +162,11 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
                 icon: Icon(themeIcon),
                 onPressed: toggleThemeMode,
               ),
+              IconButton(
+                tooltip: 'Settings (设置)',
+                icon: const Icon(Icons.settings_outlined),
+                onPressed: () => SettingsDialog.show(context),
+              ),
             ],
           ),
           drawer: Drawer(
@@ -217,6 +227,16 @@ class _HomeShellState extends State<HomeShell> with WidgetsBindingObserver {
                   onTap: () {
                     Navigator.pop(context);
                     _showGuideDialog(context);
+                  },
+                ),
+                const Divider(),
+                ListTile(
+                  leading: const Icon(Icons.settings_outlined),
+                  title: const Text('Settings'),
+                  subtitle: const Text('Appearance, Fonts, Network & HUD'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    SettingsDialog.show(context);
                   },
                 ),
               ],
@@ -491,31 +511,125 @@ class _PerfChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return AnimatedBuilder(
       animation: Listenable.merge([
+        showPerformanceHudNotifier,
+        detailedPerformanceHudNotifier,
         frameFpsNotifier,
+        frameLowFpsNotifier,
+        frameUiMsNotifier,
+        frameGpuMsNotifier,
+        frameWorstMsNotifier,
         shellRebuildCountNotifier,
       ]),
       builder: (context, _) {
+        if (!showPerformanceHudNotifier.value) {
+          return const SizedBox.shrink();
+        }
+
         final fps = frameFpsNotifier.value;
-        final rebuilds = shellRebuildCountNotifier.value;
+        final lowFps = frameLowFpsNotifier.value;
+        final uiMs = frameUiMsNotifier.value;
+        final gpuMs = frameGpuMsNotifier.value;
+        final worstMs = frameWorstMsNotifier.value;
+        final isDetailed = detailedPerformanceHudNotifier.value;
+
+        // 根据低帧与总耗时判断性能灯状态
+        final Color statusColor;
+        if (fps >= 55 && lowFps >= 45) {
+          statusColor = const Color(0xFF10B981); // 绿色健康
+        } else if (fps >= 30) {
+          statusColor = const Color(0xFFF59E0B); // 橙黄警告
+        } else {
+          statusColor = const Color(0xFFEF4444); // 红色卡顿
+        }
+
         return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
           decoration: BoxDecoration(
-            color: theme.colorScheme.surfaceContainerHighest
-                .withValues(alpha: 0.55),
+            color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.65),
             borderRadius: BorderRadius.circular(999),
             border: Border.all(
-              color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
+              color: colorScheme.outlineVariant.withValues(alpha: 0.4),
             ),
           ),
-          child: Text(
-            'FPS ${fps.toStringAsFixed(0)}  •  Rebuild $rebuilds',
-            style: TextStyle(
-              fontSize: 10.5,
-              fontFamily: 'JetBrainsMono',
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 7,
+                height: 7,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: statusColor,
+                  boxShadow: [
+                    BoxShadow(
+                      color: statusColor.withValues(alpha: 0.6),
+                      blurRadius: 4,
+                      spreadRadius: 0.5,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 6),
+              Text(
+                '${fps.toStringAsFixed(0)} fps',
+                style: const TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                  fontFamily: 'JetBrainsMono',
+                ),
+              ),
+              if (isDetailed) ...[
+                const SizedBox(width: 8),
+                Text(
+                  '低帧 ${lowFps > 0 ? lowFps.toStringAsFixed(0) : "—"}',
+                  style: TextStyle(
+                    fontSize: 10.5,
+                    color: lowFps < 45 ? const Color(0xFFF87171) : colorScheme.onSurfaceVariant,
+                    fontFamily: 'JetBrainsMono',
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'UI ${uiMs.toStringAsFixed(1)} ms',
+                  style: TextStyle(
+                    fontSize: 10.5,
+                    color: colorScheme.onSurfaceVariant,
+                    fontFamily: 'JetBrainsMono',
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'GPU ${gpuMs.toStringAsFixed(1)} ms',
+                  style: TextStyle(
+                    fontSize: 10.5,
+                    color: colorScheme.onSurfaceVariant,
+                    fontFamily: 'JetBrainsMono',
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  '预算 10 ms',
+                  style: TextStyle(
+                    fontSize: 10.5,
+                    color: const Color(0xFFF59E0B),
+                    fontFamily: 'JetBrainsMono',
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  '峰值 ${worstMs.toStringAsFixed(0)} ms',
+                  style: TextStyle(
+                    fontSize: 10.5,
+                    color: colorScheme.onSurfaceVariant,
+                    fontFamily: 'JetBrainsMono',
+                  ),
+                ),
+              ],
+            ],
           ),
         );
       },
