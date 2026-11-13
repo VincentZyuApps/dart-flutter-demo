@@ -381,7 +381,7 @@ jobs:
 
       - name: Upload Windows Release
         if: matrix.platform == 'windows-x64'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: release-windows-x64
           path: |
@@ -394,7 +394,7 @@ jobs:
 
       - name: Upload Linux Release
         if: matrix.platform == 'linux-x64'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: release-linux-x64
           path: |
@@ -406,7 +406,7 @@ jobs:
 
       - name: Upload macOS Release
         if: startsWith(matrix.platform, 'macos-')
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: release-${{ matrix.platform }}
           path: |
@@ -417,7 +417,7 @@ jobs:
 
       - name: Upload Android Release
         if: matrix.platform == 'android'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: release-android
           path: |
@@ -429,7 +429,7 @@ jobs:
 
       - name: Upload iOS Release
         if: matrix.platform == 'ios-arm64'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: release-ios-arm64
           path: build/ios/ipa/dart-flutter-demo-ios-arm64.ipa
@@ -481,7 +481,7 @@ jobs:
             linux-x64) flutter build linux --profile ;;
             android-universal) flutter build apk --profile ;;
           esac
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: profile-${{ matrix.platform }}
           path: ${{ matrix.output }}
@@ -544,7 +544,7 @@ jobs:
             "${{ needs.prepare.outputs.version }}"
 
       - name: Upload verified Flatpak
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: release-flatpak-x64
           path: |
@@ -646,7 +646,7 @@ jobs:
 
       - name: Upload manual dry-run bundle
         if: needs.prepare.outputs.should_publish != 'true'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: release-dry-run-v${{ needs.prepare.outputs.version }}
           path: |
