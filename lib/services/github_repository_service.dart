@@ -142,8 +142,8 @@ class GitHubRepositoryService {
 
   Future<GitHubRepositoryFetchResult> fetchRepositories({
     required List<String> sourceUrls,
-    required bool useProxy,
-    required String proxyUrl,
+    bool? useProxy,
+    String? proxyUrl,
   }) async {
     final logs = <String>[];
     final parsedSources = <GitHubRepositorySource>[];
@@ -153,7 +153,7 @@ class GitHubRepositoryService {
     }
 
     final client = HttpClient();
-    if (useProxy) {
+    if (useProxy == true && proxyUrl != null && proxyUrl.trim().isNotEmpty) {
       final proxy = Uri.tryParse(proxyUrl.trim());
       if (proxy == null || proxy.host.isEmpty || proxy.port <= 0) {
         throw const GitHubRepositorySourceParseException(
@@ -162,8 +162,11 @@ class GitHubRepositoryService {
       }
       client.findProxy = (_) => 'PROXY ${proxy.host}:${proxy.port}';
       logs.add('Proxy enabled: ${proxy.scheme}://${proxy.host}:${proxy.port}');
+    } else if (useProxy == false) {
+      client.findProxy = (_) => 'DIRECT';
+      logs.add('Proxy disabled (forced direct).');
     } else {
-      logs.add('Proxy disabled.');
+      logs.add('Using global network proxy configuration.');
     }
 
     try {

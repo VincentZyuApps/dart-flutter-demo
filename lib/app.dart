@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'pages/page0_system_info.dart';
@@ -9,6 +8,8 @@ import 'pages/page3_adaptive_grid.dart';
 import 'pages/page4_controls_feedback.dart';
 import 'services/app_performance.dart';
 import 'services/desktop_integration_service.dart';
+import 'services/font_service.dart';
+import 'services/network_proxy_service.dart';
 import 'widgets/animated_page.dart';
 import 'widgets/settings_dialog.dart';
 
@@ -41,26 +42,41 @@ class FlutterShowcaseApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<ThemeMode>(
-      valueListenable: themeNotifier,
-      builder: (context, themeMode, child) {
+    // 确保网络代理服务已初始化
+    NetworkProxyService.instance;
+
+    return ListenableBuilder(
+      listenable: Listenable.merge([
+        themeNotifier,
+        FontService.instance.currentFontNotifier,
+      ]),
+      builder: (context, child) {
+        final themeMode = themeNotifier.value;
+        final font = FontService.instance.currentFont;
+
+        final lightBase = ThemeData(
+          colorSchemeSeed: Colors.indigo,
+          useMaterial3: true,
+          brightness: Brightness.light,
+          pageTransitionsTheme: _pageTransitions,
+        );
+
+        final darkBase = ThemeData(
+          colorSchemeSeed: Colors.indigo,
+          useMaterial3: true,
+          brightness: Brightness.dark,
+          pageTransitionsTheme: _pageTransitions,
+        );
+
         return MaterialApp(
           title: 'Dart + Flutter Demo',
           debugShowCheckedModeBanner: false,
           themeMode: themeMode,
-          theme: ThemeData(
-            colorSchemeSeed: Colors.indigo,
-            useMaterial3: true,
-            brightness: Brightness.light,
-            textTheme: GoogleFonts.interTextTheme(),
-            pageTransitionsTheme: _pageTransitions,
+          theme: lightBase.copyWith(
+            textTheme: FontService.instance.applyFont(lightBase.textTheme, font),
           ),
-          darkTheme: ThemeData(
-            colorSchemeSeed: Colors.indigo,
-            useMaterial3: true,
-            brightness: Brightness.dark,
-            textTheme: GoogleFonts.interTextTheme(ThemeData.dark().textTheme),
-            pageTransitionsTheme: _pageTransitions,
+          darkTheme: darkBase.copyWith(
+            textTheme: FontService.instance.applyFont(darkBase.textTheme, font),
           ),
           home: const HomeShell(),
         );

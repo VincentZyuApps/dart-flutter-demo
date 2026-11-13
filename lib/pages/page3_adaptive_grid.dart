@@ -3,9 +3,11 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../models/page3_enums.dart';
 import '../services/github_repository_service.dart';
+import '../services/network_proxy_service.dart';
 import '../widgets/animated_page.dart';
 import '../widgets/repository_card.dart';
 import '../widgets/repository_list_tile.dart';
+import '../widgets/settings_dialog.dart';
 import '../widgets/state_shell.dart';
 
 class Page3AdaptiveGrid extends StatefulWidget {
@@ -23,13 +25,11 @@ class _Page3AdaptiveGridState extends State<Page3AdaptiveGrid> {
 
   final _service = GitHubRepositoryService();
   final _searchController = TextEditingController();
-  final _proxyController = TextEditingController(text: 'http://127.0.0.1:7890');
   final List<TextEditingController> _sourceControllers = [];
 
   LayoutMode _layoutMode = LayoutMode.masonry;
   DensityMode _densityMode = DensityMode.three;
   SortMode _sortMode = SortMode.updated;
-  bool _useProxy = false;
   bool _controlsExpanded = false;
   bool _autoColumns = true;
   bool _animateTransitions = true;
@@ -52,7 +52,6 @@ class _Page3AdaptiveGridState extends State<Page3AdaptiveGrid> {
   @override
   void dispose() {
     _searchController.dispose();
-    _proxyController.dispose();
     for (final controller in _sourceControllers) {
       controller.dispose();
     }
@@ -78,8 +77,6 @@ class _Page3AdaptiveGridState extends State<Page3AdaptiveGrid> {
     try {
       final result = await _service.fetchRepositories(
         sourceUrls: sources,
-        useProxy: _useProxy,
-        proxyUrl: _proxyController.text.trim(),
       );
       if (!mounted) return;
       setState(() {
@@ -262,7 +259,7 @@ class _Page3AdaptiveGridState extends State<Page3AdaptiveGrid> {
                         if (_controlsExpanded) ...[
                           const SizedBox(height: 2),
                           Text(
-                            'Tap to collapse sources, proxy, filter, sort, and layout.',
+                            'Tap to collapse sources, network, filter, sort, and layout.',
                             style: theme.textTheme.bodySmall?.copyWith(
                               color: theme.colorScheme.onSurfaceVariant,
                             ),
@@ -416,28 +413,44 @@ class _Page3AdaptiveGridState extends State<Page3AdaptiveGrid> {
             const SizedBox(height: 12),
             _buildSourceTable(theme),
             const SizedBox(height: 12),
-            Row(
-              children: [
-                Switch(
-                  value: _useProxy,
-                  onChanged: (value) => setState(() => _useProxy = value),
-                ),
-                const SizedBox(width: 6),
-                const Text('Use proxy'),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: TextField(
-                    controller: _proxyController,
-                    enabled: _useProxy,
-                    decoration: const InputDecoration(
-                      labelText: 'Proxy URL',
-                      hintText: 'http://127.0.0.1:7890',
-                      border: OutlineInputBorder(),
-                      isDense: true,
+            ValueListenableBuilder<ProxyMode>(
+              valueListenable: NetworkProxyService.instance.modeNotifier,
+              builder: (context, mode, _) {
+                final summary = NetworkProxyService.instance.summary;
+                return Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
                     ),
                   ),
-                ),
-              ],
+                  child: Row(
+                    children: [
+                      Icon(Icons.vpn_lock_rounded, size: 18, color: theme.colorScheme.primary),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          '网络代理: $summary (已接管全局)',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                      TextButton.icon(
+                        style: TextButton.styleFrom(
+                          visualDensity: VisualDensity.compact,
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                        ),
+                        onPressed: () => SettingsDialog.show(context),
+                        icon: const Icon(Icons.tune_rounded, size: 16),
+                        label: const Text('设置'),
+                      ),
+                    ],
+                  ),
+                );
+              },
             ),
             if (_logs.isNotEmpty) ...[
               const SizedBox(height: 10),
