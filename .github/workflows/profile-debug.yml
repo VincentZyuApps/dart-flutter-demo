@@ -30,7 +30,7 @@ jobs:
       run_debug: ${{ steps.modes.outputs.run_debug }}
       short_sha: ${{ steps.modes.outputs.short_sha }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Select modes from exact trigger tokens
         id: modes
         shell: bash
@@ -74,7 +74,7 @@ jobs:
             profile_path: build/app/outputs/flutter-apk/app-profile.apk
             debug_path: build/app/outputs/flutter-apk/app-debug.apk
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install Linux dependencies
         if: matrix.platform == 'linux-x64'

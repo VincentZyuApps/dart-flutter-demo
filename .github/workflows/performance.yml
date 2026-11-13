@@ -48,7 +48,7 @@ jobs:
       display_time: ${{ steps.trigger.outputs.display_time }}
       trigger_source: ${{ steps.trigger.outputs.trigger_source }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - id: trigger
         shell: bash
         env:
@@ -117,7 +117,7 @@ jobs:
             os: macos-latest
             output: build/macos/Build/Products/Profile
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Install Linux dependencies
         if: matrix.platform == 'linux-x64'
@@ -208,7 +208,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Download platform reports
         uses: actions/download-artifact@v4
