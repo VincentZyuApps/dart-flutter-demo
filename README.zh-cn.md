@@ -35,7 +35,7 @@
 特别鸣谢以下优秀的开源项目为本项目带来的交互架构与视觉设计灵感：
 
 - 🌸 **[FlClash](https://github.com/chen08209/FlClash)**：多平台高质量代理客户端，启发了本项目仪表盘（Dashboard）中极富表现力的 Material 3 偏心向日葵流体波浪底座与形变按钮动效设计。
-- ⚡ **[osu! (lazer)](https://github.com/ppy/osu)**：新一代自由开源音乐游戏客户端/引擎，启发了本项目顶部高精度实时 Lazer FPS / GPU 性能监视器 (HUD) 胶囊设计。
+- ⚡ **[Lazer](https://github.com/chuxuehaocai/Lazer)**：精致优雅的跨平台 Flutter 音乐播放器，启发了本项目顶部高精度实时性能监视器 (HUD) 胶囊与跨平台工程设计。
 
 ## 📊🧬 语言占比
 

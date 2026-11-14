@@ -35,7 +35,7 @@ A cross-platform Flutter UI showcase PoC (Proof of Concept) app, available on An
 Special thanks to the following outstanding open-source projects for their architecture, interaction design, and visual inspiration:
 
 - 🌸 **[FlClash](https://github.com/chen08209/FlClash)**: A multi-platform proxy client with delightful Material 3 aesthetics, which inspired this app's dashboard design, eccentric fluid sunflower backdrop, and expressive morphing toggle animations.
-- ⚡ **[osu! (lazer)](https://github.com/ppy/osu)**: Next-generation open-source rhythm game client/engine, which inspired our high-precision real-time Lazer FPS / GPU performance HUD capsule overlay.
+- ⚡ **[Lazer](https://github.com/chuxuehaocai/Lazer)**: An exquisite cross-platform Flutter music player, which inspired our high-precision real-time performance HUD capsule overlay and cross-platform design.
 
 ## 📊🧬 Language Footprint
 
