@@ -5,6 +5,12 @@ class Page1DialogLab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final buttonTextStyle = theme.textTheme.labelLarge?.copyWith(
+      fontSize: 16,
+      fontWeight: FontWeight.w600,
+    );
+
     return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -13,7 +19,7 @@ class Page1DialogLab extends StatelessWidget {
             onPressed: () => _showModernDialog(context),
             style: FilledButton.styleFrom(
               padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 16),
-              textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              textStyle: buttonTextStyle,
             ),
             icon: const Icon(Icons.auto_awesome, size: 22),
             label: const Text('Open Modern Dialog'),
@@ -23,7 +29,7 @@ class Page1DialogLab extends StatelessWidget {
             onPressed: () => _showWin32Dialog(context),
             style: OutlinedButton.styleFrom(
               padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 16),
-              textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              textStyle: buttonTextStyle,
             ),
             icon: const Icon(Icons.desktop_windows, size: 22),
             label: const Text('Open Classic Dialog'),

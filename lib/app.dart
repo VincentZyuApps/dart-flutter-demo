@@ -53,12 +53,14 @@ class FlutterShowcaseApp extends StatelessWidget {
       builder: (context, child) {
         final themeMode = themeNotifier.value;
         final font = FontService.instance.currentFont;
+        final fontFamily = FontService.instance.getFontFamily(font);
 
         final lightBase = ThemeData(
           colorSchemeSeed: Colors.indigo,
           useMaterial3: true,
           brightness: Brightness.light,
           pageTransitionsTheme: _pageTransitions,
+          fontFamily: fontFamily,
         );
         final lightText = FontService.instance.applyFont(lightBase.textTheme, font);
 
@@ -67,6 +69,7 @@ class FlutterShowcaseApp extends StatelessWidget {
           useMaterial3: true,
           brightness: Brightness.dark,
           pageTransitionsTheme: _pageTransitions,
+          fontFamily: fontFamily,
         );
         final darkText = FontService.instance.applyFont(darkBase.textTheme, font);
 

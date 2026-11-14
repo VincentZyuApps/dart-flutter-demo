@@ -125,4 +125,29 @@ class FontService {
         return GoogleFonts.notoSansScTextTheme(baseTextTheme);
     }
   }
+
+  String? getFontFamily(AppFontFamily font) {
+    switch (font) {
+      case AppFontFamily.system:
+        return null;
+      case AppFontFamily.lxgwWenKai:
+        return GoogleFonts.lxgwWenKaiTc().fontFamily;
+      case AppFontFamily.notoSansSc:
+        return GoogleFonts.notoSansSc().fontFamily;
+      case AppFontFamily.inter:
+        return GoogleFonts.inter().fontFamily;
+      case AppFontFamily.roboto:
+        return GoogleFonts.roboto().fontFamily;
+      case AppFontFamily.poppins:
+        return GoogleFonts.poppins().fontFamily;
+      case AppFontFamily.jetBrainsMono:
+        return GoogleFonts.jetBrainsMono().fontFamily;
+      case AppFontFamily.firaCode:
+        return GoogleFonts.firaCode().fontFamily;
+      case AppFontFamily.notoSerifSc:
+        return GoogleFonts.notoSerifSc().fontFamily;
+      case AppFontFamily.miSans:
+        return GoogleFonts.notoSansSc().fontFamily;
+    }
+  }
 }
