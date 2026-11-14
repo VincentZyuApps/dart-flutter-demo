@@ -30,6 +30,13 @@
 [![Android x86_64 | ARM64](https://img.shields.io/badge/Android-x86_64_|_ARM64-3DDC84?style=for-the-badge&logo=android&logoColor=white)](https://github.com/VincentZyuApps/dart-flutter-demo/releases)
 [![iOS ARM64](https://img.shields.io/badge/iOS-ARM64-000000?style=for-the-badge&logo=apple&logoColor=white)](https://github.com/VincentZyuApps/dart-flutter-demo/releases)
 
+## 💖 致谢与设计灵感 (Acknowledgements & Inspirations)
+
+特别鸣谢以下优秀的开源项目为本项目带来的交互架构与视觉设计灵感：
+
+- 🌸 **[FlClash](https://github.com/chen08209/FlClash)**：多平台高质量代理客户端，启发了本项目仪表盘（Dashboard）中极富表现力的 Material 3 偏心向日葵流体波浪底座与形变按钮动效设计。
+- ⚡ **[osu! (lazer)](https://github.com/ppy/osu)**：新一代自由开源音乐游戏客户端/引擎，启发了本项目顶部高精度实时 Lazer FPS / GPU 性能监视器 (HUD) 胶囊设计。
+
 ## 📊🧬 语言占比
 
 这两张动画图分别按仓库中已跟踪的代码、脚本、文档与构建配置的字节数和行数做分布统计。<br>

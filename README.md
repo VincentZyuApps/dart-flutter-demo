@@ -30,6 +30,13 @@ A cross-platform Flutter UI showcase PoC (Proof of Concept) app, available on An
 [![Android x86_64 | ARM64](https://img.shields.io/badge/Android-x86_64_|_ARM64-3DDC84?style=for-the-badge&logo=android&logoColor=white)](https://github.com/VincentZyuApps/dart-flutter-demo/releases)
 [![iOS ARM64](https://img.shields.io/badge/iOS-ARM64-000000?style=for-the-badge&logo=apple&logoColor=white)](https://github.com/VincentZyuApps/dart-flutter-demo/releases)
 
+## 💖 Acknowledgements & Design Inspirations
+
+Special thanks to the following outstanding open-source projects for their architecture, interaction design, and visual inspiration:
+
+- 🌸 **[FlClash](https://github.com/chen08209/FlClash)**: A multi-platform proxy client with delightful Material 3 aesthetics, which inspired this app's dashboard design, eccentric fluid sunflower backdrop, and expressive morphing toggle animations.
+- ⚡ **[osu! (lazer)](https://github.com/ppy/osu)**: Next-generation open-source rhythm game client/engine, which inspired our high-precision real-time Lazer FPS / GPU performance HUD capsule overlay.
+
 ## 📊🧬 Language Footprint
 
 Animated breakdowns of tracked code, script, doc, and build-config size by bytes and by lines.<br>
